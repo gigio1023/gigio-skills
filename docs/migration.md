@@ -128,3 +128,11 @@ Claude Code lists skills within about 1% of the model's context window and Codex
 ## Zcode CLI on 2026-10-14
 
 `zcode-cli` joins the additional install set. It owns official Zcode CLI discovery, authorized API-key setup, model and reasoning selection, task execution, and session continuation. API-key setup distinguishes Coding Plan from the standard API, includes a private provider profile, and checks the resolved session selection separately from a successful response. `read-agent-sessions` continues to own reading stored conversations for another agent. The package supports any model in the runtime catalog and defaults to GLM-5.3 at max effort when the user names no model. Publication does not install the skill or change Zcode authentication.
+
+## Spot GPU evaluation on 2026-10-19
+
+| Former name or set | Current name or set | Change |
+| --- | --- | --- |
+| None | `spot-gpu-evaluation` in additional | Operating LLM and agent evaluations on preemptible or spot GPU instances: placement, restart path, restarter and holds, guest lifecycle units, durable publication, preemption-aware scoring, monitoring, and cost |
+
+`evaluation-operations` keeps campaign state across runs, `ml-experiment` keeps training and serving-configuration comparisons, and `load-testing` keeps capacity under load; the new skill owns the node-level operation of an evaluation on capacity the provider can reclaim. It sits in the additional set because it needs a cloud account with spot GPU capacity, which an installer may lack. Install it by name when needed.
