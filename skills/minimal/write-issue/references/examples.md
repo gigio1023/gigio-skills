@@ -7,6 +7,7 @@ Read this when the right shape for a draft is unclear. Every example is invented
 - From an agenda to a usable result
 - Consolidating a fragmented portfolio
 - Bug relayed from chat, ownership ambiguous
+- Request to another team
 - Wrong output in data or an evaluation
 - Uncertain or research work, with its closing note
 - Splitting one large in-progress issue
@@ -98,6 +99,97 @@ Fields: label `bug`, which the team already uses. No priority, cycle, or status 
 Assignee: left empty. The delivery worker belongs to the payments team and this is a report for their triage.
 
 Why: the title states the symptom, because a report filed for another team's triage should not presume the fix. The reporter's words and conversation preserve the reported behavior. Checking event ids distinguishes a delivery defect from receiver deduplication, so that uncertainty changes the investigation. The issue needs no background about how webhooks work.
+
+## Request To Another Team
+
+The notifications team is moving email sending out of the monolith into a new service and needs the platform team to create a few things. The platform team never saw the migration. A first draft, filed with the template the platform team uses for its own engineering tickets and assigned to one of its engineers:
+
+```markdown
+Title: [Request] MSV infra setup
+
+## Background
+As part of the MSV migration we analysed current mail volume, reviewed the SMS sender setup, checked topic naming rules, and confirmed the image builds. We will use a dedicated relay for mail-sender.
+
+## Request
+Please provision the topics, the SA, and the relay limit for mail-sender by Thursday, 2026-11-04.
+
+## Notes
+- The relay limit might possibly need to be higher; we are not fully sure.
+- As noted above, we need topics, an SA, and the relay limit.
+```
+
+The rewrite:
+
+````markdown
+Title: Queue topics, service account, and relay limit check for the new mail-sender service
+
+**Summary**
+- We are moving email sending out of the monolith into a new `mail-sender` service, the same way SMS sending moved: https://tracker.example.com/platform/requests/212
+- We ask for 2 queue topics, 1 service account, and 1 relay limit check.
+
+```mermaid
+flowchart LR
+  mono[Monolith] --> req[mail-requests topic] --> svc[mail-sender] --> relay[Outbound mail relay]
+  svc --> res[mail-results topic]
+  class req,res,relay ask
+  classDef ask fill:#fef9c3,stroke:#a16207,color:#713f12
+```
+Flow of one email. Requested: the two topics and the relay limit check.
+
+**What mail-sender is**
+- A service that reads email requests from a queue and hands them to the outbound relay, so the monolith stops sending mail itself
+- It touches your systems in two places: the queue cluster and the outbound relay
+- Why now: the monolith's mail code blocks its framework upgrade, planned for December 2026
+
+**What is ready**
+- Service code and image, passing the staging test suite: https://git.example.com/notify/mail-sender
+- Deployment manifest, reviewed by our team, in that repository under `deploy/`
+
+**What we ask**
+1. Two queue topics
+   - `mail-requests` and `mail-results`, 3 partitions each, 7-day retention
+   - Reason: the same layout as the SMS topics, so your existing alerts apply
+2. One service account
+   - `mail-sender`, with produce and consume on both topics and send on the relay
+   - Reason: the service should not reuse the monolith's credentials
+3. Relay limit check
+   - Can the relay take 200 messages per second from `mail-sender` at peak?
+   - Reason: the answer decides our next request, below
+
+**After you finish, we do**
+- Deploy `mail-sender` to staging and send 1% of mail through it for a week
+- If the relay takes 200 messages per second, we will ask to route all mail through it; otherwise we will ask for a second relay.
+
+**Schedule**
+Would Wednesday, 2026-11-04 work for items 1 and 2? If not, tell us what suits you and we will adjust.
+````
+
+Fields: filed through the platform team's request form, the one the SMS sender's request used. No priority or cycle; their triage sets them.
+
+Assignee: left empty. The platform team triages its own requests.
+
+The companion chat message, sent because the user asked for one:
+
+```markdown
+Request for the platform team: queue topics, a service account, and a relay limit check for the new mail-sender service, following the SMS sender.
+- 2 topics and 1 service account; 1 question on relay capacity
+- Code and image are ready; we deploy to staging once these exist
+- Would Wednesday, 2026-11-04 work?
+https://tracker.example.com/platform/requests/240
+```
+
+In a Korean tracker the same ask keeps its outline and short labels, and its sentences end politely:
+
+```markdown
+1. Queue topic 2개 생성 요청드립니다
+   - 이름: `mail-requests`, `mail-results`
+   - 설정: 각 partition 3개, 보존 7일
+   - 이유: SMS 발송과 같은 구성이라 기존 alert를 그대로 쓰실 수 있습니다
+
+일정: 2026년 11월 4일 수요일까지 1, 2번이 가능하실까요? 어려우시면 편하신 날짜를 알려주세요. 맞춰서 진행하겠습니다.
+```
+
+Why: the rewrite answers the receivers' questions in the order they arise, from what is wanted and how much, through what the thing is, what exists, and what to create under which names, to what happens next and when. Each ask carries the names they will type and one reason. The first draft stated an undecided relay choice as the plan; the rewrite makes it depend on their answer. The deadline became a question with a fallback, and its weekday was computed with a tool, since the first draft's Thursday was a Wednesday. The coined "MSV" and "SA", the list of what was checked, the hedge, and the repeated ask are gone. The request follows the form the platform team accepted before rather than the template for its internal tickets, and the assignee is left to their triage.
 
 ## Wrong Output In Data Or An Evaluation
 
