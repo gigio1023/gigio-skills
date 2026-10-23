@@ -8,7 +8,7 @@ This package applies OpenAI's [Rethinking skills and prompts for GPT-6 Astra](ht
 
 OpenAI publishes one set of prompts for the GPT-6 family. They address behavior observed with Astra, and OpenAI asks that they be evaluated with the chosen model and workload; there is no separate Sol prompting guide. Use the same patterns for both models, and before adding a clause for Sol, check that the Sol workload shows the behavior the clause addresses: clarification pauses, sensitivity to skill files, heavily formatted output, under-delegation, or broader testing than the change needs.
 
-GPT-6.1 Sol is `gpt-6.1-sol`, distinct from legacy `gpt-6-sol`. Astra and Sol 6.1 require Responses for tools, and neither accepts `none`; Sol 6.1 also rejects `minimal`. Its API default effort is `medium`. [Runtime notes](runtime-notes.md) separate current model contracts from legacy settings and Codex catalog values. Model assignment belongs to the GPT policy in `model-routing`; shared prompting guidance does not make Sol a default for judgment-bearing work.
+GPT-6.1 Sol is `gpt-6.1-sol`, distinct from legacy `gpt-6-sol`. Astra and Sol 6.1 require Responses for tools, and neither accepts `none`; Sol 6.1 also rejects `minimal`. Its API default effort is `medium`. [Runtime notes](runtime-notes.md) separate current model contracts from legacy settings and Codex catalog values. Model assignment belongs to the current GPT policy in `model-routing`.
 
 ## Choose The Relevant Material
 

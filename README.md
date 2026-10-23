@@ -171,7 +171,7 @@ Grouped by kind of work, in the same order as the figures above. Open a group to
 | Skill | Set | Use it to |
 | --- | --- | --- |
 | [orchestrate-subagents](skills/minimal/orchestrate-subagents/) | minimal | Coordinate delegated work and synthesize its evidence |
-| [model-routing](skills/minimal/model-routing/) | minimal | Choose each subagent's model and effort for a Claude Fable or GPT-6 lead |
+| [model-routing](skills/minimal/model-routing/) | minimal | Choose subagent models and effort; GPT research uses Sol 6.1, complex judgment uses Astra |
 | [prompting-guide](skills/minimal/prompting-guide/) | minimal | Write, review, and migrate prompts, skills, and goal prompts for Claude Fable, Claude Opus, or GPT-6 |
 | [skill-builder](skills/minimal/skill-builder/) | minimal | Turn real workflows into skills, including ones that work across Claude Code and Codex |
 | [install-skill-pack](skills/minimal/install-skill-pack/) | minimal | Review and globally install skills from a chosen repository and revision |

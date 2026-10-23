@@ -11,7 +11,7 @@ Before a spawn in an unfamiliar surface, establish:
 3. Which fork modes, role pins, and override rules apply.
 4. Whether the result exposes the child's applied settings.
 
-Record the selected settings and their source in the dispatch. Record runtime confirmation separately. If only one delegation model is available, use Astra for general GPT work. A global Sol setting is suitable only when every delegated packet is mechanical.
+Record the selected settings and their source in the dispatch. Record runtime confirmation separately. If only one delegation model is available, send it only packets eligible for that model under the GPT policy. Keep other work with an eligible lead or report the limitation; do not silently turn the available model into a substitute for the selected route.
 
 ## Codex
 
@@ -29,14 +29,14 @@ For a surface exposing the native `spawn_agent` fields below:
 {"task_name":"implement_parser","message":"Implement the assigned parser change within the supplied scope and return the diff and verification evidence.","model":"gpt-6-astra","reasoning_effort":"xhigh","fork_turns":"none"}
 ```
 
-A mechanical collection packet may set `model: "gpt-6.1-sol"` with an explicit supported effort. The packet must contain fixed inputs, commands or transforms, output shape, and mechanical acceptance checks. Sol does not choose what the output means or what to do next.
+For ordinary research, set `model: "gpt-6.1-sol"` with an explicit supported effort. Supply the question, scope, sources or discovery context, evidence expectations, output, and escalation conditions. Sol may refine queries, select sources, organize findings, and summarize evidence within that scope. Use the narrower fixed execution contract only for `sol-clerk`.
 
 ### Optional Role Installation
 
-1. Confirm the target CLI and account expose `gpt-6-astra` and, if needed, `gpt-6.1-sol`. Inspect the current catalog; a bundled entry does not establish account access.
-2. Under the user's installation grant, merge `assets/gpt/codex/config.snippet.toml` into the chosen user or project configuration. Unnamed workers default to Astra at `xhigh`.
+1. Confirm the target CLI and account expose both `gpt-6-astra` and `gpt-6.1-sol` for the combined policy. Inspect the current catalog; a bundled entry does not establish account access.
+2. Under the user's installation grant, merge `assets/gpt/codex/config.snippet.toml` into the chosen user or project configuration. Unnamed workers default to Sol 6.1 at `xhigh`; select Astra explicitly for complex work, decision synthesis, and final review.
 3. Copy the role files from `assets/gpt/codex/agents/` into the supported agent directory, conventionally `~/.codex/agents/` or the project's `.codex/agents/`. Inspect existing files before replacing any.
-4. When migrating this pack's earlier roles, replace references to `sol-scout` and `sol-builder` with `astra-scout` and `astra-builder`. Retire old installed files only within the installation grant. Do not leave the old roles selectable as normal routes.
+4. Add the current `sol-scout` for ordinary research and retain `astra-scout` for difficult investigation and decision synthesis. Replace any legacy GPT-6 Sol version of `sol-scout` with the current Sol 6.1 definition. Keep `astra-builder`, `astra-judge`, and the mechanical `sol-clerk`. Update old `sol-builder` references to `astra-builder`; retire obsolete files only within the installation grant and preserve unrelated custom roles.
 5. Validate configuration and role discovery through the target harness. A live model call runs only when the task requests or requires it; report untested runtime application otherwise.
 
 Set model and effort together in explicit defaults. The assets use `xhigh`; preserve an explicitly selected effort by choosing a compatible role or supported explicit spawn instead of silently using a conflicting pin. Do not change service tier, concurrency, or the lead model as a side effect of installing worker roles.
@@ -49,11 +49,11 @@ Set model and effort together in explicit defaults. The assets use `xhigh`; pres
 
 The Hermes v0.21.3 source inspected on 2026-09-23 uses `delegation.model`, `delegation.provider`, and `delegation.reasoning_effort` as shared child settings. An empty child effort inherits the parent's resolved effort; `agent.reasoning_overrides` does not set the child effort in that version. These are dated findings. Recheck the current version before configuring it.
 
-With a single child model, use `delegation.model: gpt-6-astra` and the selected supported effort for general work. Do not set Sol as a shared default and then send it diagnosis or research. If per-task selection is unavailable, keep a mechanical task on Astra or execute its fixed procedure directly.
+With a single child model, select the shared setting for the delegated workload. Sol 6.1 can handle ordinary research and collection while an eligible lead keeps complex judgment and decision synthesis. If workers must perform Astra work, use Astra or a supported separate configuration. Do not change a shared setting while active workers depend on it; recheck the current runtime before applying configuration.
 
 ## OpenCode
 
-The agent documentation inspected on 2026-09-20 used per-agent `model` and `mode: subagent`, with provider-specific effort fields. Recheck the installed provider and [agent documentation](https://opencode.ai/docs/agents/) before installation. Express Astra as the general route and Sol 6.1 only as a mechanical role; do not infer API support from a display name.
+The agent documentation inspected on 2026-09-20 used per-agent `model` and `mode: subagent`, with provider-specific effort fields. Recheck the installed provider and [agent documentation](https://opencode.ai/docs/agents/) before installation. Express Sol 6.1 as the ordinary research route and Astra as the complex work and decision route; keep a separate mechanical role if useful. Do not infer API support from a display name.
 
 ## Claude Code And Cursor
 

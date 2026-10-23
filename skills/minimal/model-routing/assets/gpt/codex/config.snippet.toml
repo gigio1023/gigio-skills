@@ -1,9 +1,10 @@
 # Merge into the requested user or project Codex configuration only under an installation grant.
-# Explicit worker defaults use Astra. Preserve unrelated configuration and any user-selected effort.
+# Ordinary workers default to Sol 6.1; explicitly select Astra for complex work and consequential judgment.
+# Preserve unrelated configuration and any user-selected effort.
 # Check the active catalog and tool contract before applying these settings.
 
 [agents]
-default_subagent_model = "gpt-6-astra"
+default_subagent_model = "gpt-6.1-sol"
 default_subagent_reasoning_effort = "xhigh"
 
 # Role assets live in assets/gpt/codex/agents/. Install them into the supported agent directory.

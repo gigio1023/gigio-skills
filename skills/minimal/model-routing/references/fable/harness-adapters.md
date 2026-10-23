@@ -68,7 +68,7 @@ Agents are defined in `opencode.json` under `agent.<name>` or as Markdown agent 
 
 A proxy can expose GPT models as Claude Code agent definitions. Inspect its actual route list, exact model ID, effort, and tool support before selecting a route. Do not infer these from an alias or assume a spawn override changes a pinned proxy definition.
 
-GPT workers follow the GPT routing policy in `references/gpt/policy.md` even under a Fable lead. Use Astra for coding, source selection, research interpretation, summaries, and review. Sol 6.1 is available only for packets that satisfy that policy's mechanical conditions. Return raw outputs and execution errors from those packets; Fable or Astra handles the interpretation. A proxy exposing only legacy GPT-6 Sol does not satisfy an exact Sol 6.1 route.
+GPT workers follow the GPT routing policy in `references/gpt/policy.md` even under a Fable lead. Use Sol 6.1 for ordinary research, source selection, collection, organization, and summaries; use Astra for complex work, consequential judgment, decision synthesis, and final review. The mechanical-only contract applies to `sol-clerk`, not every Sol worker. A proxy exposing only legacy GPT-6 Sol does not satisfy an exact Sol 6.1 route.
 
 ## Codex Under a Fable Lead
 

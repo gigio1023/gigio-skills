@@ -57,7 +57,7 @@ This counters GPT-6's tendency toward detailed, formatted responses and Fable's 
 
 Claude Opus 5.5 shares Fable 5.1's API behavior (thinking always on, forced tool use rejected, append-only history) but differs in ways a portable skill should not paper over. Its default effort is `medium`, and at a given level it thinks more per turn than Opus 5. On long unattended runs it can end a turn with a progress update, so the done state must be checkable rather than inferred from a text-only turn. It delegates readily and verifies its own work unprompted, so delegation and verification instructions should state criteria rather than encourage more. The Opus guide in the `prompting-guide` skill, when installed, covers Opus-targeted prompts.
 
-Do not average away these differences. The shared core states intent and contract; a model or harness adapter selects runtime controls. The `model-routing` skill, when installed, owns the GPT operating policy: Astra for judgment-bearing work and Sol 6.1 only for very easy deterministic execution. That routing policy does not change the Anthropic model choices or prove a model capability limit.
+Do not average away these differences. The shared core states intent and contract; a model or harness adapter selects runtime controls. The `model-routing` skill, when installed, owns the current GPT task assignments. That routing policy does not change the Anthropic model choices or prove a model capability limit.
 
 ## Portable Prompt Pattern
 

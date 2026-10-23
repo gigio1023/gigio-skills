@@ -148,7 +148,7 @@
 - Location: [GPT routing](../../skills/minimal/model-routing/references/gpt/policy.md) and [routing overview](../routing-skills.md).
 - Decision: GPT work defaults to Astra. Sol 6.1 handles only fixed mechanical work without semantic judgment. Bounded implementation, summaries, and diagnosis still require Astra. Explicit model and effort choices take precedence over package defaults; no automatic frontier-worker effort reduction.
 - Used by: dispatch, tier, and the historical effort-floor entry. Existing field names remain unchanged.
-- Inspection status: maintainer decision applied to the current package; this record makes no new claim about industry terminology or model benchmark performance.
+- Inspection status: historical maintainer decision. [R017](#r017) superseded its GPT task assignments on 2026-10-24; explicit effort choices and the rule against automatic frontier-worker effort reduction remain compatible. This record makes no new claim about industry terminology or model benchmark performance.
 
 <a id="r016"></a>
 ## R016: Maintainer layout decision, 2026-10-12
@@ -158,3 +158,12 @@
 - Decision: the default install is the minimal set; the additional set is installed on request. The set names describe availability, not invocation. "Tier" stays reserved for routing difficulty.
 - Used by: install set.
 - Inspection status: maintainer decision; this record makes no claim about industry terminology.
+
+<a id="r017"></a>
+## R017: Maintainer routing revision, 2026-10-24
+
+- Repository maintainer; revision of the pack's GPT task assignments, superseding [R015](#r015).
+- Location: [GPT routing](../../skills/minimal/model-routing/references/gpt/policy.md) and [routing overview](../routing-skills.md).
+- Decision: Sol 6.1 handles ordinary research, source selection, query refinement, collection, organization, cited summaries, and factual comparisons. Astra handles complex design, implementation, difficult diagnosis, consequential judgments, decision-oriented synthesis, and final review. Mechanical restrictions belong to the selected execution contract, not to every Sol assignment. Explicit model and effort choices take precedence over package defaults.
+- Used by: dispatch and tier. Existing field names remain unchanged.
+- Inspection status: maintainer decision applied to the current package; no quality or cost comparison is claimed.

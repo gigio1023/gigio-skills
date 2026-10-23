@@ -11,7 +11,7 @@ Remove every placeholder and section that does not apply before handing off.
 
 - Selected model: <exact model and supported effort from the routing decision>.
 - Applicable routing rule: <family-specific policy from `model-routing`, or the executor limits the user stated when it is not installed>.
-- <If the executor is GPT-6.1 Sol: Fixed collection, deterministic data transformation, or command execution only. No semantic judgment, coding, summaries, diagnosis, review, or prose edits. Acceptance is mechanical: name the counts, hashes, schema, or exact comparison. Otherwise delete this line.>
+- <If a mechanical execution contract is selected: Fixed collection, deterministic data transformation, or command execution only. No semantic judgment, coding, summaries, diagnosis, review, or prose edits. Acceptance is mechanical: name the counts, hashes, schema, or exact comparison. Otherwise delete this line.>
 - An undefined result returns to the planner with raw evidence and completed actions.
 
 # Approved Basis and Procedure
@@ -24,7 +24,7 @@ Remove every placeholder and section that does not apply before handing off.
 
 # Execution Authority
 
-- You may decide: <explicitly permitted choices; none requiring semantic judgment for GPT-6.1 Sol>.
+- You may decide: <explicitly permitted choices; none requiring semantic judgment under a mechanical contract>.
 - Permitted effects: <writes, generated artifacts, external effects, or none>.
 - Permitted retries: <count and condition, or none>.
 - You must not decide: <design, scope, recovery, or interpretation fixed by the planner>.
@@ -71,7 +71,7 @@ Stop before the affected action if current reality contradicts the packet, an un
 - Preflight consistency result
 - Actions performed in order
 - Commands, working directories, exit statuses, and relevant output
-- Evidence tied to source locations; raw or mechanically transformed results for GPT-6.1 Sol
+- Evidence tied to source locations; raw or mechanically transformed results under a mechanical contract
 - Created, modified, or deleted files, artifacts, and external effects
 - Acceptance criteria result
 - Failed, skipped, unavailable, and unverified items
