@@ -48,9 +48,11 @@ The Skills CLI tracks installed skills by path, so an update does not rename the
 
 After this change merges, update `python-coding-standards` and remove the old global name only when the owner asks: `npx --yes skills remove --global python-docstrings --yes`.
 
-## Astra defaults and writing integration
+## Astra defaults and writing integration, 2026-10-06
 
-GPT work now defaults to Astra. GPT-6.1 Sol is reserved for fixed mechanical collection or execution with no semantic decisions. Source selection, summaries, diagnosis, implementation, writing, and review stay with Astra even when their scope is bounded. `codex-delegate` uses the same default and applies the routing policy to any authorized internal subagents.
+The GPT routing defaults in this section were superseded on 2026-10-24 by the policy below.
+
+GPT work defaulted to Astra. GPT-6.1 Sol was reserved for fixed mechanical collection or execution with no semantic decisions. Source selection, summaries, diagnosis, implementation, writing, and review stayed with Astra even when their scope was bounded. `codex-delegate` used the same default and applied the routing policy to authorized internal subagents.
 
 | Previous asset or behavior | Replacement |
 | --- | --- |
@@ -136,3 +138,16 @@ Claude Code lists skills within about 1% of the model's context window and Codex
 | None | `spot-gpu-evaluation` in additional | Operating LLM and agent evaluations on preemptible or spot GPU instances: placement, restart path, restarter and holds, guest lifecycle units, durable publication, preemption-aware scoring, monitoring, and cost |
 
 `evaluation-operations` keeps campaign state across runs, `ml-experiment` keeps training and serving-configuration comparisons, and `load-testing` keeps capacity under load; the new skill owns the node-level operation of an evaluation on capacity the provider can reclaim. It sits in the additional set because it needs a cloud account with spot GPU capacity, which an installer may lack. Install it by name when needed.
+
+## GPT research and decision routing, 2026-10-24
+
+GPT-6.1 Sol now handles ordinary research, source selection, collection, organization, and cited summaries. Astra handles consequential judgment, decision synthesis, complex work, and final review. The GPT policy in `model-routing` owns this division, including workers inside `codex-delegate` missions; the mission lead still defaults to Astra.
+
+| Previous asset or behavior | Current behavior |
+| --- | --- |
+| Unnamed workers on Astra | Sol 6.1, with explicit Astra selection for complex work and decisions |
+| `astra-scout` for all research | `sol-scout` for ordinary research; `astra-scout` for difficult investigation and decision synthesis |
+| Sol restricted to mechanical execution | Restriction retained only for `sol-clerk` or a deliberately selected mechanical contract |
+| GPT role effort defaults | Still `xhigh` |
+
+A skill refresh updates instructions and bundled assets. To activate the Codex role files, use the configuration installation procedure in `model-routing`, preserve unrelated settings, and replace a legacy GPT-6 Sol `sol-scout` with the current Sol 6.1 asset. Existing sessions and resumed missions keep their recorded settings.

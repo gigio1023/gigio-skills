@@ -14,7 +14,7 @@
 
 **Meaning and status:** The record that configures a subagent before it runs: model, effort, tools, permissions, and instructions. The Agent SDK names the type `AgentDefinition`; Claude Code and Cursor describe it as a Markdown file with YAML frontmatter; Codex calls it a custom agent file, role, or agent type.
 
-**Use and distinctions:** Say "subagent definition" in harness-neutral prose, "agent file" when the sentence points at a path, "role" in Codex-specific text, and `agent_type` when naming a supported spawn argument that selects it. The routing skills ship definitions such as `opus-builder`, `astra-builder`, and `sol-clerk`. Their configured model and effort determine the assignment; the name alone does not verify the running model.
+**Use and distinctions:** Say "subagent definition" in harness-neutral prose, "agent file" when the sentence points at a path, "role" in Codex-specific text, and `agent_type` when naming a supported spawn argument that selects it. The routing skills ship definitions such as `opus-builder`, `astra-builder`, `sol-scout`, and `sol-clerk`. Their configured model and effort determine the assignment; the name alone does not verify the running model.
 
 **Reference:** [R002](references.md#r002), [R004](references.md#r004), [R005](references.md#r005).
 
@@ -44,11 +44,11 @@
 
 ## tier
 
-**Meaning and status:** A task-difficulty class used by a routing policy. The earlier pack policy used four classes: mechanical collection, bounded execution, judgment-adjacent support, and judgment core. Current GPT routing instead makes the presence of semantic judgment decisive. A fixed scope does not make implementation, diagnosis, or summarization mechanical. Developer usage in AqueGen/model-routing uses the same general noun ("Think in tiers, not model names").
+**Meaning and status:** A task-difficulty class used by a routing policy. The earlier pack policy used four classes: mechanical collection, bounded execution, judgment-adjacent support, and judgment core. Current GPT routing distinguishes ordinary research from complex judgment rather than treating all semantic work as one class. A fixed scope does not make implementation, diagnosis, or summarization mechanical. Developer usage in AqueGen/model-routing uses the same general noun ("Think in tiers, not model names").
 
 **Use and distinctions:** Reserved for difficulty. Do not use "tier" for a model class or a service tier; say "model class" and "service tier" in full.
 
-**Reference:** [R010](references.md#r010), [R011](references.md#r011).
+**Reference:** [R010](references.md#r010), [R011](references.md#r011), [R017](references.md#r017).
 
 ## install set
 

@@ -4,7 +4,7 @@ Policy updated 2026-10-06. Anthropic runtime and price evidence was last checked
 
 ## Policy Ownership
 
-This policy owns Anthropic model choices. The GPT policy in `references/gpt/` owns GPT assignments, including GPT workers under a Fable lead. The policies are no longer mirrored. Sonnet research and Opus implementation remain Anthropic routes; GPT coding and semantic work use Astra, while Sol 6.1 is restricted to mechanical execution.
+This policy owns Anthropic model choices. The GPT policy in `references/gpt/` owns GPT assignments, including GPT workers under a Fable lead. The policies are no longer mirrored. Sonnet research and Opus implementation remain Anthropic routes; the GPT policy assigns ordinary research and summaries to Sol 6.1 and consequential judgment and complex work to Astra.
 
 The 2026-10-06 revision removes automatic frontier effort reduction and arbitrary consultation caps. `fable-builder` replaces `fable-lean-builder`, and both Fable roles inherit selected session effort. Actual user budgets remain binding. The historical policy notes below explain prior choices rather than prescribing current routes.
 

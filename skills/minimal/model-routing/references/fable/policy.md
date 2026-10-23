@@ -14,7 +14,7 @@ This policy does not decide whether to delegate; `orchestrate-subagents` and the
 
 ## Anthropic Routing
 
-This policy owns Anthropic model choices. GPT alternatives follow the GPT routing policy in `references/gpt/policy.md`: Astra for judgment-bearing work, Sol 6.1 only for very easy deterministic execution. The two policies share orchestration principles, not mirrored model tables.
+This policy owns Anthropic model choices. GPT alternatives follow the GPT routing policy in `references/gpt/policy.md`: Sol 6.1 for ordinary research, collection, and summaries; Astra for consequential judgment, decision synthesis, and complex work. The two policies share orchestration principles, not mirrored model tables.
 
 ### Three signals, four tiers
 

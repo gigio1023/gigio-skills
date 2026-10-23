@@ -20,7 +20,7 @@ Read the lead's identity from what the harness states, such as the system prompt
 
 Two cases open a policy other than the lead's. A worker from another family follows its own family's policy, for that worker only. Installing or maintaining shipped files follows the policy of the family whose files change, whoever edits them: a GPT lead updating Fable agent definitions reads the Fable policy and its harness adapters. GPT workers follow `references/gpt/policy.md` under any lead, including a Fable lead or a lead with no shipped policy. Under a non-Fable lead, the Fable policy applies only on request, when the user names it (formerly `fable5-model-routing`) or asks to put Fable on the judgment; its "Another model leads" rule in `references/fable/policy.md` governs that case. Without such a request, Anthropic workers under a non-Fable lead have no shipped policy and use the harness defaults.
 
-Never carry one family's tier table, default routes, effort defaults, or role files to the other family's models. For example, Fable workers inherit the selected session effort even though the GPT roles ship at `xhigh`, and the GPT policy's four Sol conditions do not govern Sonnet or Haiku routes.
+Never carry one family's tier table, default routes, effort defaults, or role files to the other family's models. For example, Fable workers inherit the selected session effort even though the GPT roles ship at `xhigh`, and the GPT division between ordinary Sol research and Astra judgment does not govern Sonnet or Haiku routes.
 
 ## Boundaries
 

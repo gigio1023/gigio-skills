@@ -1,6 +1,6 @@
 # Small Model Handoff Prompt Patterns
 
-GPT-6.1 Sol packets must satisfy the GPT policy in `model-routing`, when installed, before using these patterns; the boundary below follows that policy's 2026-10-06 revision. The general change example below does not authorize Sol to implement code. Use Sol only for fixed collection, approved deterministic data transforms, or command execution; return raw evidence and failures to the planner for interpretation.
+GPT packets must satisfy the current GPT policy in `model-routing`, when installed, before using these patterns. The `sol-clerk` role or another deliberately selected mechanical contract permits only fixed collection, approved deterministic data transforms, or command execution; return raw evidence and failures to the planner for interpretation. Apply those restrictions to that contract, not to every assignment on the selected model.
 
 ## Contents
 
@@ -24,7 +24,7 @@ Outcome: [one observable result, artifact, or evidence packet]
 Mode: [change | run | inspect | ordered mixed phases]
 Approved basis: [decision, procedure, reproduction, or prerequisite evidence]
 Executor: [exact model, supported effort, and applicable routing rule]
-Executor limits: [choices or recovery this model must not perform; no semantic judgment for GPT-6.1 Sol]
+Executor limits: [choices or recovery this assignment must not perform; no semantic judgment under a mechanical contract]
 Allowed scope:
 - Files/symbols: [exclusive mutation targets, or none]
 - Commands: [exact commands and working directory, or none]
@@ -118,7 +118,7 @@ Require only fields relevant to the mode:
 - Preflight consistency result
 - Actions performed in order
 - Commands with working directory, exit status, and relevant output
-- Evidence tied to named sources; raw or mechanically transformed results for GPT-6.1 Sol
+- Evidence tied to named sources; raw or mechanically transformed results under a mechanical contract
 - Created, modified, or deleted files and artifacts
 - Acceptance criteria result
 - Failed, skipped, unavailable, and unverified items
@@ -140,7 +140,7 @@ Missing decision or authority: [smallest required addition]
 Verification state: [evidence captured and not captured]
 ```
 
-## Change Example For A Non-Sol Executor
+## Change Example For An Authorized Change Executor
 
 ```text
 Do not optimize for completing the request as broadly as possible.

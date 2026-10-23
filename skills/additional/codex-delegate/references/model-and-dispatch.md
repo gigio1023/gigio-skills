@@ -1,20 +1,20 @@
 # Model and Dispatch
 
-GPT-6 Astra owns delegated work that requires investigation, interpretation, design, implementation judgment, review, or synthesis. This is this pack's default routing policy, not a claim that CLI availability or model quality was established for every account; a user's explicit model choice or their own routing policy overrides it.
+New delegated mission leads default to GPT-6 Astra at `xhigh`. The GPT policy in `model-routing` owns task eligibility and child assignments. This is this pack's operating policy, not a claim that CLI availability or model quality was established for every account; a user's explicit model choice or their own routing policy overrides it.
 
 ## Selection
 
 | Work | Default model | Effort |
 | --- | --- | --- |
-| Judgment-bearing or ambiguous mission | `gpt-6-astra` | `xhigh` |
-| Fixed procedure with mechanical acceptance | `gpt-6.1-sol`, when deliberately selected | `xhigh` |
+| New mission lead | `gpt-6-astra` | `xhigh` |
+| Ordinary research or mechanical mission, when deliberately selected | `gpt-6.1-sol` | `xhigh` |
 | Explicit user model or effort choice | User selection | User selection |
 
-A mechanical packet fixes the inputs, procedure, output, and acceptance. Running an already selected command and returning its exit code can fit. Choosing commands, selecting decisive evidence, interpreting failures, reviewing code, and implementing a fix require judgment. Short tasks can still require Astra.
+A deliberately selected Sol mission may choose sources, refine queries, organize evidence, produce cited summaries, and compare source-supported facts within its scope. Complex design, implementation, difficult diagnosis, consequential judgments, decision-oriented synthesis, and final review belong to Astra under the current routing policy.
 
-Use Astra when uncertain. Do not make a cheaper trial a prerequisite, lower frontier effort automatically, or impose an arbitrary limit on frontier consultations. Honor the actual mission's cost, time, and concurrency limits. If the requested route is unavailable, report the limitation or use an already authorized alternative.
+Keep inseparable research and consequential judgment on Astra. Do not make a cheaper trial a prerequisite, lower frontier effort automatically, or impose an arbitrary limit on frontier consultations. Honor the actual mission's cost, time, and concurrency limits. If the requested route is unavailable, report the limitation or use an already authorized alternative.
 
-The launcher passes model and `model_reasoning_effort` explicitly. A resume preserves recorded settings unless the host overrides them. Inspect a legacy Sol source before resuming: retained history does not make its old route appropriate for new judgment-bearing work. Pass `--model gpt-6-astra` and record a reason such as `resume-policy-migration` when applying the current policy. A user's deliberate model choice still wins.
+The launcher passes model and `model_reasoning_effort` explicitly. A resume preserves recorded settings unless the host overrides them. Inspect a legacy source before resuming and select the follow-up route under the current policy. Pass explicit model options and record a reason such as `resume-policy-migration` when changing the route. A user's deliberate model choice still wins.
 
 ## Service tier
 
@@ -24,13 +24,12 @@ The current [configuration reference](https://learn.chatgpt.com/docs/config-file
 
 ## Internal subagents
 
-An Astra delegate uses the GPT policy of the sibling `model-routing` skill for available roles, model settings, and host-specific overrides. Mission work is eligible for useful internal delegation.
+The delegate uses the GPT policy of the sibling `model-routing` skill for available roles, model settings, and host-specific overrides. Mission work is eligible for useful internal delegation.
 
-- Default every judgment-bearing child to Astra, including unnamed and nested workers.
-- Use Sol 6.1 only for fixed execution with mechanical acceptance and no semantic decisions.
+- Apply the current task split to named, unnamed, and nested workers; the mission lead's model does not determine every child's model.
 - Preserve the mission's authority, data boundary, and resource limits at every depth.
 - Follow the runtime's supported model-override contract. Do not invent roles, pass unsupported overrides, or install global agent defaults as part of a task launch.
-- If the routing skill is absent, apply those same defaults directly through supported tools. If suitable subagent tools are unavailable, work sequentially.
+- If the routing skill is absent, use Sol 6.1 for ordinary research, source selection, query refinement, cited summaries, factual comparisons, and mechanical execution. Use Astra for complex design, implementation, difficult diagnosis, consequential judgments, decision-oriented synthesis, and final review. If suitable subagent tools are unavailable, work sequentially.
 
 Delegate independent work with a clear integration owner. Shared writes need isolated workspaces or disjoint ownership that the lead can integrate safely. Account for host roots and internal children together when a resource limit matters. No fixed root count disables useful children automatically.
 

@@ -1,7 +1,7 @@
 name = "astra-builder"
-description = "Design, implementation, debugging, and writing within an assigned scope. GPT-6 Astra at xhigh."
+description = "Design, implementation, difficult debugging, and decision-sensitive writing within an assigned scope. GPT-6 Astra at xhigh."
 model = "gpt-6-astra"
 model_reasoning_effort = "xhigh"
 developer_instructions = """
-Complete the assigned change within the packet's ownership and authority. Use judgment to implement a coherent result and resolve routine details. Preserve other workers' changes. Run checks relevant to the changed behavior and repository requirements. Return the result, changed paths, verification evidence, and material unresolved issues. If further delegation is permitted and useful, apply the GPT policy in model-routing: Astra for judgment-bearing work, Sol 6.1 only for fixed mechanical execution, with the same scope and budget.
+Complete the assigned change within the packet's ownership and authority. Use judgment to implement a coherent result and resolve routine details. Preserve other workers' changes. Run checks relevant to the changed behavior and repository requirements. Return the result, changed paths, verification evidence, and material unresolved issues. If further delegation is permitted and useful, apply the GPT policy in model-routing: Sol 6.1 for separable ordinary research, collection, and summaries; Astra for consequential judgment and complex work, with the same scope and budget.
 """

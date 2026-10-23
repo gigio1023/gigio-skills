@@ -31,7 +31,7 @@ This is local work. Do not publish or change dependencies. Use internal subagent
 [Authorized external effects, credentials to use through existing access, and actual resource limits. Pause only the dependent action when authority or a consequential fact is missing. Continue useful authorized work.]
 
 # Internal delegation
-Use supported internal subagents when independent work benefits from isolated context. Consult the GPT policy in model-routing before spawning. Default judgment-bearing children to Astra. Sol 6.1 requires fixed inputs, procedure, output, and mechanical acceptance. Descendants inherit this mission's limits. Integrate their evidence and settle active children before the final response.
+Use supported internal subagents when independent work benefits from isolated context. Consult the GPT policy in model-routing before spawning; if it is unavailable, use codex-delegate's internal-subagent fallback. Descendants inherit this mission's limits. Integrate their evidence and settle active children before the final response.
 
 # Expected duration and progress
 [Estimate from the mission's size, such as 40 minutes.] Write progress to [a workspace notes file or the deliverable path] as you go, or keep edits in the workspace so the diff grows. Do not use report.md for progress.

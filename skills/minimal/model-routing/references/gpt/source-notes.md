@@ -2,7 +2,7 @@
 
 ## Policy And Evidence
 
-This pack's GPT routing policy changed on 2026-10-06: Astra handles judgment-bearing work by default, and Sol 6.1 handles only very easy deterministic execution. It is a default that the user's own routing policy overrides. OpenAI's broader recommendations for Sol do not establish or override this narrower operating policy.
+On 2026-10-24 this pack changed its operating policy: Sol 6.1 handles most ordinary research, source selection, collection, organization, and summaries; Astra handles consequential judgment, decision synthesis, complex work, and final review. This supersedes the mechanical-only Sol policy from 2026-10-06. The split is a maintainer preference intended to reduce routine Astra use, not a measured cost or quality result. Explicit user routing choices still govern.
 
 This policy owns GPT model selection. The Fable policy in `references/fable/` owns Anthropic choices. They share delegation concepts, but their policies are not mirrored text. Orchestration owns decomposition and synthesis, and each harness adapter owns the supported control mechanism.
 
@@ -26,6 +26,8 @@ The authoring session's native spawn tool exposed both model IDs and `xhigh`. It
 - [OpenCode agents](https://opencode.ai/docs/agents/), inspected 2026-09-20: per-agent model, subagent mode, and provider-specific effort configuration. Recheck before configuring a newer version.
 
 ## Policy History
+
+- 2026-10-24: added `sol-scout` on Sol 6.1 and made Sol 6.1 the unnamed worker default. Narrowed `astra-scout` to difficult investigation and decision synthesis, retained Astra builder and judge roles, and kept `sol-clerk` as an optional mechanical executor. Source selection and interpretation alone no longer require Astra. Effort defaults remain `xhigh`; no new model capability or runtime claim is introduced.
 
 - 2026-10-12: packaged with the Fable policy in the `model-routing` skill, formerly `gpt6-astra-model-routing` and `fable5-model-routing`. This policy moved to `references/gpt/policy.md` and its Codex assets to `assets/gpt/codex/`; role models, efforts, and instructions are unchanged. `small-model-handoff` became optional for Sol packets, with a self-contained packet fallback.
 - 2026-10-06: Astra became the default for named and unnamed GPT workers at every allowed delegation depth. `sol-scout` and `sol-builder` became Astra roles. `sol-clerk` moved to Sol 6.1 with a mechanical-only packet. Removed automatic frontier effort reduction, cheap-first trials, arbitrary consultation caps, and the mirrored Fable core. Preserved actual user budgets and authorization boundaries.
