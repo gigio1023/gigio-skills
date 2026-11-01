@@ -9,7 +9,8 @@ Writes ``<stem>.html`` (the HTML deliverable and the PDF source) and
 file's stem. Before writing anything it refuses a note whose prose types a
 number by hand or names an ID that exists in neither version: numbers enter
 the note only through ``{{...}}`` tokens that resolve against diff.json.
-Code spans, URLs, version labels, refs, ISO dates, and words in which a letter
+Every prose field follows this rule, the overview's ``alt`` included. Code
+spans, URLs, version labels, refs, ISO dates, and words in which a letter
 directly precedes a digit, such as ``v4.0``, the commit ``3e1f09a7``, or
 ``제3자``, may contain digits; ``_inline.scan_literals`` holds the rule.
 
