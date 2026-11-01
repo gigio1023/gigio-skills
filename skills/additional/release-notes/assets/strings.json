@@ -10,7 +10,7 @@
     "stat_changed": "Changed",
     "h_actions": "Required actions",
     "no_actions": "No action is needed.",
-    "h_glance": "Counts by kind and category",
+    "h_glance": "Record counts",
     "h_changes": "Material changes",
     "h_mapping": "ID mapping for renamed, moved, merged, and removed records",
     "h_questions": "Open questions",
@@ -55,7 +55,10 @@
     "key_same": "Same in both",
     "see_change": "Given in the {id} section",
     "minor_reason": "Wording only",
-    "src_link": "Link"
+    "src_link": "Link",
+    "excerpt_of": "{field}, excerpt",
+    "full_list_omitted": "Every added, removed, and changed record is listed in the data file.",
+    "src_full_list": "All changes"
   },
   "ko": {
     "kicker": "릴리스 노트",
@@ -68,7 +71,7 @@
     "stat_changed": "변경",
     "h_actions": "필요한 조치",
     "no_actions": "따로 할 일은 없다.",
-    "h_glance": "종류별, 분류별 항목 수",
+    "h_glance": "항목 수",
     "h_changes": "주요 변경",
     "h_mapping": "이름 변경, 이동, 병합, 삭제 항목의 ID 대응",
     "h_questions": "열린 질문",
@@ -113,6 +116,9 @@
     "key_same": "변화 없음",
     "see_change": "{id} 절에 있음",
     "minor_reason": "표현만 수정",
-    "src_link": "링크"
+    "src_link": "링크",
+    "excerpt_of": "{field} 발췌",
+    "full_list_omitted": "추가, 삭제, 변경된 항목은 모두 데이터 파일에 있다.",
+    "src_full_list": "전체 변경 목록"
   }
 }

@@ -1,9 +1,10 @@
 """Render a release note as one self-contained HTML file: inline CSS and inline SVG.
 
 The same file is the HTML deliverable and the source the PDF renderer prints.
-Section order: identity, summary, counts that reconcile, required actions,
-figures, material changes as as-is and to-be pairs, the ID mapping, extra
-sections, open questions, the full change index, and the source of the
+Section order: identity, the author's overview figure, opening bullets,
+required actions, counts that reconcile with their figures, material changes
+as as-is and to-be pairs, the field list, the ID mapping, extra sections,
+open questions, the optional appendix of every change, and the source of the
 numbers. Every piece of text from note.json or diff.json is escaped.
 """
 
@@ -13,10 +14,19 @@ import html
 import re
 from pathlib import Path
 
+from _diff_data import DiffData
 from _errors import NoteSourceError
-from _inline import bound_number, escape_text, render_html
-from _note_content import CardField, DiffPiece, FieldEntry, NoteContent
-from _note_source import ChangeView, Figure, FigureType, Highlight
+from _inline import escape_text, render_html
+from _note_content import CardField, DiffPiece, FieldEntry, NoteContent, word_diff
+from _note_source import (
+    ChangeView,
+    Figure,
+    FigureType,
+    FullList,
+    Highlight,
+    Item,
+    Overview,
+)
 from _svg_charts import (
     DumbbellKey,
     Palette,
@@ -75,19 +85,20 @@ def _body(content: NoteContent, palette: Palette) -> str:
         out.append(f'<p class="subtitle">{r(note.subtitle)}</p>')
     out.append(_meta(content))
     out.append("</header>")
-    out.append('<section class="summary">' + "".join(f"<p>{r(p)}</p>" for p in note.summary) + "</section>")
-    out.append(_stats(content))
-    out.append(f'<p class="reconcile">{html.escape(" ".join(content.reconcile_sentences()))}</p>')
+    if note.overview is not None:
+        out.append(_overview(content, note.overview))
+    out.append(f'<section class="summary">{_bullets(note.summary, diff)}</section>')
     out.append(f"<h2>{html.escape(s['h_actions'])}</h2>")
     if note.actions:
         # The colon keeps role and action apart in extracted text and Markdown, where bold is lost.
-        items: str = "".join(f"<li><strong>{r(a.who)}:</strong> {r(a.what)}</li>" for a in note.actions)
+        items: str = "".join(f"<li><strong>{r(a.who)}:</strong> {r(a.what)}{_bullets(a.items, diff)}</li>" for a in note.actions)
         out.append(f'<ul class="actions">{items}</ul>')
     else:
         out.append(f"<p>{html.escape(s['no_actions'])}</p>")
-    if note.figures:
-        out.append(f"<h2>{html.escape(s['h_glance'])}</h2>")
-        out.extend(_figure(content, figure, palette) for figure in note.figures)
+    out.append(f"<h2>{html.escape(s['h_glance'])}</h2>")
+    reconcile: str = "".join(f"<li>{html.escape(sentence)}</li>" for sentence in content.reconcile_sentences())
+    out.append(f'<ul class="reconcile">{reconcile}</ul>')
+    out.extend(_figure(content, figure, palette) for figure in note.figures)
     if note.changes:
         out.append(f"<h2>{html.escape(s['h_changes'])}</h2>")
         out.extend(_highlight(content, change, palette) for change in note.changes)
@@ -101,14 +112,14 @@ def _body(content: NoteContent, palette: Palette) -> str:
         out.append(f"<h2>{html.escape(s['h_mapping'])}</h2>")
         out.append(_table([s["col_id"], s["as_is"], s["to_be"], s["col_change"]], [[escape_text(v, diff) for v in row] for row in mapping]))
     for section in note.sections:
-        out.append(f"<h2>{r(section.heading)}</h2>" + "".join(f"<p>{r(p)}</p>" for p in section.paragraphs))
+        out.append(f"<h2>{r(section.heading)}</h2>{_bullets(section.items, diff)}")
     if note.open_questions:
-        out.append(f"<h2>{html.escape(s['h_questions'])}</h2>")
-        out.append("<ul>" + "".join(f"<li>{r(q)}</li>" for q in note.open_questions) + "</ul>")
-    out.append(f"<h2>{html.escape(s['h_index'])}</h2>")
-    headers: list[str] = [s["col_id"], s["col_name"], s["col_change"]] + ([s["col_why"]] if content.shows_reasons() else [])
-    index: list[list[str]] = [[r(v) if i == 3 else escape_text(v, diff) for i, v in enumerate(row)] for row in content.index_rows()]
-    out.append(_table(headers, index))
+        out.append(f"<h2>{html.escape(s['h_questions'])}</h2>{_bullets(note.open_questions, diff)}")
+    if note.full_list is FullList.APPENDIX:
+        out.append(f'<section class="appendix"><h2>{html.escape(s["h_index"])}</h2>')
+        headers: list[str] = [s["col_id"], s["col_name"], s["col_change"]] + ([s["col_why"]] if content.shows_reasons() else [])
+        index: list[list[str]] = [[r(v) if i == 3 else escape_text(v, diff) for i, v in enumerate(row)] for row in content.index_rows()]
+        out.append(_table(headers, index) + "</section>")
     out.append(_source(content))
     return "\n".join(out)
 
@@ -125,15 +136,26 @@ def _meta(content: NoteContent) -> str:
     return f'<div class="meta">{inner}</div>'
 
 
-def _stats(content: NoteContent) -> str:
-    """Count tiles; each removal kind gets its own tile so no count mixes merges with removals."""
-    tiles: list[str] = []
-    for tile in content.tiles():
-        value: str = " \u2192 ".join(bound_number(path, content.diff.resolve(path)) for path in tile.paths)
-        label_path: str = html.escape(tile.paths[-1], quote=True)
-        tiles.append(f'<div class="stat {tile.tone}"><b>{value}</b>'
-                     f'<span data-label="{label_path}">{html.escape(tile.label)}</span></div>')
-    return f'<section class="stats n{len(tiles)}">{"".join(tiles)}</section>'
+def _bullets(items: list[Item], diff: DiffData) -> str:
+    """Nested bullets; an empty list renders nothing."""
+    if not items:
+        return ""
+    return "<ul>" + "".join(f"<li>{render_html(i.text, diff)}{_bullets(i.items, diff)}</li>" for i in items) + "</ul>"
+
+
+def _points(label: str, items: list[Item], css: str, diff: DiffData) -> str:
+    """A labelled why or impact: inline after the label when it is one bullet without children, else a list."""
+    head: str = f"<strong>{html.escape(label)}:</strong>"
+    if len(items) == 1 and not items[0].items:
+        return f'<p class="{css}">{head} {render_html(items[0].text, diff)}</p>'
+    return f'<div class="{css}"><p>{head}</p>{_bullets(items, diff)}</div>'
+
+
+def _overview(content: NoteContent, overview: Overview) -> str:
+    """The author's page-one figure, inlined so its text stays text in the PDF."""
+    alt: str = html.unescape(_strip_tags(render_html(overview.alt, content.diff)))
+    caption: str = f"<figcaption>{render_html(overview.caption, content.diff)}</figcaption>" if overview.caption else ""
+    return f'<figure class="overview">{embedded_svg(overview.src, alt)}{caption}</figure>'
 
 
 def _figure(content: NoteContent, figure: Figure, palette: Palette) -> str:
@@ -172,25 +194,28 @@ def _highlight(content: NoteContent, change: Highlight, palette: Palette) -> str
     if change.view is ChangeView.TEXT_DIFF:
         before, after = content.text_diff(change.id, change.field or "")
         body: str = _diff_block(content, before, after, content.field_label(change.field or ""), palette)
+    elif change.excerpt is not None:
+        before, after = word_diff(*change.excerpt)
+        body = _diff_block(content, before, after, s["excerpt_of"].format(field=content.field_label(change.field or "")), palette)
     else:
-        body = _cards(content, change.id, palette)
-    why: str = f'<p class="why"><strong>{html.escape(s["why"])}:</strong> {render_html(change.why, diff)}</p>'
-    impact: str = f'<p class="impact"><strong>{html.escape(s["impact"])}:</strong> {render_html(change.impact, diff)}</p>'
+        body = _cards(content, change.id, palette, change.fields)
+    why: str = _points(s["why"], change.why, "why", diff)
+    impact: str = _points(s["impact"], change.impact, "impact", diff)
     figure: str = _figure(content, change.figure, palette) if change.figure is not None else ""
     return f'<section class="change">{head}{body}{why}{impact}{figure}</section>'
 
 
-def _cards(content: NoteContent, record_id: str, palette: Palette) -> str:
+def _cards(content: NoteContent, record_id: str, palette: Palette, only: list[str] | None) -> str:
     """As-is and to-be cards; a merged or replaced record shows each successor's fields on the to-be side."""
     s, diff = content.s, content.diff
-    fields, section, _ = content.card_fields(record_id)
+    fields, section, _ = content.card_fields(record_id, only)
 
     def rows(items: list[CardField], side: str) -> str:
         return "".join(
             f'<dt>{html.escape(f.label)}</dt><dd class="{"diff" if f.changed else "same"}">'
             f'{escape_text((f.old if side == "old" else f.new) or "", diff)}</dd>' for f in items)
 
-    successors: list[tuple[str, list[CardField]]] = content.successor_fields(record_id) if section == "removed" else []
+    successors: list[tuple[str, list[CardField]]] = content.successor_fields(record_id, only) if section == "removed" else []
     if successors:
         # The as-is card marks the fields that differ from any successor shown beside it.
         fields = [CardField(f.label, f.old, f.new, any(items[i].changed for _, items in successors))
@@ -262,6 +287,9 @@ def _source(content: NoteContent) -> str:
         (html.escape(s["src_tool"]), "version_diff.py"),
         (html.escape(s["src_minor"]), html.escape(s["minor_rule"])),
     ]
+    if content.note.full_list is FullList.OMIT:
+        # check_numbers reads this marker: without the appendix, the data file is where every listed ID appears.
+        rows.append((html.escape(s["src_full_list"]), f'<span data-full-list="omitted">{html.escape(s["full_list_omitted"])}</span>'))
     # Links print as rows with the address visible, so a printed copy still shows where they lead.
     rows += [(render_html(link.label, content.diff), f'<a href="{html.escape(link.url, quote=True)}">{html.escape(link.url)}</a>')
              for link in content.note.links]

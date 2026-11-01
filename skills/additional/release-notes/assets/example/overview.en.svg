@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 672 340"><defs><marker id="ov-arrow-gray" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5F5E5B"/></marker><marker id="ov-arrow-vermillion" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#C55123"/></marker></defs>
+<rect x="0" y="0" width="168" height="44" rx="8" fill="#F4F3F1"/>
+<text x="16" y="28" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="16.67" font-weight="600" fill="#5F5E5B" text-anchor="start">2.0</text>
+<text x="152" y="28" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="400" fill="#5F5E5B" text-anchor="end">22 records</text>
+<line x1="176" y1="22" x2="230" y2="22" stroke="#5F5E5B" stroke-width="1.5" marker-end="url(#ov-arrow-gray)"/>
+<rect x="240" y="0" width="168" height="44" rx="8" fill="#2769B7"/>
+<text x="256" y="28" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="16.67" font-weight="600" fill="#E5F1FF" text-anchor="start">2.1</text>
+<text x="392" y="28" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#E5F1FF" text-anchor="end">23 records</text>
+<text x="440" y="29" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="16.67" font-weight="600" fill="#2C2C2B"><tspan fill="#5F5E5B">22</tspan><tspan fill="#A63C0C"> −2</tspan><tspan fill="#1E5BA1"> +3</tspan><tspan fill="#1E5BA1"> = 23</tspan></text>
+<text x="0" y="74" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#A63C0C" text-anchor="start">Removed 2</text>
+<rect x="0" y="84" width="185.766" height="28" rx="8" fill="#FFEBE4"/>
+<text x="10" y="102.5" font-family="JetBrains Mono, 'Noto Sans Mono CJK KR', monospace" font-size="12" font-weight="600" fill="#A63C0C" text-anchor="start">FB-007</text>
+<text x="54.0156" y="102.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#2C2C2B" text-anchor="start">Wrong invoice address</text>
+<line x1="191.766" y1="98" x2="235.766" y2="98" stroke="#C55123" stroke-width="1.5" marker-end="url(#ov-arrow-vermillion)"/>
+<text x="213.766" y="90" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#A63C0C" text-anchor="middle">merged</text>
+<rect x="241.766" y="84" width="130.75" height="28" rx="8" fill="#E5F1FF"/>
+<text x="251.766" y="102.5" font-family="JetBrains Mono, 'Noto Sans Mono CJK KR', monospace" font-size="12" font-weight="600" fill="#1E5BA1" text-anchor="start">FB-006</text>
+<text x="295.781" y="102.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#2C2C2B" text-anchor="start">Invoice error</text>
+<rect x="0" y="124" width="172.125" height="28" rx="8" fill="#FFEBE4"/>
+<text x="10" y="142.5" font-family="JetBrains Mono, 'Noto Sans Mono CJK KR', monospace" font-size="12" font-weight="600" fill="#A63C0C" text-anchor="start">FB-019</text>
+<text x="54.0156" y="142.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#2C2C2B" text-anchor="start">Fax support request</text>
+<line x1="178.125" y1="138" x2="202.125" y2="138" stroke="#C55123" stroke-width="1.5"/>
+<line x1="202.125" y1="130" x2="202.125" y2="146" stroke="#C55123" stroke-width="1.5"/>
+<text x="212.125" y="142.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#A63C0C" text-anchor="start">no successor</text>
+<text x="449.047" y="74" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#1E5BA1" text-anchor="start">Added 3</text>
+<rect x="449.047" y="84" width="134.219" height="28" rx="8" fill="#E5F1FF"/>
+<text x="459.047" y="102.5" font-family="JetBrains Mono, 'Noto Sans Mono CJK KR', monospace" font-size="12" font-weight="600" fill="#1E5BA1" text-anchor="start">FB-023</text>
+<text x="503.062" y="102.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#2C2C2B" text-anchor="start">Refund delay</text>
+<rect x="449.047" y="116" width="174.312" height="28" rx="8" fill="#E5F1FF"/>
+<text x="459.047" y="134.5" font-family="JetBrains Mono, 'Noto Sans Mono CJK KR', monospace" font-size="12" font-weight="600" fill="#1E5BA1" text-anchor="start">FB-024</text>
+<text x="503.062" y="134.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#2C2C2B" text-anchor="start">Damaged packaging</text>
+<rect x="449.047" y="148" width="222.953" height="28" rx="8" fill="#E5F1FF"/>
+<text x="459.047" y="166.5" font-family="JetBrains Mono, 'Noto Sans Mono CJK KR', monospace" font-size="12" font-weight="600" fill="#1E5BA1" text-anchor="start">FB-025</text>
+<text x="503.062" y="166.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#2C2C2B" text-anchor="start">Two-factor code not received</text>
+<text x="0" y="208" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#2C2C2B" text-anchor="start">Group totals</text>
+<rect x="560" y="196" width="10" height="10" rx="4" fill="#8E8B86"/>
+<text x="576" y="206" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#5F5E5B" text-anchor="start">2.0</text>
+<rect x="616" y="196" width="10" height="10" rx="4" fill="#2769B7"/>
+<text x="632" y="206" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="600" fill="#1E5BA1" text-anchor="start">2.1</text>
+<rect x="0" y="220" width="120" height="80" rx="8" fill="#F4F3F1"/>
+<text x="12" y="242" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#5F5E5B" text-anchor="start">Billing</text>
+<rect x="12" y="254" width="77" height="12" rx="4" fill="#8E8B86"/>
+<text x="95" y="264.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#5F5E5B" text-anchor="start">7</text>
+<rect x="12" y="274" width="77" height="12" rx="4" fill="#2769B7"/>
+<text x="95" y="284.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="600" fill="#1E5BA1" text-anchor="start">7</text>
+<rect x="138" y="220" width="120" height="80" rx="8" fill="#F4F3F1"/>
+<text x="150" y="242" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#5F5E5B" text-anchor="start">Delivery</text>
+<rect x="150" y="254" width="66" height="12" rx="4" fill="#8E8B86"/>
+<text x="222" y="264.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#5F5E5B" text-anchor="start">6</text>
+<rect x="150" y="274" width="66" height="12" rx="4" fill="#2769B7"/>
+<text x="222" y="284.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="600" fill="#1E5BA1" text-anchor="start">6</text>
+<rect x="276" y="220" width="120" height="80" rx="8" fill="#E5F1FF"/>
+<text x="288" y="242" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#2C2C2B" text-anchor="start">Product</text>
+<text x="384" y="242" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#1E5BA1" text-anchor="end">+1</text>
+<rect x="288" y="254" width="33" height="12" rx="4" fill="#8E8B86"/>
+<text x="327" y="264.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#5F5E5B" text-anchor="start">3</text>
+<rect x="288" y="274" width="44" height="12" rx="4" fill="#2769B7"/>
+<text x="338" y="284.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="600" fill="#1E5BA1" text-anchor="start">4</text>
+<rect x="414" y="220" width="120" height="80" rx="8" fill="#E5F1FF"/>
+<text x="426" y="242" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#2C2C2B" text-anchor="start">Support</text>
+<text x="522" y="242" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#A63C0C" text-anchor="end">−2</text>
+<rect x="426" y="254" width="44" height="12" rx="4" fill="#8E8B86"/>
+<text x="476" y="264.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#5F5E5B" text-anchor="start">4</text>
+<rect x="426" y="274" width="22" height="12" rx="4" fill="#2769B7"/>
+<text x="454" y="284.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="600" fill="#1E5BA1" text-anchor="start">2</text>
+<rect x="552" y="220" width="120" height="80" rx="8" fill="#E5F1FF"/>
+<text x="564" y="242" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#2C2C2B" text-anchor="start">Account</text>
+<text x="660" y="242" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="13.33" font-weight="600" fill="#1E5BA1" text-anchor="end">+2</text>
+<rect x="564" y="254" width="22" height="12" rx="4" fill="#8E8B86"/>
+<text x="592" y="264.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#5F5E5B" text-anchor="start">2</text>
+<rect x="564" y="274" width="44" height="12" rx="4" fill="#2769B7"/>
+<text x="614" y="284.5" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="600" fill="#1E5BA1" text-anchor="start">4</text>
+<path d="M198,302 V312 H336 V307" fill="none" stroke="#2769B7" stroke-width="1.5"/>
+<path d="M331.5,308 L336,301 L340.5,308 Z" fill="#2769B7"/>
+<text x="267" y="330" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#5F5E5B" text-anchor="middle">moved <tspan font-family="JetBrains Mono, 'Noto Sans Mono CJK KR', monospace" font-weight="600" fill="#1E5BA1">FB-013</tspan><tspan fill="#1E5BA1"> Missing parts</tspan></text>
+<path d="M474,302 V312 H612 V307" fill="none" stroke="#2769B7" stroke-width="1.5"/>
+<path d="M607.5,308 L612,301 L616.5,308 Z" fill="#2769B7"/>
+<text x="543" y="330" font-family="Pretendard, 'Noto Sans CJK KR', sans-serif" font-size="12" font-weight="400" fill="#5F5E5B" text-anchor="middle">moved <tspan font-family="JetBrains Mono, 'Noto Sans Mono CJK KR', monospace" font-weight="600" fill="#1E5BA1">FB-020</tspan><tspan fill="#1E5BA1"> Data export request</tspan></text>
+</svg>

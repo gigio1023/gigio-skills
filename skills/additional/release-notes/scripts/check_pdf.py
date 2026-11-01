@@ -59,17 +59,23 @@ class _SourceOutline(HTMLParser):
         super().__init__()
         self.headings: list[str] = []
         self.figure_titles: list[str] = []
+        self.opening: list[str] = []
+        self._section_depth: int = 0  # > 0 inside <section class="summary">
         self._capture: str | None = None
         self._buffer: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         classes: str = dict(attrs).get("class") or ""
+        if tag == "section":
+            self._section_depth += 1 if self._section_depth or "summary" in classes.split() else 0
         if tag in ("h1", "h2", "h3"):
             self._capture, self._buffer = "heading", []
         elif tag == "p" and "fig-title" in classes.split():
             self._capture, self._buffer = "figure", []
 
     def handle_endtag(self, tag: str) -> None:
+        if tag == "section" and self._section_depth:
+            self._section_depth -= 1
         if self._capture == "heading" and tag in ("h1", "h2", "h3"):
             self.headings.append(_squash("".join(self._buffer)))
             self._capture = None
@@ -80,6 +86,8 @@ class _SourceOutline(HTMLParser):
     def handle_data(self, data: str) -> None:
         if self._capture:
             self._buffer.append(data)
+        if self._section_depth:
+            self.opening.append(data)
 
 
 def main(argv: list[str]) -> int:
@@ -165,7 +173,17 @@ def _run_checks(document: Any, source: _SourceOutline, expected_pages: int | Non
               {"outline": outline, "tagged": "/StructTreeRoot" in catalog, "lang": language},
               outline == len(source.headings) and "/StructTreeRoot" in catalog and bool(language)),
         Check("D21", "heading left at the bottom of a page", "0", stranded, not stranded),
+        _opening_on_first_page(document, source),
     ]
+
+
+def _opening_on_first_page(document: Any, source: _SourceOutline) -> Check:
+    """D23: the overview figure and the whole opening fit on page one, so the end of the opening prints there."""
+    # Whitespace is dropped on both sides: list items meet without a space in HTML and with a line break in the PDF.
+    tail: str = re.sub(r"\s+", "", "".join(source.opening))[-24:]
+    first: str = re.sub(r"\s+", "", document[0].get_text())
+    return Check("D23", "opening bullets end on page one", "the last opening words are on page 1", tail,
+                 bool(tail) and tail in first)
 
 
 def _overlapping_words(page: Any, number: int) -> list[str]:

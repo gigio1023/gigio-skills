@@ -7,19 +7,37 @@ Read when choosing a note's sections, deciding which changes are material, or na
 | Section | Holds | Comes from |
 | --- | --- | --- |
 | Identity | Both version labels with their tag, commit, or release URL, and the release date | `version_diff.py` options |
-| Opening | One or two sentences on what changed and what it means for this reader | `note.json` `summary` |
-| Counts | Records before and after, added, removed, changed, then the sentence that reconciles them | data file |
-| Required actions | Who must do what, by role, with the IDs involved | `note.json` `actions` |
-| Changes at a glance | One or two figures, each answering one question | `note.json` `figures`, drawn from the data file |
+| Overview figure | One drawn figure of the whole as-is to to-be change: what left, what arrived, what moved, which totals changed | `note.json` `overview`, an SVG the author draws |
+| Opening | At most six one-line bullets on what changed and what it means for this reader, with nested detail | `note.json` `summary` |
+| Required actions | Who must do what, by role, one line each, with the IDs involved as nested bullets | `note.json` `actions` |
+| Record counts | The reconciling identity, the removal kinds, and how shared records divide, then one or two figures | data file and `note.json` `figures` |
 | Material changes | Per change: ID and title, as-is and to-be pair, why, impact, and an optional figure | `note.json` `changes` |
-| New and changed field values | The new text of one field, usually the definition, for every added and changed record | `note.json` `field_list`, values from the data file |
-| Renamed, moved, and removed IDs | Old and new name or parent per ID, each removed ID with its successor or none, and a short reason per ID when given | data file and `note.json` `reasons` |
+| New and changed field values | Both values of one field, usually the definition, for every added and changed record without its own change section | `note.json` `field_list`, values from the data file |
+| ID mapping | Old and new name or parent per renamed, moved, merged, or removed ID, each removed ID with its successor or none | data file |
 | Extra sections | Compatibility, migration steps, known issues, acknowledgments, as the release needs | `note.json` `sections` |
 | Open questions | Undecided points, phrased as questions | `note.json` `open_questions` |
-| All changes | Every added, removed, changed, and minor-only ID with its change kinds | data file |
+| All changes | Optional appendix: every added, removed, changed, and minor-only ID with its change kinds and one reason | data file and `note.json` `reasons`; `full_list` |
 | Source of the numbers | Data file, both version sources, the tool, the minor-edit rule, links | data file and `note.json` `links` |
 
-PostgreSQL's release notes put migration before the change list, and Common Changelog puts breaking changes first; the required actions sit right after the counts for the same reason. Keep the opening to the change and its consequence. A sentence that announces the note, praises the release, or narrates how it was prepared gives the reader nothing to act on.
+PostgreSQL's release notes put migration before the change list, and Common Changelog puts breaking changes first; the required actions sit right after the opening for the same reason. Keep the opening to the change and its consequence. A sentence that announces the note, praises the release, or narrates how it was prepared gives the reader nothing to act on.
+
+## Page one and the word budget
+
+Page one is the overview figure plus at most six top-level opening bullets, each one line, with nested bullets for detail. Every text on the opening and the actions is a bullet; no paragraph sits on page one. A long explanation moves to a material change, an extra section, or the appendix. `check_design.mjs` D22 fails a note whose opening has more than six top-level bullets, a top-level opening or action bullet longer than one rendered line, a nested bullet longer than two lines, a paragraph in the opening or actions, or no overview figure; `check_pdf.py` D23 fails when the opening does not end on page one.
+
+Material changes, reasons, and impacts use bullets too when they hold more than one point. A why or impact given as one string prints inline after its label; a list prints as bullets under it.
+
+## Overview figure
+
+The overview shows the whole change in one drawing: a before and after column, a flow of records between groups, or annotated arrows, whatever fits the artifact. It is a figure, not a row of number cards. It carries few words: IDs, short names, version labels, and counts. The author draws it, with `technical-figure` when installed or by hand, and the builder inlines it so its text stays text in the PDF. `scripts/_overview_svg.py` checks the contract when note.json loads and lists every problem:
+
+- Root `<svg viewBox="0 0 672 H">` with `H` at most 360 and no `width` or `height`; it prints at the 178 mm text width, one unit per CSS pixel.
+- Text as `<text>` and `<tspan>`, never outlined paths. `font-family` is the note's `--font` stack, `Pretendard, 'Noto Sans CJK KR', sans-serif`, or its `--mono` stack. `font-size` is 12, 13.33, 16.67, or 20.67, the note's 9, 10, 12.5, and 15.5 pt; `font-weight` is 400 or 600.
+- Paint with `fill` and `stroke` presentation attributes in the `:root` token colors of `assets/note.css`; no `style`, `class`, `href`, `filter`, `opacity`, dashes, images, or scripts.
+- No box borders: a `rect` has no stroke and a radius of 4, 8, or 12. Lines, arrows, and stroked circles are data marks and may be stroked. As-is is hollow or gray, to-be filled blue, removed vermillion.
+- Every `id` starts with `ov-`, such as an arrow marker `ov-arrow`, so it cannot collide with the note.
+
+Numbers and IDs in the overview pass the same number check as the rest of the note. `overview.alt` states every value of the figure as text; the Markdown release body prints it in place of the drawing.
 
 ## Change vocabulary
 

@@ -1,7 +1,9 @@
 """Parse note.json, the hand-written part of a release note, into typed records.
 
-note.json holds the words: title, summary, actions, figure choices, the
-material changes with their reasons, extra sections, and open questions.
+note.json holds the words: title, the overview figure, the opening bullets,
+actions, figure choices, the material changes with their reasons, extra
+sections, and open questions. Prose is bullets: an item is a string or an
+object with ``text`` and nested ``items``, up to three levels.
 Numbers come from diff.json through ``{{...}}`` tokens. The parser rejects
 unknown keys so a misspelled field fails loudly instead of disappearing from
 the rendered note, and it checks every ID and field the note cites against
@@ -19,6 +21,7 @@ from typing import Any
 
 from _diff_data import DiffData
 from _errors import NoteSourceError
+from _overview_svg import check_overview
 
 SCHEMA: str = "release-notes/note@1"
 LANGUAGES: frozenset[str] = frozenset({"en", "ko"})
@@ -34,12 +37,39 @@ class FigureType(StrEnum):
 class ChangeView(StrEnum):
     CARDS = "cards"
     TEXT_DIFF = "text-diff"
+    EXCERPT = "excerpt"
+
+
+MAX_DEPTH: int = 3
+
+
+class FullList(StrEnum):
+    APPENDIX = "appendix"
+    OMIT = "omit"
+
+
+@dataclass(frozen=True)
+class Item:
+    """One bullet: its text and the bullets nested under it."""
+
+    text: str
+    items: list[Item]
+
+
+@dataclass(frozen=True)
+class Overview:
+    """The page-one figure of the whole change, drawn by the note author."""
+
+    src: Path
+    alt: str
+    caption: str | None
 
 
 @dataclass(frozen=True)
 class Action:
     who: str
     what: str
+    items: list[Item]
 
 
 @dataclass(frozen=True)
@@ -60,15 +90,17 @@ class Highlight:
     title: str
     view: ChangeView
     field: str | None
-    why: str
-    impact: str
+    why: list[Item]
+    impact: list[Item]
     figure: Figure | None
+    fields: list[str] | None  # cards view: show only these fields
+    excerpt: tuple[str, str] | None  # excerpt view: (as-is excerpt, to-be excerpt) of one field
 
 
 @dataclass(frozen=True)
 class Section:
     heading: str
-    paragraphs: list[str]
+    items: list[Item]
 
 
 @dataclass(frozen=True)
@@ -82,43 +114,47 @@ class Note:
     lang: str
     title: str
     subtitle: str | None
-    summary: list[str]
+    overview: Overview | None
+    summary: list[Item]
     actions: list[Action]
     figures: list[Figure]
     changes: list[Highlight]
     sections: list[Section]
-    open_questions: list[str]
+    open_questions: list[Item]
     links: list[Link]
     field_labels: dict[str, str]
     reasons: dict[str, str]
     field_list: str | None
+    full_list: FullList
 
     def prose(self) -> Iterator[tuple[str, str]]:
         """Yield (location, text) for every string that may carry inline markup."""
         yield "title", self.title
         if self.subtitle:
             yield "subtitle", self.subtitle
-        for i, text in enumerate(self.summary):
-            yield f"summary[{i}]", text
+        if self.overview is not None:
+            yield "overview.alt", self.overview.alt
+            if self.overview.caption:
+                yield "overview.caption", self.overview.caption
+        yield from _item_texts(self.summary, "summary")
         for i, action in enumerate(self.actions):
             yield f"actions[{i}].who", action.who
             yield f"actions[{i}].what", action.what
+            yield from _item_texts(action.items, f"actions[{i}].items")
         for i, figure in enumerate(self.figures):
             yield f"figures[{i}].title", figure.title
             yield f"figures[{i}].caption", figure.caption
         for i, change in enumerate(self.changes):
             yield f"changes[{i}].title", change.title
-            yield f"changes[{i}].why", change.why
-            yield f"changes[{i}].impact", change.impact
+            yield from _item_texts(change.why, f"changes[{i}].why")
+            yield from _item_texts(change.impact, f"changes[{i}].impact")
             if change.figure is not None:
                 yield f"changes[{i}].figure.title", change.figure.title
                 yield f"changes[{i}].figure.caption", change.figure.caption
         for i, section in enumerate(self.sections):
             yield f"sections[{i}].heading", section.heading
-            for j, text in enumerate(section.paragraphs):
-                yield f"sections[{i}].paragraphs[{j}]", text
-        for i, text in enumerate(self.open_questions):
-            yield f"open_questions[{i}]", text
+            yield from _item_texts(section.items, f"sections[{i}].items")
+        yield from _item_texts(self.open_questions, "open_questions")
         for i, link in enumerate(self.links):
             yield f"links[{i}].label", link.label
         for record_id, reason in self.reasons.items():
@@ -131,8 +167,8 @@ def load_note(path: Path, diff: DiffData) -> Note:
     except (OSError, json.JSONDecodeError) as err:
         raise NoteSourceError(f"{path}: cannot read the note source: {err}") from err
     top: dict[str, Any] = _object(raw, "note.json", required={"schema", "lang", "title", "summary"}, optional={
-        "subtitle", "actions", "figures", "changes", "sections", "open_questions", "links", "field_labels", "reasons",
-        "field_list"})
+        "subtitle", "overview", "actions", "figures", "changes", "sections", "open_questions", "links", "field_labels",
+        "reasons", "field_list", "full_list"})
     if top["schema"] != SCHEMA:
         raise NoteSourceError(f"{path}: schema must be {SCHEMA!r}")
     if top["lang"] not in LANGUAGES:
@@ -141,16 +177,18 @@ def load_note(path: Path, diff: DiffData) -> Note:
         lang=top["lang"],
         title=_text(top["title"], "title"),
         subtitle=_text(top["subtitle"], "subtitle") if "subtitle" in top else None,
-        summary=_texts(top["summary"], "summary"),
+        overview=_overview(top["overview"], path.parent) if "overview" in top else None,
+        summary=_items(top["summary"], "summary"),
         actions=[_action(a, f"actions[{i}]") for i, a in enumerate(_list(top.get("actions", []), "actions"))],
         figures=[_figure(f, f"figures[{i}]", path.parent) for i, f in enumerate(_list(top.get("figures", []), "figures"))],
         changes=[_highlight(c, f"changes[{i}]", path.parent) for i, c in enumerate(_list(top.get("changes", []), "changes"))],
         sections=[_section(s, f"sections[{i}]") for i, s in enumerate(_list(top.get("sections", []), "sections"))],
-        open_questions=_texts(top.get("open_questions", []), "open_questions"),
+        open_questions=_items(top.get("open_questions", []), "open_questions"),
         links=[_link(k, f"links[{i}]") for i, k in enumerate(_list(top.get("links", []), "links"))],
         field_labels=_labels(top.get("field_labels", {}), "field_labels"),
         reasons=_labels(top.get("reasons", {}), "reasons"),
         field_list=_text(top["field_list"], "field_list") if "field_list" in top else None,
+        full_list=_full_list(top.get("full_list", FullList.APPENDIX.value)),
     )
     _check_against_diff(note, diff)
     return note
@@ -180,8 +218,46 @@ def _text(value: Any, where: str) -> str:
     return value
 
 
-def _texts(value: Any, where: str) -> list[str]:
-    return [_text(item, f"{where}[{i}]") for i, item in enumerate(_list(value, where))]
+def _items(value: Any, where: str, depth: int = 1) -> list[Item]:
+    """Bullets: a list whose entries are strings or {"text", "items"} objects, at most MAX_DEPTH levels deep."""
+    if depth > MAX_DEPTH:
+        raise NoteSourceError(f"{where}: bullets nest at most {MAX_DEPTH} levels; move the detail to a later section")
+    found: list[Item] = []
+    for i, entry in enumerate(_list(value, where)):
+        if isinstance(entry, str):
+            found.append(Item(_text(entry, f"{where}[{i}]"), []))
+            continue
+        item: dict[str, Any] = _object(entry, f"{where}[{i}]", required={"text"}, optional={"items"})
+        found.append(Item(_text(item["text"], f"{where}[{i}].text"), _items(item.get("items", []), f"{where}[{i}].items", depth + 1)))
+    return found
+
+
+def _points(value: Any, where: str) -> list[Item]:
+    """A why or impact: one string, shown inline after its label, or a list of bullets."""
+    return [Item(_text(value, where), [])] if isinstance(value, str) else _items(value, where)
+
+
+def _item_texts(items: list[Item], where: str) -> Iterator[tuple[str, str]]:
+    for i, item in enumerate(items):
+        yield f"{where}[{i}]", item.text
+        yield from _item_texts(item.items, f"{where}[{i}].items")
+
+
+def _overview(value: Any, base: Path) -> Overview:
+    item: dict[str, Any] = _object(value, "overview", required={"src", "alt"}, optional={"caption"})
+    src: Path = (base / _text(item["src"], "overview.src")).resolve()
+    if not src.is_file():
+        raise NoteSourceError(f"overview.src: {src} does not exist")
+    check_overview(src)
+    caption: str | None = _text(item["caption"], "overview.caption") if "caption" in item else None
+    return Overview(src, _text(item["alt"], "overview.alt"), caption)
+
+
+def _full_list(value: Any) -> FullList:
+    try:
+        return FullList(value)
+    except ValueError as err:
+        raise NoteSourceError(f"full_list: one of {[f.value for f in FullList]}") from err
 
 
 def _labels(value: Any, where: str) -> dict[str, str]:
@@ -191,8 +267,9 @@ def _labels(value: Any, where: str) -> dict[str, str]:
 
 
 def _action(value: Any, where: str) -> Action:
-    item: dict[str, Any] = _object(value, where, required={"who", "what"}, optional=set())
-    return Action(who=_text(item["who"], f"{where}.who"), what=_text(item["what"], f"{where}.what"))
+    item: dict[str, Any] = _object(value, where, required={"who", "what"}, optional={"items"})
+    return Action(who=_text(item["who"], f"{where}.who"), what=_text(item["what"], f"{where}.what"),
+                  items=_items(item.get("items", []), f"{where}.items", 2))
 
 
 def _figure(value: Any, where: str, base: Path) -> Figure:
@@ -215,26 +292,49 @@ def _figure(value: Any, where: str, base: Path) -> Figure:
 
 
 def _highlight(value: Any, where: str, base: Path) -> Highlight:
-    item: dict[str, Any] = _object(value, where, required={"id", "title", "why", "impact"}, optional={"view", "field", "figure"})
+    item: dict[str, Any] = _object(value, where, required={"id", "title", "why", "impact"},
+                                   optional={"view", "field", "figure", "fields", "as_is", "to_be"})
     try:
         view: ChangeView = ChangeView(item.get("view", ChangeView.CARDS.value))
     except ValueError as err:
         raise NoteSourceError(f"{where}.view: one of {[v.value for v in ChangeView]}") from err
-    if view is ChangeView.TEXT_DIFF and "field" not in item:
-        raise NoteSourceError(f"{where}: a text-diff view names the text field in 'field'")
+    if view in (ChangeView.TEXT_DIFF, ChangeView.EXCERPT) and "field" not in item:
+        raise NoteSourceError(f"{where}: a {view.value} view names the text field in 'field'")
+    excerpt: tuple[str, str] | None = None
+    if view is ChangeView.EXCERPT:
+        if "as_is" not in item or "to_be" not in item:
+            raise NoteSourceError(f"{where}: an excerpt view gives 'as_is' and 'to_be', each copied verbatim from the field")
+        excerpt = (_text(item["as_is"], f"{where}.as_is"), _text(item["to_be"], f"{where}.to_be"))
+    elif "as_is" in item or "to_be" in item:
+        raise NoteSourceError(f"{where}: 'as_is' and 'to_be' belong to the excerpt view")
+    fields: list[str] | None = None
+    if "fields" in item:
+        if view is not ChangeView.CARDS:
+            raise NoteSourceError(f"{where}: 'fields' limits the cards view only")
+        fields = [_text(f, f"{where}.fields[{i}]") for i, f in enumerate(_list(item["fields"], f"{where}.fields"))]
     figure: Figure | None = _figure(item["figure"], f"{where}.figure", base) if "figure" in item else None
     return Highlight(id=str(item["id"]), title=_text(item["title"], f"{where}.title"), view=view, field=item.get("field"),
-                     why=_text(item["why"], f"{where}.why"), impact=_text(item["impact"], f"{where}.impact"), figure=figure)
+                     why=_points(item["why"], f"{where}.why"), impact=_points(item["impact"], f"{where}.impact"), figure=figure,
+                     fields=fields, excerpt=excerpt)
 
 
 def _section(value: Any, where: str) -> Section:
-    item: dict[str, Any] = _object(value, where, required={"heading", "paragraphs"}, optional=set())
-    return Section(_text(item["heading"], f"{where}.heading"), _texts(item["paragraphs"], f"{where}.paragraphs"))
+    item: dict[str, Any] = _object(value, where, required={"heading", "items"}, optional=set())
+    return Section(_text(item["heading"], f"{where}.heading"), _items(item["items"], f"{where}.items"))
 
 
 def _link(value: Any, where: str) -> Link:
     item: dict[str, Any] = _object(value, where, required={"label", "url"}, optional=set())
     return Link(_text(item["label"], f"{where}.label"), _text(item["url"], f"{where}.url"))
+
+
+def field_text(raw: Any) -> str:
+    """A field value as the text a reader sees: lists joined with commas, objects as JSON."""
+    if isinstance(raw, list):
+        return ", ".join(str(item) for item in raw)
+    if isinstance(raw, dict):
+        return json.dumps(raw, ensure_ascii=False)
+    return "" if raw is None else str(raw)
 
 
 def _check_against_diff(note: Note, diff: DiffData) -> None:
@@ -247,6 +347,17 @@ def _check_against_diff(note: Note, diff: DiffData) -> None:
         entry: dict[str, Any] | None = listed.get(change.id)
         if entry is None:
             raise NoteSourceError(f"changes[{i}].id: {change.id} is not added, removed, or changed in {diff.path.name}")
+        if change.fields is not None and not set(change.fields) <= set(compared):
+            raise NoteSourceError(f"changes[{i}].fields: {sorted(set(change.fields) - set(compared))} are not compared fields ({compared})")
+        if change.excerpt is not None:
+            if entry["section"] != "changed" or change.field not in entry["major_fields"]:
+                raise NoteSourceError(f"changes[{i}]: {change.id} has no changed field {change.field!r} to excerpt")
+            for side, part in (("old", change.excerpt[0]), ("new", change.excerpt[1])):
+                whole: str = field_text(entry[side].get(change.field))
+                if part not in whole:
+                    key: str = "as_is" if side == "old" else "to_be"
+                    raise NoteSourceError(f"changes[{i}].{key}: the excerpt does not appear verbatim in {change.id} "
+                                          f"{change.field} ({diff.old_label if side == 'old' else diff.new_label}) in {diff.path.name}")
         if change.view is ChangeView.TEXT_DIFF:
             fields: list[str] = [c["field"] for c in entry.get("changes", []) if isinstance(c["new"], str) and isinstance(c["old"], str)]
             if change.field not in fields:

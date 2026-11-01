@@ -14,7 +14,9 @@ Checks, each reported with what it found:
 - N3 every ``data-count`` number in the HTML equals the current value at its
   path, which catches an HTML built from an older data file
 - N4 every ID-shaped string exists in one of the two versions, and every
-  added, removed, or changed ID appears in each output
+  added, removed, or changed ID appears in each output; a note built with
+  ``full_list: omit`` marks that in the HTML, and then only the cited IDs
+  are checked, because the data file carries the full list
 - N5 the reconciliation identity is printed
 - N6 the PDF text carries exactly the HTML's numbers, after removing the
   running header and page numbers; a stale or truncated PDF fails here
@@ -72,6 +74,7 @@ class _RenderedHtml(HTMLParser):
         self.bindings: list[tuple[str, str]] = []
         self.label_bindings: list[tuple[str, str]] = []
         self.lang: str = ""
+        self.full_list_omitted: bool = False
         self.title: str = ""
         self._stack: list[str] = []
         # One open binding at a time: (attribute, path, tag, collected text). Bound elements do not nest.
@@ -82,6 +85,8 @@ class _RenderedHtml(HTMLParser):
         self._stack.append(tag)
         if attributes.get("aria-label"):
             self.labels.append(attributes["aria-label"] or "")
+        if attributes.get("data-full-list") == "omitted":
+            self.full_list_omitted = True
         if tag == "html":
             self.lang = attributes.get("lang") or ""
         for attribute in ("data-count", "data-label"):
@@ -123,15 +128,16 @@ def main(argv: list[str]) -> int:
         page.feed(Path(args.html).read_text(encoding="utf-8"))
         checks: list[Check] = [_reconciles(diff)]
         html_text: str = " ".join(page.text)
-        checks += _text_checks("html", html_text + " " + " ".join(page.labels), diff)
+        complete: bool = not page.full_list_omitted
+        checks += _text_checks("html", html_text + " " + " ".join(page.labels), diff, complete)
         checks.append(_bindings(page.bindings, diff))
         checks.append(_labels(page, diff))
         if args.md:
             md_text: str = re.sub(r"```(?!diff).*?```", " ", Path(args.md).read_text(encoding="utf-8"), flags=re.S)
-            checks += _text_checks("md", md_text, diff)
+            checks += _text_checks("md", md_text, diff, complete)
         if args.pdf:
             pdf_text: str = _pdf_text(Path(args.pdf), page.title.strip())
-            checks += _text_checks("pdf", pdf_text, diff)
+            checks += _text_checks("pdf", pdf_text, diff, complete)
             checks.append(_pdf_matches_html(pdf_text, " ".join(page.text + page.code), diff))
     except (ReleaseNoteError, OSError) as err:
         print(f"check_numbers: {err}", file=sys.stderr)
@@ -159,12 +165,12 @@ def _reconciles(diff: DiffData) -> Check:
     return Check("N1", "data file reconciles", not problems, problems)
 
 
-def _text_checks(label: str, text: str, diff: DiffData) -> list[Check]:
+def _text_checks(label: str, text: str, diff: DiffData, complete: bool) -> list[Check]:
     numbers, unknown_ids = scan_literals(text, diff)
     allowed: set[str] = diff.allowed_numbers()
     stray: list[str] = sorted({n for n in numbers if canonical_number(n) not in allowed})
     listed: list[str] = [e["id"] for s in ("added", "removed", "changed", "minor_only") for e in diff.document[s]]
-    missing: list[str] = [i for i in listed if not re.search(rf"(?<![A-Za-z0-9_-]){re.escape(i)}(?![0-9_-])", text)]
+    missing: list[str] = [i for i in listed if complete and not re.search(rf"(?<![A-Za-z0-9_-]){re.escape(i)}(?![0-9_-])", text)]
     identity: str = diff.document["identities"][0]
     squashed: str = re.sub(r"\s+", " ", text.replace("−", "-"))
     return [

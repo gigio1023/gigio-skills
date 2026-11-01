@@ -24,12 +24,15 @@ if (!htmlPath) {
   process.exit(2);
 }
 
+// The page-one word budget of references/note-structure.md, in rendered lines at the printed text width.
+const OPENING_BULLETS = 6;
+
 let browser;
 try {
   browser = await launch(loadChromium());
   const page = await openNote(browser, htmlPath);
   const fonts = await checkFonts(page);
-  const measured = await page.evaluate(measure);
+  const measured = await page.evaluate(measure, OPENING_BULLETS);
   const checks = [
     { id: 'D1', name: 'accent hue families: document, and per figure', threshold: '<= 3 and <= 2',
       value: { document: measured.hues, perFigure: measured.figureHues },
@@ -52,6 +55,9 @@ try {
     { id: 'D16', name: 'clipped boxes and chart text outside its chart', threshold: '0', value: measured.clipped,
       ok: !measured.clipped.length },
     { id: 'D20', name: 'dashed or dotted strokes', threshold: '0', value: measured.dashed, ok: !measured.dashed.length },
+    { id: 'D22', name: 'page-one budget: overview figure, opening and action bullets',
+      threshold: `overview present; opening <= ${OPENING_BULLETS} top-level bullets of 1 line; action leads 1 line; nested bullets <= 2 lines; no paragraphs`,
+      value: measured.budget, ok: measured.budget.problems.length === 0 },
     { id: 'A1', name: 'one h1, lang set, charts labelled, table headers scoped', threshold: 'all',
       value: measured.access, ok: Object.values(measured.access).every(Boolean) },
   ];
@@ -83,7 +89,7 @@ async function screenshots(browser, file, dir) {
 }
 
 // Runs inside the page. Everything it needs is defined here.
-function measure() {
+function measure(openingBullets) {
   const parse = (c) => {
     const m = String(c).match(/[\d.]+/g);
     return m ? [Number(m[0]), Number(m[1]), Number(m[2]), m.length > 3 ? Number(m[3]) : 1] : null;
@@ -130,6 +136,18 @@ function measure() {
     return set.size;
   });
 
+  // SVG text sits on whatever shape is painted under its center, such as a filled box in an overview.
+  const svgBackground = (el) => {
+    el.scrollIntoView({ block: 'center' });  // elementsFromPoint sees only the viewport
+    const box = el.getBoundingClientRect();
+    const under = document.elementsFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    for (const shape of under) {
+      if (shape === el || shape.closest('text') || !shape.ownerSVGElement || shape.tagName === 'g') continue;
+      const fill = parse(getComputedStyle(shape).fill);
+      if (fill && fill[3] > 0 && ['rect', 'circle', 'path', 'polygon'].includes(shape.tagName)) return fill;
+    }
+    return background(el.ownerSVGElement);
+  };
   const sizes = new Set();
   const lowText = [];
   for (const el of textElements) {
@@ -139,7 +157,7 @@ function measure() {
     if (svg) px *= svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
     sizes.add(round(px * 0.75));
     const fg = parse(svg ? cs.fill : cs.color);
-    const r = ratio(fg, background(el));
+    const r = ratio(fg, svg ? svgBackground(el) : background(el));
     if (r < 4.5) lowText.push([el.tagName, el.textContent.trim().slice(0, 24), round(r)]);
   }
 
@@ -220,6 +238,34 @@ function measure() {
     }
   }
 
+  // Rendered lines of a list item's own text, without its nested list: line boxes cluster by top edge.
+  const ownLines = (li) => {
+    const range = document.createRange();
+    const tops = [];
+    for (const node of li.childNodes) {
+      if (node.nodeType === 1 && node.tagName === 'UL') continue;
+      range.selectNodeContents(node);
+      for (const r of range.getClientRects()) if (r.width > 0 && r.height > 0) tops.push(r.top);
+    }
+    tops.sort((a, b) => a - b);
+    return tops.filter((t, i) => i === 0 || t - tops[i - 1] > 8).length;
+  };
+  const budgetProblems = [];
+  const opening = [...document.querySelectorAll('.summary > ul > li')];
+  if (!document.querySelector('figure.overview svg')) budgetProblems.push('no overview figure');
+  if (opening.length > openingBullets) budgetProblems.push(`${opening.length} opening bullets`);
+  if (document.querySelector('.summary p, ul.actions p')) budgetProblems.push('paragraph in the opening or actions');
+  const leads = [...opening, ...document.querySelectorAll('ul.actions > li')];
+  for (const li of leads) {
+    const n = ownLines(li);
+    if (n > 1) budgetProblems.push(`${n} lines: ${li.textContent.trim().slice(0, 40)}`);
+  }
+  for (const li of document.querySelectorAll('.summary li li, ul.actions li li')) {
+    const n = ownLines(li);
+    if (n > 2) budgetProblems.push(`${n} lines (nested): ${li.textContent.trim().slice(0, 40)}`);
+  }
+  const budget = { openingBullets: opening.length, actionBullets: leads.length - opening.length, problems: budgetProblems };
+
   const access = {
     oneH1: document.querySelectorAll('h1').length === 1,
     lang: !!document.documentElement.lang,
@@ -231,6 +277,6 @@ function measure() {
 
   return {
     hues: [...hues].sort((a, b) => a - b), figureHues, sizes: [...sizes].sort((a, b) => a - b), lowText, lowMarks,
-    pairSeparation, chrome, radii: [...radii].sort((a, b) => a - b), offScale: [...offScale], dashed, unstriped, emoji, clipped, access,
+    budget, pairSeparation, chrome, radii: [...radii].sort((a, b) => a - b), offScale: [...offScale], dashed, unstriped, emoji, clipped, access,
   };
 }

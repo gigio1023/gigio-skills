@@ -59,15 +59,6 @@ class CardField:
 
 
 @dataclass(frozen=True)
-class Tile:
-    """One stat tile: the value paths it prints and the path whose label it carries."""
-
-    tone: str
-    label: str
-    paths: list[str]
-
-
-@dataclass(frozen=True)
 class FieldEntry:
     """One record in the field list: its ID, its ID and name, its list section, and the field's two values."""
 
@@ -120,14 +111,6 @@ class NoteContent:
         sentences.append(self.s["reconcile_shared"].format(**values))
         return sentences
 
-    def tiles(self) -> list[Tile]:
-        tiles: list[Tile] = [Tile("", self.s["stat_records"], ["counts.before", "counts.after"]),
-                             Tile("added", self.s["stat_added"], ["counts.added"])]
-        tiles += [Tile("removed", self.s[LABEL_KEYS[f"removal_kinds.{kind}"]], [f"removal_kinds.{kind}"])
-                  for kind, _ in self.removal_parts()]
-        tiles.append(Tile("", self.s["stat_changed"], ["counts.changed"]))
-        return tiles
-
     def reason_for(self, record_id: str) -> str:
         """The record's one reason: from note.json reasons, a pointer to its change section, or the no-reason text."""
         if record_id in self.note.reasons:
@@ -166,7 +149,7 @@ class NoteContent:
 
     def kind_bars(self) -> list[BarRow]:
         counts: dict[str, int] = self.diff.counts
-        rows: list[BarRow] = [BarRow(self.s["kind_added"], counts["added"], "added", "counts.added")]
+        rows: list[BarRow] = [BarRow(self.s["kind_added"], counts["added"], "added", "counts.added")]  # filtered below
         rows += [BarRow(self.s[LABEL_KEYS[f"removal_kinds.{kind}"]], n, "removed", f"removal_kinds.{kind}")
                  for kind, n in self.removal_parts()]
         for field, tally in self.diff.document["field_changes"].items():
@@ -174,7 +157,8 @@ class NoteContent:
                 rows.append(BarRow(self.kind_label(field), tally["major"], "neutral", f"field_changes.{field}.major"))
         if counts["minor_only"]:
             rows.append(BarRow(self.s["kind_minor"], counts["minor_only"], "neutral", "counts.minor_only"))
-        return rows
+        # Zero rows are dropped and the rest sorted by count, so the largest kind of change reads first.
+        return sorted((row for row in rows if row.value), key=lambda row: -row.value)
 
     def group_rows(self) -> list[PairRow]:
         groups: dict[str, dict[str, int]] = self.diff.document["groups"]
@@ -228,64 +212,40 @@ class NoteContent:
             rows.append(row + (self.reason_for(rid),) if self.shows_reasons() else row)
         return rows
 
-    def successor_fields(self, record_id: str) -> list[tuple[str, list[CardField]]]:
+    def successor_fields(self, record_id: str, only: list[str] | None = None) -> list[tuple[str, list[CardField]]]:
         """For a removed record with successors: each successor's ID and name and its fields beside the removed record's."""
         _, entry = self.entries[record_id]
         found: list[tuple[str, list[CardField]]] = []
         for successor in entry["successor_records"]:
             fields: list[CardField] = []
             for field in self.diff.document["compared_fields"]:
+                if only is not None and field not in only:
+                    continue
                 old: str = self.value(entry["record"].get(field))
                 new: str = self.value(successor.get(field))
                 fields.append(CardField(self.field_label(field), old, new, old != new))
             found.append((self._id_and_name(successor), fields))
         return found
 
-    def card_fields(self, record_id: str) -> tuple[list[CardField], str, dict[str, Any]]:
-        """Fields for the as-is and to-be cards of one record, plus its list section and entry."""
+    def text_diff(self, record_id: str, field: str) -> tuple[list[DiffPiece], list[DiffPiece]]:
+        """Word-level difference of one text field of a changed record; see word_diff."""
+        _, entry = self.entries[record_id]
+        return word_diff(str(entry["old"].get(field, "")), str(entry["new"].get(field, "")))
+
+    def card_fields(self, record_id: str, only: list[str] | None = None) -> tuple[list[CardField], str, dict[str, Any]]:
+        """Fields for the as-is and to-be cards of one record, plus its list section and entry; ``only`` limits the fields."""
         section, entry = self.entries[record_id]
         fields: list[CardField] = []
         changed: set[str] = set(entry.get("major_fields", [])) | set(entry.get("minor_fields", []))
         if section in ("added", "removed"):
             changed = set(self.diff.document["compared_fields"])
         for field in self.diff.document["compared_fields"]:
+            if only is not None and field not in only:
+                continue
             old: str | None = None if section == "added" else self.value((entry.get("old") or entry["record"]).get(field))
             new: str | None = None if section == "removed" else self.value((entry.get("new") or entry["record"]).get(field))
             fields.append(CardField(self.field_label(field), old, new, field in changed))
         return fields, section, entry
-
-    def text_diff(self, record_id: str, field: str) -> tuple[list[DiffPiece], list[DiffPiece]]:
-        """Word-level difference of one text field: pieces for the as-is text and for the to-be text.
-
-        Words are compared without the spaces between them, so a changed run of words is one piece.
-        A single shared word between two changes joins the change on both sides: difflib matches
-        short words such as "as" or "the" that belong to different phrases, and a reader sees one
-        rewritten phrase more clearly than two fragments around a coincidental match.
-        """
-        _, entry = self.entries[record_id]
-        old_words: list[str] = str(entry["old"].get(field, "")).split()
-        new_words: list[str] = str(entry["new"].get(field, "")).split()
-        matcher = difflib.SequenceMatcher(None, old_words, new_words, autojunk=False)
-        segments: list[list[Any]] = [[op == "equal", old_words[i1:i2], new_words[j1:j2]]
-                                     for op, i1, i2, j1, j2 in matcher.get_opcodes()]
-        merged: list[list[Any]] = []
-        for index, segment in enumerate(segments):
-            between_changes: bool = 0 < index < len(segments) - 1 and not segments[index + 1][0] and bool(merged) and not merged[-1][0]
-            if segment[0] and len(segment[1]) == 1 and between_changes:
-                segment = [False, segment[1], segment[2]]
-            if merged and not merged[-1][0] and not segment[0]:
-                merged[-1][1] += segment[1]
-                merged[-1][2] += segment[2]
-            else:
-                merged.append([segment[0], list(segment[1]), list(segment[2])])
-        before: list[DiffPiece] = []
-        after: list[DiffPiece] = []
-        for same, old_part, new_part in merged:
-            if old_part:
-                before.append(DiffPiece(" ".join(old_part), "same" if same else "removed"))
-            if new_part:
-                after.append(DiffPiece(" ".join(new_part), "same" if same else "added"))
-        return _spaced(before), _spaced(after)
 
     def field_list(self, field: str) -> list[FieldEntry]:
         """Every added record and every record whose field changed, except those with their own change section.
@@ -323,6 +283,39 @@ class NoteContent:
     def _removal_label(self, entry: dict[str, Any]) -> str:
         ids: str = ", ".join(entry["successors"])
         return self.s[f"kind_{entry['kind']}"].format(ids=ids)
+
+
+def word_diff(old_text: str, new_text: str) -> tuple[list[DiffPiece], list[DiffPiece]]:
+    """Word-level difference of two texts: pieces for the as-is text and for the to-be text.
+
+    Words are compared without the spaces between them, so a changed run of words is one piece.
+    A single shared word between two changes joins the change on both sides: difflib matches
+    short words such as "as" or "the" that belong to different phrases, and a reader sees one
+    rewritten phrase more clearly than two fragments around a coincidental match.
+    """
+    old_words: list[str] = old_text.split()
+    new_words: list[str] = new_text.split()
+    matcher = difflib.SequenceMatcher(None, old_words, new_words, autojunk=False)
+    segments: list[list[Any]] = [[op == "equal", old_words[i1:i2], new_words[j1:j2]]
+                                 for op, i1, i2, j1, j2 in matcher.get_opcodes()]
+    merged: list[list[Any]] = []
+    for index, segment in enumerate(segments):
+        between_changes: bool = 0 < index < len(segments) - 1 and not segments[index + 1][0] and bool(merged) and not merged[-1][0]
+        if segment[0] and len(segment[1]) == 1 and between_changes:
+            segment = [False, segment[1], segment[2]]
+        if merged and not merged[-1][0] and not segment[0]:
+            merged[-1][1] += segment[1]
+            merged[-1][2] += segment[2]
+        else:
+            merged.append([segment[0], list(segment[1]), list(segment[2])])
+    before: list[DiffPiece] = []
+    after: list[DiffPiece] = []
+    for same, old_part, new_part in merged:
+        if old_part:
+            before.append(DiffPiece(" ".join(old_part), "same" if same else "removed"))
+        if new_part:
+            after.append(DiffPiece(" ".join(new_part), "same" if same else "added"))
+    return _spaced(before), _spaced(after)
 
 
 def _strings(lang: str) -> dict[str, str]:

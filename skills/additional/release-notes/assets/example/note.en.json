@@ -3,25 +3,34 @@
   "lang": "en",
   "title": "Example Feedback Taxonomy {{new.label}}",
   "subtitle": "Synthetic example for the support and product teams that tag customer feedback",
+  "overview": {
+    "src": "overview.en.svg",
+    "alt": "Version {{old.label}} has {{counts.before}} records and version {{new.label}} has {{counts.after}}. FB-007 Wrong invoice address is merged into FB-006 Invoice error. FB-019 Fax support request is removed with no successor. FB-023 Refund delay, FB-024 Damaged packaging, and FB-025 Two-factor code not received are added. FB-013 moves from Delivery to Product and FB-020 from Support to Account. Category totals go from {{groups.Product.before}} to {{groups.Product.after}} in Product, {{groups.Support.before}} to {{groups.Support.after}} in Support, and {{groups.Account.before}} to {{groups.Account.after}} in Account; Billing and Delivery keep theirs."
+  },
   "summary": [
-    "Each record in the taxonomy is a tag that agents attach to customer feedback, and each record belongs to one category such as Billing. Version {{new.label}} merges **FB-007 Wrong invoice address** into **FB-006 Invoice error** and removes **FB-019 Fax support request**, which has no successor. It adds **FB-023 Refund delay**, **FB-024 Damaged packaging**, and **FB-025 Two-factor code not received**. Reports that count feedback by category will show different totals for Account, Product, and Support."
+    "A record is one tag that agents attach to customer feedback; each record belongs to one category.",
+    "**FB-007 Wrong invoice address** is merged into **FB-006 Invoice error**.",
+    "**FB-019 Fax support request** is removed and has no successor.",
+    {"text": "{{counts.added}} records are added:", "items": ["**FB-023 Refund delay** in Billing", "**FB-024 Damaged packaging** in Delivery", "**FB-025 Two-factor code not received** in Account"]},
+    {"text": "{{field_changes.definition.major}} definitions change what agents tag.", "items": ["FB-011 Late delivery now uses the latest date shown at checkout", "FB-014 Defective product covers the warranty period only", "FB-016 Sign-in failure covers correct credentials only"]},
+    "Category totals change for Account, Product, and Support."
   ],
   "actions": [
-    {"who": "Support agents", "what": "From {{date}}, tag invoices with a wrong billing address as FB-006, and use FB-023, FB-024, and FB-025 for the three new cases. Check the latest delivery date shown at checkout before tagging FB-011 Late delivery."},
-    {"who": "Report owners", "what": "Re-tag stored FB-007 feedback as FB-006, and re-tag stored FB-016 feedback that mentions a missing sign-in code as FB-025. Keep stored FB-019 tags as history, since the fax line is closed. Category totals change because FB-013 and FB-020 moved, FB-019 was removed, and FB-023, FB-024, and FB-025 were added."},
-    {"who": "Product teams", "what": "Mark {{date}} on defect-rate trend charts, because FB-014 now counts only defects within the warranty period."},
-    {"who": "Identity team", "what": "Handle FB-025 tickets, which the queue now routes to you."}
+    {"who": "Support agents", "what": "from {{date}}, tag wrong-address invoices as FB-006.", "items": ["Use FB-023, FB-024, and FB-025 for the three new cases", "Check the latest delivery date at checkout before tagging FB-011"]},
+    {"who": "Report owners", "what": "re-tag stored FB-007 feedback as FB-006.", "items": ["Re-tag stored FB-016 feedback about a missing sign-in code as FB-025", "Keep stored FB-019 tags as history; the fax line is closed"]},
+    {"who": "Product teams", "what": "mark {{date}} on defect-rate trend charts.", "items": ["FB-014 now counts only defects within the warranty period"]},
+    {"who": "Identity team", "what": "handle FB-025 tickets, which the queue now routes to you."}
   ],
   "figures": [
     {"type": "change-kinds", "title": "Records by kind of change", "caption": "A new definition is the most common change, with {{field_changes.definition.major}} records."},
-    {"type": "group-dumbbell", "title": "Records per category", "caption": "Account goes from {{groups.Account.before}} to {{groups.Account.after}} because FB-020 moved in from Support and FB-025 was added. Support goes from {{groups.Support.before}} to {{groups.Support.after}} because FB-020 moved out and FB-019 was removed. Product goes from {{groups.Product.before}} to {{groups.Product.after}} because FB-013 moved in from Delivery. Delivery stays at {{groups.Delivery.after}}: FB-013 moved out and FB-024 was added. Billing stays at {{groups.Billing.after}}: FB-007 was merged into FB-006 and FB-023 was added."}
+    {"type": "group-dumbbell", "title": "Records per category", "caption": "Account goes from {{groups.Account.before}} to {{groups.Account.after}}: FB-020 moved in and FB-025 was added. Support goes from {{groups.Support.before}} to {{groups.Support.after}}: FB-020 moved out and FB-019 was removed. Product goes from {{groups.Product.before}} to {{groups.Product.after}}: FB-013 moved in. Delivery stays at {{groups.Delivery.after}}: FB-013 moved out and FB-024 was added. Billing stays at {{groups.Billing.after}}: FB-007 was merged and FB-023 was added."}
   ],
   "changes": [
-    {"id": "FB-007", "title": "Wrong invoice address merged into FB-006 Invoice error", "why": "Agents could not choose between the two records when an invoice had both a wrong address and a wrong amount.", "impact": "New feedback goes to FB-006, whose definition now names the billing address. FB-006 has a more urgent queue priority than FB-007 had, and lower priority numbers are handled first."},
-    {"id": "FB-011", "title": "Slow shipping renamed Late delivery, with a date-based definition", "why": "The old definition depended on what the customer expected. The new definition compares the arrival with the latest date shown at checkout, so two agents tag the same parcel the same way. Late deliveries now qualify for the same refund as lost parcels, so they get the same priority as **FB-008 Lost parcel**.", "impact": "Agents check the delivery date shown at checkout before tagging. Late deliveries join the most urgent priority level.", "figure": {"type": "field-dumbbell", "field": "priority", "title": "Records with a new priority", "caption": "FB-002, FB-011, and FB-017 each move one level toward the front of the queue. Lower numbers are handled first."}},
-    {"id": "FB-014", "view": "text-diff", "field": "definition", "title": "Defective product limited to the warranty period", "why": "Agents tagged complaints about products used against their instructions here, so the reported defect rate was too high.", "impact": "Expect fewer FB-014 tags from the release date on. Product teams tracking defect rates mark that date on their trend charts."},
-    {"id": "FB-016", "view": "text-diff", "field": "definition", "title": "Login problem renamed Sign-in failure and limited to correct credentials", "why": "Missing two-factor codes now have their own record, FB-025. The new name matches the wording on the sign-in page.", "impact": "Agents tag a missing code as FB-025 and keep FB-016 for failures with correct credentials. Report owners re-tag stored two-factor feedback."},
-    {"id": "FB-025", "title": "Two-factor code not received added", "why": "Agents tagged missing two-factor codes as FB-016, but a different team fixes them.", "impact": "The queue routes FB-025 to the identity team."}
+    {"id": "FB-007", "title": "Wrong invoice address merged into FB-006 Invoice error", "why": "Agents could not choose between the two records when an invoice had both a wrong address and a wrong amount.", "impact": ["New feedback goes to FB-006, whose definition now names the billing address", "FB-006 is handled sooner in the queue than FB-007 was; lower priority numbers come first"]},
+    {"id": "FB-011", "title": "Slow shipping renamed Late delivery, with a date-based definition", "why": ["The old definition depended on what the customer expected", "The new one compares the arrival with the latest date shown at checkout, so two agents tag the same parcel the same way", "Late deliveries now get the same refund and priority as **FB-008 Lost parcel**"], "impact": "Agents check the checkout date before tagging; late deliveries join the most urgent priority level.", "figure": {"type": "field-dumbbell", "field": "priority", "title": "Records with a new priority", "caption": "FB-002, FB-011, and FB-017 each move one level toward the front of the queue. Lower numbers are handled first."}},
+    {"id": "FB-014", "view": "text-diff", "field": "definition", "title": "Defective product limited to the warranty period", "why": "Complaints about products used against their instructions were tagged here, so the reported defect rate was too high.", "impact": ["Expect fewer FB-014 tags from the release date on", "Product teams mark that date on their defect-rate charts"]},
+    {"id": "FB-016", "view": "excerpt", "field": "definition", "as_is": "cannot use their account.", "to_be": "cannot sign in to their account with correct credentials.", "title": "Login problem renamed Sign-in failure and limited to correct credentials", "why": ["Missing two-factor codes now have their own record, FB-025", "The new name matches the wording on the sign-in page"], "impact": "Agents tag a missing code as FB-025; report owners re-tag stored two-factor feedback."},
+    {"id": "FB-025", "title": "Two-factor code not received added", "fields": ["name", "group", "definition"], "why": "Agents tagged missing two-factor codes as FB-016, but a different team fixes them.", "impact": "The queue routes FB-025 to the identity team."}
   ],
   "field_list": "definition",
   "reasons": {
@@ -35,11 +44,12 @@
     "FB-024": "Packaging damage was tagged as lost or wrong items"
   },
   "sections": [
-    {"heading": "Compatibility of feedback exports", "paragraphs": ["CSV exports of tagged feedback keep the same columns. Every record keeps its ID except FB-007 and FB-019, which no longer exist."]}
+    {"heading": "Compatibility of feedback exports", "items": ["CSV exports of tagged feedback keep the same columns", "Every record keeps its ID except FB-007 and FB-019, which no longer exist"]}
   ],
   "open_questions": [
     "Should FB-024 Damaged packaging move to Product when the product inside is also damaged?"
   ],
+  "full_list": "appendix",
   "links": [
     {"label": "Comparison data for every change", "url": "https://example.com/feedback-taxonomy/releases/diff.json"}
   ],

@@ -27,7 +27,7 @@ These hold for every pattern, built in or drawn elsewhere:
 | Which part of a hierarchy or pipeline changed | Structure diagram, unchanged parts ghosted | `technical-figure` | Added parts in blue; removed parts in place with a struck label; caption names the encoding | Redrawing the whole structure at full weight |
 | What does the definition say now | Word-level text change | Built in: `text-diff` view | Removed words struck through, added words bold; the field name beside both | Long blocks; red and green only |
 | What does the change do to one concrete record | Two field cards, as-is and to-be | Built in: `cards` view | Same fields on both sides; changed fields bold | Choosing a flattering example; say why this record was chosen when it is not the only one |
-| One headline number | Stat tile | Built in: the counts row | The value and its label | A one-bar chart |
+| What changed overall, at a glance | Drawn overview: before and after columns, flows between groups, or annotated arrows | Author-drawn `overview` SVG on page one | IDs, short names, counts; few words | A row of number cards or tiles |
 | Same measure across several configurations | Small multiples on one shared scale | `technical-figure` | Same axes and order in every panel; only the changed series in blue | Different scales per panel |
 
 ## Choosing for common changes

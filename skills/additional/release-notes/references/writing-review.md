@@ -8,6 +8,10 @@ These are review prompts, not limits. The features are over-represented in model
 
 Give a fresh-context reviewer the rendered note text or `note.json`, the reader description, and the prompts below. A reviewer who did not take part in the session sees the coined labels that the writer no longer notices. The reviewer returns findings with the sentence and a proposed rewrite; the writer checks each against the data file and the sources before applying it, because a rewrite can change a claim. For sentence-level rules beyond these prompts, apply `copydesk` when installed, and its Korean writing reference for Korean notes.
 
+## Word budget
+
+The opening and the actions are bullets, and page one holds the overview figure plus at most six top-level bullets of one line each, with nested bullets for detail. Ask of the draft: does any top-level bullet run past one line, does a bullet hold two points, and does an explanation sit on page one that belongs in a material change, an extra section, or the appendix? Split, cut, or move it. D22 and D23 in [design-checks.md](design-checks.md) measure the same budget on the rendered note; this review catches the bullet that fits but says too much.
+
 ## Prompts
 
 | # | Ask of each sentence | Rewrite toward | Evidence |

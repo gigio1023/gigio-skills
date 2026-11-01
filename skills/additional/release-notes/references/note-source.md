@@ -65,16 +65,20 @@ Schema `release-notes/note@1`; [the example](../assets/example/note.en.json) use
 | `lang` | yes | `en` or `ko`; other languages need an entry in `assets/strings.json` |
 | `title` | yes | Artifact name and version, usually with `{{new.label}}` |
 | `subtitle` | no | The audience or scope in one line |
-| `summary` | yes | List of opening paragraphs |
-| `actions` | no | List of `{who, what}`; empty prints that no action is needed |
+| `overview` | no, but D22 fails without it | `{src, alt, caption?}`: the page-one SVG relative to note.json, its values as text, and an optional caption of a few words |
+| `summary` | yes | Opening bullets: a list of items |
+| `actions` | no | List of `{who, what, items?}`: the role, a one-line action, and nested bullets; empty prints that no action is needed |
 | `figures` | no | List of figures, below |
 | `changes` | no | List of material changes, below |
-| `sections` | no | List of `{heading, paragraphs}` for compatibility, migration, known issues |
-| `open_questions` | no | List of questions |
+| `sections` | no | List of `{heading, items}` for compatibility, migration, known issues |
+| `open_questions` | no | List of items, each a question |
 | `links` | no | List of `{label, url}`, such as the full change list |
 | `field_labels` | no | Display names for compared fields, such as `{"group": "Category"}` |
-| `reasons` | no | Short reason per removed, renamed, or moved ID, `{"FB-013": "..."}`; adds a reason column to the mapping table, with "Not recorded" for IDs without one |
-| `field_list` | no | A compared field, such as `definition`, whose new text is listed for every added record and every record with a major change in it |
+| `reasons` | no | One short reason per listed ID without a change section, `{"FB-013": "..."}`; the appendix Why column prints it, points to the change section for IDs that have one, says "Wording only" for minor edits, and "Not recorded" otherwise. An ID in both `reasons` and `changes` is an error, so a record never shows two reasons |
+| `field_list` | no | A compared field, such as `definition`, listed with both values and word-level marks for every added record and every record with a major change in it, except records with their own change section |
+| `full_list` | no | `appendix` (default): a compact table of every listed ID at the end. `omit`: no table; the source section says the data file lists every change, and the number check stops requiring every ID in the output |
+
+An item is a string or `{"text": "...", "items": [item, ...]}`, nested at most three levels: `"summary": ["FB-007 is merged into FB-006", {"text": "{{counts.added}} records are added:", "items": ["FB-023 Refund delay", "FB-024 Damaged packaging"]}]`. A change's `why` and `impact` take a string or a list of items.
 
 ## Tokens and inline markup
 
@@ -86,7 +90,7 @@ The builder rejects digits typed in prose, with three exceptions: code spans, ve
 
 | `figures[].type` | Draws | Needs |
 | --- | --- | --- |
-| `change-kinds` | Horizontal bars: added, removed, each field with major changes, minor-only | Nothing more; the caption gets a sentence on overlapping kinds |
+| `change-kinds` | Horizontal bars per kind: added, each removal kind, each field with major changes, minor-only; zero rows dropped, sorted by count | Nothing more; the caption gets a sentence on overlapping kinds |
 | `group-dumbbell` | Per group, hollow as-is ring and filled to-be dot, sorted by change | `version_diff.py --group-field` |
 | `field-dumbbell` | Per changed record, the old and new value of one numeric field | `field` naming a numeric compared field |
 | `svg` | An SVG drawn elsewhere, such as by `technical-figure` | `src` relative to note.json, `alt` stating the values as text |
@@ -97,5 +101,8 @@ Every figure has a `title` and a `caption`. The `svg` type's text must be SVG te
 | --- | --- | --- |
 | `cards` (default) | Two field cards, as-is and to-be; changed fields in bold, unchanged in gray; an added or removed record shows "Not in" the other version, or its successor | `id` of any listed record |
 | `text-diff` | One text field word by word: removed words struck through on a vermillion tint, added words bold on a blue tint | `id` of a changed record and `field` naming one of its changed text fields |
+| `excerpt` | A chosen part of one long field, as-is beside to-be, with the same word-level marks | `field`, plus `as_is` and `to_be` copied verbatim from the old and new values; the build fails when either is not found in the data file |
+
+A `cards` view may list `fields`, such as `["name", "definition"]`, to show only those fields, for records with many compared fields.
 
 Each change also needs `title`, `why`, and `impact`, and may carry one `figure` in the same form as `figures` entries. It prints after the change's impact, which keeps a chart beside the change it explains and the overview within two charts per page.
