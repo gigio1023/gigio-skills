@@ -22,6 +22,10 @@ import argparse
 import sys
 from pathlib import Path
 
+# `python3 -I` leaves the script's directory off sys.path, and the sibling
+# modules live there, so add it before importing them.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 from _diff_data import DiffData, load_diff
 from _errors import NoteSourceError, ReleaseNoteError
 from _html_note import render_document

@@ -47,6 +47,10 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
+# `python3 -I` leaves the script's directory off sys.path, and the sibling
+# modules live there, so add it before importing them.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 from _diff_data import DiffData, canonical_number, load_diff
 from _errors import EnvironmentSetupError, ReleaseNoteError
 from _inline import format_value, scan_literals
