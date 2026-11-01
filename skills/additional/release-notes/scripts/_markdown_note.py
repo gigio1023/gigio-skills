@@ -119,7 +119,7 @@ def _figure(content: NoteContent, figure: Figure) -> str:
     title: str = f"**{render_markdown(figure.title, diff)}**"
     caption: str = render_markdown(figure.caption, diff)
     if figure.type is FigureType.CHANGE_KINDS:
-        table: str = _table([s["col_change"], s["stat_records"]], [[b.label, f"{b.value:,}"] for b in content.kind_bars()], numeric=True)
+        table: str = _table([s["col_change"], s["col_records"]], [[b.label, f"{b.value:,}"] for b in content.kind_bars()], numeric=True)
         caption += ("" if ends_sentence(figure.caption) else ".") + " " + escape_markdown(s["kinds_overlap"])
     elif figure.type in (FigureType.GROUP_DUMBBELL, FigureType.FIELD_DUMBBELL, FigureType.FACTS_DUMBBELL):
         if figure.type is FigureType.GROUP_DUMBBELL:
@@ -199,7 +199,9 @@ def _source(content: NoteContent) -> str:
     lines.extend(f"- {render_markdown(link.label, content.diff)}: <{link.url}>" for link in content.note.links)
     cited: list[str] = content.cited_facts()
     if cited:
-        rows: list[list[str]] = [[_code(name), content.value(doc["facts"][name]["value"]), _code(doc["facts"][name]["source"])] for name in cited]
+        # A fact prints its label when the data file gives one, else its name; names and sources are code spans.
+        rows: list[list[str]] = [[render_markdown(doc["facts"][name]["label"], content.diff) if "label" in doc["facts"][name] else _code(name),
+                                  content.value(doc["facts"][name]["value"]), _code(doc["facts"][name]["source"])] for name in cited]
         lines.append("\n" + _table([s["col_fact"], s["col_value"], s["col_source"]], rows, escape=False))
     return "\n".join(lines)
 

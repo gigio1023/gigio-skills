@@ -1,6 +1,7 @@
 {
   "schema": "release-notes/note@1",
   "lang": "en",
+  "record_noun": {"singular": "record", "plural": "records"},
   "title": "Example Feedback Taxonomy {{new.label}}",
   "subtitle": "Synthetic example for the support and product teams that tag customer feedback",
   "overview": {

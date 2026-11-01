@@ -9,7 +9,8 @@ Writes ``<stem>.html`` (the HTML deliverable and the PDF source) and
 file's stem. Before writing anything it refuses a note whose prose types a
 number by hand or names an ID that exists in neither version: numbers enter
 the note only through ``{{...}}`` tokens that resolve against diff.json.
-Every prose field follows this rule, the overview's ``alt`` included. Code
+Every prose field follows this rule, the overview's ``alt`` and the label of
+each fact the note cites included. Code
 spans, URLs, version labels, refs, ISO dates, and words in which a letter
 directly precedes a digit, such as ``v4.0``, the commit ``3e1f09a7``, or
 ``제3자``, may contain digits; ``_inline.scan_literals`` holds the rule.
@@ -24,6 +25,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 # `python3 -I` leaves the script's directory off sys.path, and the sibling
 # modules live there, so add it before importing them.
@@ -48,8 +50,8 @@ def main(argv: list[str]) -> int:
     try:
         diff: DiffData = load_diff(Path(args.diff))
         note: Note = load_note(Path(args.note), diff)
-        _refuse_literals(note, diff)
         content: NoteContent = NoteContent(note, diff)
+        _refuse_literals(content)
         document: str = render_document(content)
         markdown: str = render_markdown_note(content)
     except ReleaseNoteError as err:
@@ -67,9 +69,14 @@ def main(argv: list[str]) -> int:
     return 0
 
 
-def _refuse_literals(note: Note, diff: DiffData) -> None:
+def _refuse_literals(content: NoteContent) -> None:
+    """Refuse typed numbers and unknown IDs in the writer's words: note.json prose and the labels of the cited facts."""
+    diff: DiffData = content.diff
+    facts: dict[str, dict[str, Any]] = diff.document["facts"]
+    texts: list[tuple[str, str]] = list(content.note.prose())
+    texts += [(f"{diff.path.name} facts.{name}.label", facts[name]["label"]) for name in content.cited_facts() if "label" in facts[name]]
     problems: list[str] = []
-    for where, text in note.prose():
+    for where, text in texts:
         numbers, unknown_ids = scan_literals(text, diff)
         if numbers:
             problems.append(f"{where}: typed number(s) {', '.join(numbers)}; use a {{{{...}}}} token from {diff.path.name}"

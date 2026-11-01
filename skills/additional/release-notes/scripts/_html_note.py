@@ -7,6 +7,11 @@ as as-is and to-be pairs, the field list, the ID mapping, extra sections,
 open questions, the optional appendix of every change, and the source of the
 numbers. Every piece of text from note.json or diff.json is escaped.
 
+Each string the data file holds as an identifier, such as a version label,
+ref, path, or fact source, prints as one run marked ``data-identifier``.
+check_numbers.py reads such a run whole, as it reads a code span: it is not
+prose, and in the PDF a line may break inside it.
+
 Each number is printed once where the reader meets it. With an overview,
 page one already shows the counts, so the reconciling sentences move to the
 source section and the counts section holds only its figures.
@@ -117,7 +122,8 @@ def _body(content: NoteContent, palette: Palette) -> str:
     mapping: list[tuple[str, str, str, str]] = content.mapping_rows()
     if mapping:
         out.append(f"<h2>{html.escape(s['h_mapping'])}</h2>")
-        out.append(_table([s["col_id"], s["as_is"], s["to_be"], s["col_change"]], [[escape_text(v, diff) for v in row] for row in mapping]))
+        out.append(_table([s["col_id"], s["as_is"], s["to_be"], s["col_change"]], [[escape_text(v, diff) for v in row] for row in mapping],
+                          ids=frozenset({0})))
     for section in note.sections:
         out.append(f"<h2>{r(section.heading)}</h2>{_bullets(section.items, diff)}")
     if note.open_questions:
@@ -126,7 +132,7 @@ def _body(content: NoteContent, palette: Palette) -> str:
         out.append(f'<section class="appendix"><h2>{html.escape(s["h_index"])}</h2>')
         headers: list[str] = [s["col_id"], s["col_name"], s["col_change"]] + ([s["col_why"]] if content.shows_reasons() else [])
         index: list[list[str]] = [[r(v) if i == 3 else escape_text(v, diff) for i, v in enumerate(row)] for row in content.index_rows()]
-        out.append(_table(headers, index) + "</section>")
+        out.append(_table(headers, index, ids=frozenset({0})) + "</section>")
     out.append(_source(content))
     return "\n".join(out)
 
@@ -141,8 +147,8 @@ def _meta(content: NoteContent) -> str:
     if doc.get("date"):
         cells.append((s["released"], doc["date"], None))
     inner: str = "".join(
-        f'<div><span class="k">{html.escape(k)}</span><span class="v">{html.escape(v)}</span>'
-        + (f'<span class="ref">{_ref(ref)}</span>' if ref else "") + "</div>"
+        f'<div><span class="k">{html.escape(k)}</span><span class="v" data-identifier>{html.escape(v)}</span>'
+        + (f'<span class="ref" data-identifier>{_ref(ref)}</span>' if ref else "") + "</div>"
         for k, v, ref in cells)
     return f'<div class="meta">{inner}</div>'
 
@@ -310,12 +316,12 @@ def _field_entry(content: NoteContent, entry: FieldEntry, field: str, palette: P
     return f'<section class="field-entry">{title}{block}</section>'
 
 
-def _table(headers: list[str], rows: list[list[str]], *, numeric: frozenset[int] = frozenset()) -> str:
-    """A borderless table; cells arrive as HTML, already escaped, the first column holds IDs, ``numeric`` columns align right."""
+def _table(headers: list[str], rows: list[list[str]], *, ids: frozenset[int], numeric: frozenset[int] = frozenset()) -> str:
+    """A borderless table; cells arrive as HTML, already escaped; ``ids`` columns hold IDs and never wrap, ``numeric`` columns align right."""
     num: str = ' class="num"'
     head: str = "".join(f'<th scope="col"{num if i in numeric else ""}>{html.escape(h)}</th>' for i, h in enumerate(headers))
     body: str = "".join(
-        "<tr>" + "".join(f'<td class="id">{c}</td>' if i == 0 else f'<td class="num">{c}</td>' if i in numeric else f"<td>{c}</td>"
+        "<tr>" + "".join(f'<td class="id">{c}</td>' if i in ids else f'<td class="num">{c}</td>' if i in numeric else f"<td>{c}</td>"
                          for i, c in enumerate(row)) + "</tr>"
         for row in rows
     )
@@ -324,21 +330,30 @@ def _table(headers: list[str], rows: list[list[str]], *, numeric: frozenset[int]
     return f"<table{keep}><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
 
 
-def _source(content: NoteContent) -> str:
-    """Where every number comes from: file paths as the data file records them, refs, links, and each fact's source.
+def _identifier(text: str) -> str:
+    """A string the data file holds as an identifier, printed as one marked run; see the module docstring."""
+    return f"<span data-identifier>{html.escape(text)}</span>"
 
-    With an overview, the reconciling sentences print here, since page one shows the counts. Each path and
-    fact source is one text run, as the data file spells it; the stylesheet lets a long one wrap anywhere
-    rather than widen the page.
+
+def _source(content: NoteContent) -> str:
+    """Where every number comes from: file paths as the data file records them, refs, links, and each cited fact.
+
+    With an overview, the reconciling sentences print here, since page one shows the counts. Each path, ref,
+    and fact source is one identifier run, as the data file spells it; the stylesheet lets a long one wrap
+    anywhere rather than widen the page. A fact prints its label when the data file gives one, else its name.
     """
     s, doc, diff = content.s, content.diff.document, content.diff
 
     def version(side: str) -> str:
         ref: str | None = doc[side].get("ref")
-        return html.escape(doc[side]["source"]) + (" " + _ref(ref) if ref else "")
+        return _identifier(doc[side]["source"]) + (f" <span data-identifier>{_ref(ref)}</span>" if ref else "")
+
+    def fact_name(name: str) -> str:
+        label: str | None = doc["facts"][name].get("label")
+        return render_html(label, diff) if label is not None else _identifier(name)
 
     rows: list[tuple[str, str]] = [
-        (html.escape(s["src_data"]), html.escape(doc["data_file"])),
+        (html.escape(s["src_data"]), _identifier(doc["data_file"])),
         (html.escape(s["as_is"]), version("old")),
         (html.escape(s["to_be"]), version("new")),
         (html.escape(s["src_tool"]), "version_diff.py"),
@@ -356,9 +371,10 @@ def _source(content: NoteContent) -> str:
     facts: str = ""
     cited: list[str] = content.cited_facts()
     if cited:
-        fact_rows: list[list[str]] = [[html.escape(name), bound_number(f"facts.{name}", doc["facts"][name]["value"]),
-                                       html.escape(doc["facts"][name]["source"])] for name in cited]
-        facts = _table([s["col_fact"], s["col_value"], s["col_source"]], fact_rows, numeric=frozenset({1}))
+        fact_rows: list[list[str]] = [[fact_name(name), bound_number(f"facts.{name}", doc["facts"][name]["value"]),
+                                       _identifier(doc["facts"][name]["source"])] for name in cited]
+        # A label is prose that may wrap; a fact name without one is an identifier run.
+        facts = _table([s["col_fact"], s["col_value"], s["col_source"]], fact_rows, ids=frozenset(), numeric=frozenset({1}))
     return f'<section class="source"><h2>{html.escape(s["h_source"])}</h2><dl>{items}</dl>{facts}</section>'
 
 

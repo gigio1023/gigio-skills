@@ -57,6 +57,7 @@ from _records import Record, SourceLayout, field_of, has_path, load_version, val
 
 SCHEMA: str = "release-notes/diff@2"
 MINOR_RULE: str = "strings that differ only in letter case, punctuation, or whitespace"
+FACT_KEYS: frozenset[str] = frozenset({"value", "source", "label"})  # a fact in --facts; label is optional
 
 # Records are dataclasses because the bundled scripts run with the standard
 # library alone; there is no project environment to install Pydantic into.
@@ -186,7 +187,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
                         "named groups become record fields, such as '^(?P<category>[^/]+)/'")
     parser.add_argument("--source-base", default=".", help="directory that the recorded export and data file paths are relative to (default: .)")
     parser.add_argument("--successors", help="CSV with columns old_id,new_id for removed IDs that have a successor")
-    parser.add_argument("--facts", help="JSON object of extra numbers: {name: {value, source}}")
+    parser.add_argument("--facts", help="JSON object of extra numbers: {name: {value, source, label?}}")
     parser.add_argument("--out", required=True, help="path of the data file to write, such as diff.json")
     return parser.parse_args(argv)
 
@@ -262,14 +263,20 @@ def _read_successors(path: Path, old: dict[str, Record], new: dict[str, Record])
 
 
 def _read_facts(path: Path) -> dict[str, dict[str, Any]]:
+    """Facts as ``{name: {value, source, label?}}``; the name is the token path, the optional label what the note prints."""
     facts: Any = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(facts, dict):
-        raise InputDataError(f"{path}: expected an object of {{name: {{value, source}}}}")
+        raise InputDataError(f"{path}: expected an object of {{name: {{value, source, label?}}}}")
     for name, fact in facts.items():
         valid: bool = isinstance(fact, dict) and isinstance(fact.get("source"), str) and fact["source"].strip() != ""
         number: Any = fact.get("value") if isinstance(fact, dict) else None
         if not valid or isinstance(number, bool) or not isinstance(number, (int, float)):
             raise InputDataError(f"{path}: fact {name!r} needs a numeric 'value' and a non-empty 'source'")
+        unknown: set[str] = fact.keys() - FACT_KEYS
+        if unknown:
+            raise InputDataError(f"{path}: fact {name!r} has unknown keys {sorted(unknown)}; allowed: {sorted(FACT_KEYS)}")
+        if "label" in fact and (not isinstance(fact["label"], str) or not fact["label"].strip()):
+            raise InputDataError(f"{path}: fact {name!r} 'label' must be a non-empty string, the name the note prints")
     return facts
 
 

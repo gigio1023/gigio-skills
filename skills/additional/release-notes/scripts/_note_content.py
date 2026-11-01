@@ -1,27 +1,26 @@
 """Rows, labels, and sentences that both the HTML and the Markdown renderer print.
 
 Every number here is read from diff.json, and every label from the language's
-entry in ``assets/strings.json`` or from note.json ``field_labels``, so the
-two outputs cannot disagree about a count or the name of a change kind.
+entry in ``assets/strings.json``, with note.json ``record_noun`` filled in, or
+from note.json ``field_labels``, so the two outputs cannot disagree about a
+count or the name of a change kind.
 """
 
 from __future__ import annotations
 
 import difflib
-import json
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 from _diff_data import DiffData
 from _errors import NoteSourceError
 from _note_source import FactPair, Note, field_text
 from _records import field_of, value_at
+from _strings import load_strings, with_noun
 from _svg_charts import BarRow, PairRow
 
-STRINGS_PATH: Path = Path(__file__).resolve().parent.parent / "assets" / "strings.json"
 REMOVAL_KINDS: tuple[str, ...] = ("merged", "split", "replaced", "removed")
 # A word that ends a sentence: terminal punctuation, then any closing quotes or brackets.
 SENTENCE_END: re.Pattern[str] = re.compile(r"[.!?。！？][\"'”’)\]」』]*$")
@@ -32,7 +31,6 @@ ELLIPSIS: str = "…"
 # The one label each counted path carries wherever a number is printed under a label.
 # check_numbers.py reads the same table, so a correct number under another kind's label fails.
 LABEL_KEYS: dict[str, str] = {
-    "counts.after": "stat_records",
     "counts.added": "stat_added",
     "counts.changed": "stat_changed",
     "counts.minor_only": "kind_minor",
@@ -51,10 +49,6 @@ def expected_label(path: str, strings: dict[str, str], roles: dict[str, str | No
         if roles[role] is not None and path == f"field_changes.{field_of(roles[role])}.major":
             return strings[key]
     return None
-
-
-def load_strings(lang: str) -> dict[str, str]:
-    return _strings(lang)
 
 
 @dataclass(frozen=True)
@@ -93,7 +87,7 @@ class NoteContent:
     def __init__(self, note: Note, diff: DiffData) -> None:
         self.note: Note = note
         self.diff: DiffData = diff
-        self.s: dict[str, str] = _strings(note.lang)
+        self.s: dict[str, str] = with_noun(load_strings(note.lang), note.record_noun)
         roles: dict[str, str | None] = diff.document["roles"]
         # Roles are dotted paths; a change in the top-level field that holds one counts as that kind.
         self.name_path: str | None = roles["name"]
@@ -416,13 +410,6 @@ def _context_pieces(words: list[str | None]) -> list[DiffPiece]:
     if run:
         pieces.append(DiffPiece(" ".join(run), "same"))
     return pieces
-
-
-def _strings(lang: str) -> dict[str, str]:
-    table: dict[str, dict[str, str]] = json.loads(STRINGS_PATH.read_text(encoding="utf-8"))
-    if lang not in table:
-        raise NoteSourceError(f"no strings for lang {lang!r} in {STRINGS_PATH}")
-    return table[lang]
 
 
 def _spaced(pieces: list[DiffPiece]) -> list[DiffPiece]:
