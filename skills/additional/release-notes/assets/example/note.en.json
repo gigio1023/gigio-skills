@@ -1,0 +1,42 @@
+{
+  "schema": "release-notes/note@1",
+  "lang": "en",
+  "title": "Example Feedback Taxonomy {{new.label}}",
+  "subtitle": "Synthetic example for the support and product teams that tag customer feedback",
+  "summary": [
+    "Version {{new.label}} merges wrong-address invoices into **FB-006 Invoice error**, retires fax support requests, and adds {{counts.added}} records for refund delays, damaged packaging, and missing sign-in codes. Support agents must stop using FB-007 and FB-019 and start using the new records. Reports that group feedback by category will show different totals for Account, Product, and Support."
+  ],
+  "actions": [
+    {"who": "Support agents", "what": "Tag invoices with a wrong billing address as FB-006, and use FB-023, FB-024, and FB-025 for refund delays, damaged packaging, and missing sign-in codes. FB-007 and FB-019 no longer exist; fax requests no longer get a record of their own."},
+    {"who": "Report owners", "what": "Remap stored FB-007 tags to FB-006 and stored two-factor complaints from FB-016 to FB-025. Expect Account, Product, and Support totals to move because FB-013 and FB-020 changed category."},
+    {"who": "Identity team", "what": "Take ownership of FB-025, which separates missing two-factor codes from other sign-in failures."}
+  ],
+  "figures": [
+    {"type": "change-kinds", "title": "Records by kind of change", "caption": "Counts from the data file, comparing {{old.label}} with {{new.label}}."},
+    {"type": "group-dumbbell", "title": "Records per category", "caption": "Account grows from {{groups.Account.before}} to {{groups.Account.after}} records and Support shrinks from {{groups.Support.before}} to {{groups.Support.after}}, because FB-020 moved from Support to Account, FB-025 was added to Account, and FB-019 was removed from Support. Product gains FB-013 from Delivery, which keeps its total because FB-024 was added."}
+  ],
+  "changes": [
+    {"id": "FB-007", "title": "Wrong invoice address merged into FB-006 Invoice error", "why": "Agents could not choose between the two records when an invoice had both a wrong address and a wrong amount.", "impact": "New feedback goes to FB-006. Report owners remap stored FB-007 tags to FB-006."},
+    {"id": "FB-011", "title": "Slow shipping becomes Late delivery with a date-based definition", "why": "The old definition depended on what the customer expected. The new one compares the arrival with the latest date shown at checkout, so two agents tag the same parcel the same way. Late deliveries now qualify for the same refund as lost parcels, so they share the most urgent priority with **FB-008 Lost parcel**.", "impact": "Agents check the delivery date shown at checkout before tagging. Late deliveries move to the front of the queue.", "figure": {"type": "field-dumbbell", "field": "priority", "title": "Records with a new priority", "caption": "Priority sets the order in which the support queue is worked, and lower numbers are handled first. Each of the {{field_changes.priority.major}} records moves to a more urgent level."}},
+    {"id": "FB-014", "view": "text-diff", "field": "definition", "title": "Defective product limited to the warranty period", "why": "Complaints about products used against their instructions were tagged here and raised the reported defect rate.", "impact": "Expect fewer FB-014 tags from the release date on. Product teams tracking defect rates should mark that date on their trend charts."},
+    {"id": "FB-025", "title": "New record for missing sign-in codes", "why": "Missing two-factor codes were tagged as FB-016 but need a fix from a different team.", "impact": "Route FB-025 to the identity team. FB-016 now covers only failures with correct credentials."}
+  ],
+  "field_list": "definition",
+  "reasons": {
+    "FB-004": "Only card payments can be declined at checkout",
+    "FB-016": "Matches the wording on the sign-in page",
+    "FB-013": "Missing parts are a packing defect, not a carrier issue",
+    "FB-020": "Data requests are handled by the account team",
+    "FB-019": "The fax line was closed"
+  },
+  "sections": [
+    {"heading": "Compatibility of exports", "paragraphs": ["Exports keep the same columns. Every record keeps its ID except FB-007 and FB-019, which no longer exist."]}
+  ],
+  "open_questions": [
+    "Should FB-024 Damaged packaging move to Product when the product inside is also damaged? The taxonomy owners decide before the next release."
+  ],
+  "links": [
+    {"label": "Data file with every change", "url": "https://example.com/feedback-taxonomy/releases/diff.json"}
+  ],
+  "field_labels": {"name": "Name", "group": "Category", "priority": "Priority", "definition": "Definition"}
+}

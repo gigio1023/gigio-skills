@@ -1,0 +1,166 @@
+{
+ "version": "2.1",
+ "items": [
+  {
+   "id": "FB-001",
+   "name": "Duplicate charge",
+   "group": "Billing",
+   "priority": 1,
+   "definition": "The customer was charged more than once for the same order."
+  },
+  {
+   "id": "FB-002",
+   "name": "Unclear pricing",
+   "group": "Billing",
+   "priority": 2,
+   "definition": "The customer could not tell what an item or plan would cost before paying."
+  },
+  {
+   "id": "FB-003",
+   "name": "Promo code not applied",
+   "group": "Billing",
+   "priority": 3,
+   "definition": "A valid promotion code was entered, but the discount did not appear on the order."
+  },
+  {
+   "id": "FB-004",
+   "name": "Card payment declined",
+   "group": "Billing",
+   "priority": 2,
+   "definition": "The payment was refused at checkout."
+  },
+  {
+   "id": "FB-005",
+   "name": "Subscription cancellation",
+   "group": "Billing",
+   "priority": 2,
+   "definition": "The customer asks to end a recurring plan or reports that cancellation did not take effect."
+  },
+  {
+   "id": "FB-006",
+   "name": "Invoice error",
+   "group": "Billing",
+   "priority": 3,
+   "definition": "An invoice shows a wrong amount, tax, line item, or billing address."
+  },
+  {
+   "id": "FB-008",
+   "name": "Lost parcel",
+   "group": "Delivery",
+   "priority": 1,
+   "definition": "The carrier reports the parcel as lost, or tracking has not changed for 10 days."
+  },
+  {
+   "id": "FB-009",
+   "name": "Wrong item delivered",
+   "group": "Delivery",
+   "priority": 2,
+   "definition": "The parcel contained an item the customer did not order, or a different size or color of the ordered item."
+  },
+  {
+   "id": "FB-010",
+   "name": "Delivery window missed",
+   "group": "Delivery",
+   "priority": 3,
+   "definition": "The parcel arrived outside the delivery window the customer selected."
+  },
+  {
+   "id": "FB-011",
+   "name": "Late delivery",
+   "group": "Delivery",
+   "priority": 1,
+   "definition": "The parcel arrived after the latest delivery date shown at checkout."
+  },
+  {
+   "id": "FB-012",
+   "name": "Item out of stock",
+   "group": "Delivery",
+   "priority": 3,
+   "definition": "An ordered item could not be shipped because it was out of stock."
+  },
+  {
+   "id": "FB-013",
+   "name": "Missing parts",
+   "group": "Product",
+   "priority": 2,
+   "definition": "The parcel arrived without some of the parts listed for the product."
+  },
+  {
+   "id": "FB-014",
+   "name": "Defective product",
+   "group": "Product",
+   "priority": 1,
+   "definition": "The product stopped working or never worked within the warranty period, when used as the instructions describe."
+  },
+  {
+   "id": "FB-015",
+   "name": "Product not as described",
+   "group": "Product",
+   "priority": 2,
+   "definition": "The product differs from its listing in size, color, material, or features."
+  },
+  {
+   "id": "FB-016",
+   "name": "Sign-in failure",
+   "group": "Account",
+   "priority": 1,
+   "definition": "The customer cannot sign in to their account with correct credentials."
+  },
+  {
+   "id": "FB-017",
+   "name": "Size guide inaccurate",
+   "group": "Product",
+   "priority": 3,
+   "definition": "The size guide on the listing did not match the delivered product."
+  },
+  {
+   "id": "FB-018",
+   "name": "Email change request",
+   "group": "Account",
+   "priority": 3,
+   "definition": "The customer asks to change the email address on their account."
+  },
+  {
+   "id": "FB-020",
+   "name": "Data export request",
+   "group": "Account",
+   "priority": 3,
+   "definition": "The customer asks for a copy of the personal data stored in their account."
+  },
+  {
+   "id": "FB-021",
+   "name": "Agent was rude",
+   "group": "Support",
+   "priority": 2,
+   "definition": "The customer reports that a support agent was impolite or dismissive."
+  },
+  {
+   "id": "FB-022",
+   "name": "No reply to ticket",
+   "group": "Support",
+   "priority": 2,
+   "definition": "A support ticket received no reply within the promised time."
+  },
+  {
+   "id": "FB-023",
+   "name": "Refund delay",
+   "group": "Billing",
+   "priority": 2,
+   "definition": "An approved refund has not reached the customer within the promised time."
+  },
+  {
+   "id": "FB-024",
+   "name": "Damaged packaging",
+   "group": "Delivery",
+   "priority": 2,
+   "definition": "The parcel arrived with packaging damage, whether or not the product inside was damaged."
+  },
+  {
+   "id": "FB-025",
+   "name": "Two-factor code not received",
+   "group": "Account",
+   "priority": 1,
+   "definition": "The customer did not receive the sign-in code sent by text message or email."
+  }
+ ]
+}

@@ -1,0 +1,230 @@
+"""Rows, labels, and sentences that both the HTML and the Markdown renderer print.
+
+Every number here is read from diff.json, and every label from the language's
+entry in ``assets/strings.json`` or from note.json ``field_labels``, so the
+two outputs cannot disagree about a count or the name of a change kind.
+"""
+
+from __future__ import annotations
+
+import difflib
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from _diff_data import DiffData
+from _errors import NoteSourceError
+from _note_source import Note
+from _svg_charts import BarRow, PairRow
+
+STRINGS_PATH: Path = Path(__file__).resolve().parent.parent / "assets" / "strings.json"
+
+
+@dataclass(frozen=True)
+class CardField:
+    label: str
+    old: str | None
+    new: str | None
+    changed: bool
+
+
+@dataclass(frozen=True)
+class DiffPiece:
+    text: str
+    op: str  # "same", "removed", or "added"
+
+
+class NoteContent:
+    """Derived content for one note: the note source, its data file, and its language strings."""
+
+    def __init__(self, note: Note, diff: DiffData) -> None:
+        self.note: Note = note
+        self.diff: DiffData = diff
+        self.s: dict[str, str] = _strings(note.lang)
+        roles: dict[str, str | None] = diff.document["roles"]
+        self.name_field: str | None = roles["name"]
+        self.parent_field: str | None = roles["parent"]
+        self.entries: dict[str, tuple[str, dict[str, Any]]] = {
+            entry["id"]: (section, entry)
+            for section in ("added", "removed", "changed", "minor_only")
+            for entry in diff.document[section]
+        }
+
+    def field_label(self, field: str) -> str:
+        return self.note.field_labels.get(field, field.replace("_", " ").capitalize())
+
+    def reconcile_sentence(self) -> str:
+        return self.s["reconcile"].format(**{k: f"{v:,}" for k, v in self.diff.counts.items()})
+
+    def name_of(self, record_id: str) -> str:
+        section, entry = self.entries[record_id]
+        record: dict[str, Any] = entry["new"] if section in ("changed", "minor_only") else entry["record"]
+        return str(record.get(self.name_field, "")) if self.name_field else ""
+
+    def change_labels(self, record_id: str) -> list[str]:
+        """Change kinds of one listed record, in the closed vocabulary of diff.json."""
+        section, entry = self.entries[record_id]
+        if section == "added":
+            return [self.s["kind_added"]]
+        if section == "removed":
+            return [self._removal_label(entry)]
+        if section == "minor_only":
+            return [self.s["kind_minor"]]
+        return [self.kind_label(field) for field in entry["major_fields"]]
+
+    def kind_label(self, field: str) -> str:
+        if field == self.name_field:
+            return self.s["kind_renamed"]
+        if field == self.parent_field:
+            return self.s["kind_moved"]
+        return self.s["kind_field"].format(field=self.field_label(field))
+
+    def kind_bars(self) -> list[BarRow]:
+        counts: dict[str, int] = self.diff.counts
+        rows: list[BarRow] = [BarRow(self.s["kind_added"], counts["added"], "added"),
+                              BarRow(self.s["kind_removed"], counts["removed"], "removed")]
+        for field, tally in self.diff.document["field_changes"].items():
+            if tally["major"]:
+                rows.append(BarRow(self.kind_label(field), tally["major"], "neutral"))
+        if counts["minor_only"]:
+            rows.append(BarRow(self.s["kind_minor"], counts["minor_only"], "neutral"))
+        return rows
+
+    def group_rows(self) -> list[PairRow]:
+        groups: dict[str, dict[str, int]] = self.diff.document["groups"]
+        rows: list[PairRow] = [PairRow(name, g["before"], g["after"]) for name, g in groups.items()]
+        return sorted(rows, key=lambda r: (-(r.after - r.before), r.label))
+
+    def field_rows(self, field: str) -> list[PairRow]:
+        rows: list[PairRow] = []
+        for entry in self.diff.document["changed"]:
+            if field not in entry["major_fields"]:
+                continue
+            old, new = entry["old"].get(field), entry["new"].get(field)
+            if isinstance(old, bool) or isinstance(new, bool) or not isinstance(old, (int, float)) or not isinstance(new, (int, float)):
+                raise NoteSourceError(f"field-dumbbell: {entry['id']} {field} is not numeric in both versions ({old!r}, {new!r})")
+            rows.append(PairRow(f"{entry['id']} {self.name_of(entry['id'])}".strip(), old, new))
+        if not rows:
+            raise NoteSourceError(f"field-dumbbell: no record has a major change in {field!r}")
+        return sorted(rows, key=lambda r: (r.after - r.before, r.label))
+
+    def bars_aria(self, title: str) -> str:
+        return f"{title}: " + ", ".join(f"{r.label} {r.value:,}" for r in self.kind_bars())
+
+    def pairs_aria(self, title: str, rows: list[PairRow]) -> str:
+        return f"{title}: " + ", ".join(f"{r.label} {_plain(r.before)} → {_plain(r.after)}" for r in rows)
+
+    def mapping_rows(self) -> list[tuple[str, str, str, str]]:
+        """Rows of ID, as-is, to-be, change for renamed, moved, and removed records."""
+        rows: list[tuple[str, str, str, str]] = []
+        for field, label in ((self.name_field, self.s["kind_renamed"]), (self.parent_field, self.s["kind_moved"])):
+            if field is None:
+                continue
+            for entry in self.diff.document["changed"]:
+                if field in entry["major_fields"]:
+                    rows.append((entry["id"], self.value(entry["old"].get(field)), self.value(entry["new"].get(field)), label))
+        for entry in self.diff.document["removed"]:
+            old_name: str = self.name_of(entry["id"]) or entry["id"]
+            successors: str = ", ".join(self._id_and_name(r) for r in entry["successor_records"])
+            to_be: str = successors or self.s["not_in"].format(label=self.diff.new_label)
+            rows.append((entry["id"], old_name, to_be, self._removal_label(entry)))
+        return rows
+
+    def index_rows(self) -> list[tuple[str, str, str]]:
+        return [(rid, self.name_of(rid), ", ".join(self.change_labels(rid))) for rid in sorted(self.entries)]
+
+    def card_fields(self, record_id: str) -> tuple[list[CardField], str, dict[str, Any]]:
+        """Fields for the as-is and to-be cards of one record, plus its list section and entry."""
+        section, entry = self.entries[record_id]
+        fields: list[CardField] = []
+        changed: set[str] = set(entry.get("major_fields", [])) | set(entry.get("minor_fields", []))
+        if section in ("added", "removed"):
+            changed = set(self.diff.document["compared_fields"])
+        for field in self.diff.document["compared_fields"]:
+            old: str | None = None if section == "added" else self.value((entry.get("old") or entry["record"]).get(field))
+            new: str | None = None if section == "removed" else self.value((entry.get("new") or entry["record"]).get(field))
+            fields.append(CardField(self.field_label(field), old, new, field in changed))
+        return fields, section, entry
+
+    def text_diff(self, record_id: str, field: str) -> tuple[list[DiffPiece], list[DiffPiece]]:
+        """Word-level difference of one text field: pieces for the as-is text and for the to-be text.
+
+        Words are compared without the spaces between them, so a changed run of words is one piece.
+        A single shared word between two changes joins the change on both sides: difflib matches
+        short words such as "as" or "the" that belong to different phrases, and a reader sees one
+        rewritten phrase more clearly than two fragments around a coincidental match.
+        """
+        _, entry = self.entries[record_id]
+        old_words: list[str] = str(entry["old"].get(field, "")).split()
+        new_words: list[str] = str(entry["new"].get(field, "")).split()
+        matcher = difflib.SequenceMatcher(None, old_words, new_words, autojunk=False)
+        segments: list[list[Any]] = [[op == "equal", old_words[i1:i2], new_words[j1:j2]]
+                                     for op, i1, i2, j1, j2 in matcher.get_opcodes()]
+        merged: list[list[Any]] = []
+        for index, segment in enumerate(segments):
+            between_changes: bool = 0 < index < len(segments) - 1 and not segments[index + 1][0] and bool(merged) and not merged[-1][0]
+            if segment[0] and len(segment[1]) == 1 and between_changes:
+                segment = [False, segment[1], segment[2]]
+            if merged and not merged[-1][0] and not segment[0]:
+                merged[-1][1] += segment[1]
+                merged[-1][2] += segment[2]
+            else:
+                merged.append([segment[0], list(segment[1]), list(segment[2])])
+        before: list[DiffPiece] = []
+        after: list[DiffPiece] = []
+        for same, old_part, new_part in merged:
+            if old_part:
+                before.append(DiffPiece(" ".join(old_part), "same" if same else "removed"))
+            if new_part:
+                after.append(DiffPiece(" ".join(new_part), "same" if same else "added"))
+        return _spaced(before), _spaced(after)
+
+    def field_list(self, field: str) -> list[tuple[str, str]]:
+        """(ID and name, to-be value) for every added record and every record whose field changed."""
+        rows: list[tuple[str, str]] = []
+        for record_id in sorted(self.entries):
+            section, entry = self.entries[record_id]
+            if section == "added" or (section == "changed" and field in entry["major_fields"]):
+                record: dict[str, Any] = entry["record"] if section == "added" else entry["new"]
+                rows.append((f"{record_id} {self.name_of(record_id)}".strip(), self.value(record.get(field))))
+        return rows
+
+    def _id_and_name(self, record: dict[str, Any]) -> str:
+        key: str = self.diff.document["roles"]["key"]
+        name: str = str(record.get(self.name_field, "")) if self.name_field else ""
+        return f"{record[key]} {name}".strip()
+
+    def value(self, raw: Any) -> str:
+        if raw is None or raw == "":
+            return self.s["empty"]
+        if isinstance(raw, list):
+            return ", ".join(str(item) for item in raw)
+        if isinstance(raw, dict):
+            return json.dumps(raw, ensure_ascii=False)
+        return _plain(raw) if isinstance(raw, (int, float)) and not isinstance(raw, bool) else str(raw)
+
+    def _removal_label(self, entry: dict[str, Any]) -> str:
+        ids: str = ", ".join(entry["successors"])
+        return self.s[f"kind_{entry['kind']}"].format(ids=ids)
+
+
+def _strings(lang: str) -> dict[str, str]:
+    table: dict[str, dict[str, str]] = json.loads(STRINGS_PATH.read_text(encoding="utf-8"))
+    if lang not in table:
+        raise NoteSourceError(f"no strings for lang {lang!r} in {STRINGS_PATH}")
+    return table[lang]
+
+
+def _spaced(pieces: list[DiffPiece]) -> list[DiffPiece]:
+    """Put back the single space between consecutive pieces, outside the highlighted runs."""
+    spaced: list[DiffPiece] = []
+    for index, piece in enumerate(pieces):
+        if index:
+            spaced.append(DiffPiece(" ", "same"))
+        spaced.append(piece)
+    return spaced
+
+
+def _plain(value: float) -> str:
+    return f"{int(value):,}" if float(value).is_integer() else f"{value:,}"

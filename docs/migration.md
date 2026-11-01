@@ -151,3 +151,11 @@ GPT-6.1 Sol now handles ordinary research, source selection, collection, organiz
 | GPT role effort defaults | Still `xhigh` |
 
 A skill refresh updates instructions and bundled assets. To activate the Codex role files, use the configuration installation procedure in `model-routing`, preserve unrelated settings, and replace a legacy GPT-6 Sol `sol-scout` with the current Sol 6.1 asset. Existing sessions and resumed missions keep their recorded settings.
+
+## Release notes on 2026-11-01
+
+| Former name or set | Current name or set | Change |
+| --- | --- | --- |
+| None | `release-notes` in additional | Team release notes for a new version of a taxonomy, standard, dataset, API, library, or product: a version diff whose data file is the only source of the note's numbers, as-is and to-be comparisons with restrained charts, and PDF, HTML, and GitHub release Markdown rendered from one source with number and design checks |
+
+`copydesk` keeps general documents, the writing profile, and its production routes; the new skill owns the release-note form, the version diff, and the checks that tie every printed number to the data file. `draft-pr` and `write-notion` keep publication. It sits in the additional set because it renders through Playwright's Chromium or WeasyPrint, a tool the installer may lack. Install it by name when needed.
