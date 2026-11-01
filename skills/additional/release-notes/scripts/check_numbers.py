@@ -124,7 +124,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--diff", required=True)
     parser.add_argument("--html", required=True, help="the rendered note HTML; the PDF is compared against it")
     parser.add_argument("--md", help="the rendered GitHub release Markdown")
-    parser.add_argument("--pdf", help="the rendered PDF (needs PyMuPDF)")
+    parser.add_argument("--pdf", help="the rendered PDF (needs pypdf)")
     args: argparse.Namespace = parser.parse_args(argv)
     try:
         diff: DiffData = load_diff(Path(args.diff))
