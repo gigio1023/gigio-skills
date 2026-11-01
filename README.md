@@ -2,7 +2,7 @@
 
 [![skills.sh](https://skills.sh/b/gigio1023/gigio-skills)](https://skills.sh/gigio1023/gigio-skills)
 
-50 reusable [Agent Skills](https://agentskills.io/) for research and evaluation, software delivery, writing, and work with coding agents such as Claude Code, Codex, and Cursor. The skills live in two install sets: the **minimal set** is the default install, and the **additional set** is installed on request. [`npx skills`](https://github.com/vercel-labs/skills) copies the skills you choose into the agents you choose.
+51 reusable [Agent Skills](https://agentskills.io/) for research and evaluation, software delivery, writing, and work with coding agents such as Claude Code, Codex, and Cursor. The skills live in two install sets: the **minimal set** is the default install, and the **additional set** is installed on request. [`npx skills`](https://github.com/vercel-labs/skills) copies the skills you choose into the agents you choose.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/figures/readme/repo-overview.dark.png">
@@ -21,7 +21,7 @@ A skill is one folder. `SKILL.md` holds the description an agent reads to decide
 </picture>
 
 - **Minimal set** `skills/minimal/`: 32 skills that cover the maintainer's recurring work. A minimal skill never requires an additional or external skill; it may mention one "when installed".
-- **Additional set** `skills/additional/`: 18 skills for the paper track, evaluation on spot GPUs, vulnerability reporting, by-name workflows, harness-specific delegation, and personal tools.
+- **Additional set** `skills/additional/`: 19 skills for the paper track, evaluation on spot GPUs, vulnerability reporting, release notes, by-name workflows, harness-specific delegation, and personal tools.
 - **A set decides availability only.** Once installed, each skill's description and invocation settings decide when it runs. The minimal set reflects the maintainer's work, so choose sets and skills by your own.
 
 <picture>
@@ -45,7 +45,7 @@ npx --yes skills add 'https://github.com/gigio1023/gigio-skills/tree/main/skills
   --skill '*' --agent claude-code codex cursor --global --yes
 ```
 
-Use `skills/additional` in the same URL for the additional set, or `'gigio1023/gigio-skills#main'` for all 50 skills. Quote the `'*'` so the shell does not expand it.
+Use `skills/additional` in the same URL for the additional set, or `'gigio1023/gigio-skills#main'` for all 51 skills. Quote the `'*'` so the shell does not expand it.
 
 Install selected skills by name:
 
@@ -80,6 +80,7 @@ An agent picks a skill from its description, so this table is for a person choos
 | Evaluations on spot GPUs | `spot-gpu-evaluation` | `evaluation-operations` |
 | Load or a failing system | `load-testing`, `bug-diagnosis` | `design-doc` when the fix changes a design |
 | Documents, Notion pages, issues, PRs | `copydesk`, `write-notion`, `write-issue`, `draft-pr` | `review-panel` |
+| A release note for a new version | `release-notes` | `draft-pr` for the GitHub release, `write-notion` |
 | Delegation, prompts, skills | `orchestrate-subagents`, `model-routing`, `prompting-guide`, `skill-builder` | `codex-delegate`, `small-model-handoff` |
 | Continuing or handing off work | `work-plan`, `session-handoff` | `read-agent-sessions` |
 
@@ -141,7 +142,7 @@ Grouped by kind of work, in the same order as the figures above. Open a group to
 </details>
 
 <details>
-<summary><b>Writing and language</b>: 2 minimal, 2 additional</summary>
+<summary><b>Writing and language</b>: 2 minimal, 3 additional</summary>
 
 | Skill | Set | Use it to |
 | --- | --- | --- |
@@ -149,6 +150,7 @@ Grouped by kind of work, in the same order as the figures above. Open a group to
 | [write-notion](skills/minimal/write-notion/) | minimal | Create and revise team pages in Notion with layout, mentions, tables, and figures |
 | [english-prompt-review](skills/additional/english-prompt-review/) | additional | Rewrite an English prompt naturally and explain nuance in your native language |
 | [vuln-report](skills/additional/vuln-report/) | additional | Write and check vulnerability reports, advisories, and evidence packages for each disclosure venue |
+| [release-notes](skills/additional/release-notes/) | additional | Write a team release note comparing two versions with reconciled counts and as-is and to-be charts, as PDF, HTML, or a GitHub release body |
 
 `copydesk` supplies the shared writing principles that `draft-pr`, `write-issue`, and `write-notion` apply. See its [synthetic examples](skills/minimal/copydesk/references/synthetic-examples.md), [sharing and delivery](skills/minimal/copydesk/references/sharing-and-delivery.md) reference, and the [public writing sources](docs/writing-sources.md).
 
@@ -219,7 +221,7 @@ Inspect a checkout without creating a tracked install:
 npx --yes skills add . --list
 ```
 
-Before publishing, check that each `SKILL.md` name matches its folder, every referenced path exists, the catalog points to the right skill, and the listing finds 50 unique names.
+Before publishing, check that each `SKILL.md` name matches its folder, every referenced path exists, the catalog points to the right skill, and the listing finds 51 unique names.
 
 | Topic | Document |
 | --- | --- |

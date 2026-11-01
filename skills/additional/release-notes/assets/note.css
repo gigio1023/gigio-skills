@@ -1,0 +1,119 @@
+/* Release note print and screen stylesheet: A4, light, borderless.
+   Separation comes from surface fills, spacing, and radius; tables alternate
+   row fills. Spacing is a 4 px scale, radii are 4, 8, and 12 px, and type uses
+   six sizes from 8.5 to 28 pt (8 pt in the page margin boxes). As-is is gray
+   and hollow, to-be is blue and filled, removed or action-needed is vermillion.
+   No font-feature-settings or font-variant-numeric: Chromium's PDF gives
+   Pretendard's alternate glyphs (ss06, tabular figures) no Unicode mapping,
+   so copied or extracted text loses those characters. */
+
+:root {
+  --bg: #FFFFFF;
+  --surface: #F4F3F1;
+  --ink: #2C2C2B;
+  --ink-2: #5F5E5B;
+  --line: #8E8B86;
+  --blue: #2769B7;
+  --blue-text: #1E5BA1;
+  --blue-fill: #E5F1FF;
+  --vermillion: #C55123;
+  --vermillion-text: #A63C0C;
+  --vermillion-fill: #FFEBE4;
+  --font: "Pretendard", "Noto Sans CJK KR", sans-serif;
+  --mono: "JetBrains Mono", "Noto Sans Mono CJK KR", monospace;
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  font: 10pt/1.55 var(--font);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  line-break: strict;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body { margin: 0; }
+@media screen { body { max-width: 178mm; margin: 0 auto; padding: 32px 16px; } }
+
+h1, h2, h3, p, ul, ol, dl, dd, figure, table { margin: 0; }
+h1 { font-size: 28pt; line-height: 1.2; font-weight: 600; margin-bottom: 8px; }
+h2 { font-size: 15.5pt; line-height: 1.35; font-weight: 600; margin: 32px 0 12px; break-after: avoid; }
+h3 { font-size: 12.5pt; line-height: 1.4; font-weight: 600; margin: 24px 0 8px; break-after: avoid; }
+p, ul, ol { margin-bottom: 12px; }
+ul, ol { padding-left: 20px; }
+li { margin-bottom: 4px; }
+li > ul { margin: 4px 0 0; }
+li > ul > li { color: var(--ink-2); }
+p, li { orphans: 3; widows: 3; }
+strong { font-weight: 600; }
+a { color: var(--ink); text-decoration: underline; overflow-wrap: anywhere; }
+code { font-family: var(--mono); font-size: 9pt; background: var(--surface); border-radius: 4px; padding: 0 4px; }
+
+.kicker { font-size: 8.5pt; color: var(--ink-2); font-weight: 600; margin-bottom: 4px; }
+.subtitle { color: var(--ink-2); margin-bottom: 16px; }
+.meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
+.meta div { background: var(--surface); border-radius: 8px; padding: 8px 12px; }
+.meta div > span { display: block; font-size: 8.5pt; color: var(--ink-2); }
+
+/* The overview is the author's own drawing at the full text width: no panel around it. */
+figure.overview { background: none; border-radius: 0; padding: 0; margin: 8px 0 20px; }
+figure.overview svg { display: block; width: 100%; height: auto; }
+.summary > ul { margin-bottom: 16px; }
+.reconcile { color: var(--ink-2); }
+.why ul, .impact ul { margin-bottom: 4px; }
+.why p, .impact p { margin-bottom: 4px; }
+
+.actions li strong { color: var(--ink); }
+
+figure { background: var(--surface); border-radius: 12px; padding: 16px; margin: 0 0 16px; break-inside: avoid; }
+.fig-title { font-weight: 600; margin-bottom: 8px; }
+figcaption { font-size: 8.5pt; color: var(--ink-2); margin-top: 8px; }
+svg.chart { display: block; width: 100%; height: auto; }
+/* Chart paint and type are SVG attributes written from the tokens above by scripts/_svg_charts.py. */
+
+/* A change section may break between its blocks; the heading stays with the first block,
+   and each card pair, text difference, and figure stays whole. */
+.change { margin-bottom: 16px; }
+.change figure { margin-top: 12px; }
+.pair, .textdiff, .field-entry { break-inside: avoid; }
+.change h3 .id { color: var(--ink-2); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.card { background: var(--surface); border-radius: 8px; padding: 12px 16px; }
+.card.to-be { background: var(--blue-fill); }
+.card-head { font-size: 8.5pt; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
+.card-head svg.mark { display: inline-block; vertical-align: -1px; margin-right: 4px; }
+.card .successor { font-size: 9pt; font-weight: 600; margin: 4px 0; }
+.card dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 9pt; }
+.card dt { color: var(--ink-2); }
+.card dd.same { color: var(--ink-2); }
+.card dd.diff { font-weight: 600; }
+.card .absent { color: var(--ink-2); font-size: 9pt; margin: 0; }
+.textdiff { background: var(--surface); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; }
+.textdiff .card-head { margin: 0; }
+.textdiff p { margin: 0; }
+del { background: var(--vermillion-fill); text-decoration: line-through; color: var(--ink); }
+ins { background: var(--blue-fill); text-decoration: none; font-weight: 600; }
+.why, .impact { margin-bottom: 4px; }
+
+table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 9pt; line-height: 1.45; margin-bottom: 16px; }
+caption { caption-side: top; text-align: left; font-size: 8.5pt; color: var(--ink-2); padding-bottom: 8px; }
+thead { display: table-header-group; }
+th { font-weight: 600; color: var(--ink-2); font-size: 8.5pt; text-align: left; padding: 4px 8px; }
+td { padding: 4px 8px; text-align: left; vertical-align: top; }
+tr { break-inside: avoid; }
+table.keep { break-inside: avoid; }
+tbody tr:nth-child(even) > * { background: var(--surface); }
+tbody tr:nth-child(even) > :first-child { border-radius: 4px 0 0 4px; }
+tbody tr:nth-child(even) > :last-child { border-radius: 0 4px 4px 0; }
+td.num, th.num { text-align: right; }
+td.id, .nb { white-space: nowrap; }
+/* The appendix of every change is a lookup table: one size down, tight rows. */
+.appendix table { font-size: 8.5pt; line-height: 1.35; }
+.appendix td { padding: 0 8px; }
+
+.entry-title { font-weight: 600; font-size: 9pt; margin-bottom: 4px; break-after: avoid; }
+.source { break-inside: avoid; }
+.source dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; font-size: 9pt; }
+.source dt { color: var(--ink-2); }

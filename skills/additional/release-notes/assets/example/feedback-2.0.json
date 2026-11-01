@@ -1,0 +1,159 @@
+{
+ "version": "2.0",
+ "items": [
+  {
+   "id": "FB-001",
+   "name": "Duplicate charge",
+   "group": "Billing",
+   "priority": 1,
+   "definition": "The customer was charged more than once for the same order."
+  },
+  {
+   "id": "FB-002",
+   "name": "Unclear pricing",
+   "group": "Billing",
+   "priority": 3,
+   "definition": "The customer could not tell what an item or plan would cost before paying."
+  },
+  {
+   "id": "FB-003",
+   "name": "Promo code not applied",
+   "group": "Billing",
+   "priority": 3,
+   "definition": "A valid promotion code was entered but the discount did not appear on the order"
+  },
+  {
+   "id": "FB-004",
+   "name": "Payment declined",
+   "group": "Billing",
+   "priority": 2,
+   "definition": "The payment was refused at checkout."
+  },
+  {
+   "id": "FB-005",
+   "name": "Subscription cancellation",
+   "group": "Billing",
+   "priority": 2,
+   "definition": "The customer asks to end a recurring plan or reports that cancellation did not take effect."
+  },
+  {
+   "id": "FB-006",
+   "name": "Invoice error",
+   "group": "Billing",
+   "priority": 3,
+   "definition": "An invoice shows a wrong amount, tax, or line item."
+  },
+  {
+   "id": "FB-007",
+   "name": "Wrong invoice address",
+   "group": "Billing",
+   "priority": 4,
+   "definition": "An invoice shows a billing address the customer did not enter."
+  },
+  {
+   "id": "FB-008",
+   "name": "Lost parcel",
+   "group": "Delivery",
+   "priority": 1,
+   "definition": "The carrier reports the parcel as lost, or tracking has not changed for 10 days."
+  },
+  {
+   "id": "FB-009",
+   "name": "Wrong item delivered",
+   "group": "Delivery",
+   "priority": 2,
+   "definition": "The parcel contained an item the customer did not order."
+  },
+  {
+   "id": "FB-010",
+   "name": "Delivery window missed",
+   "group": "Delivery",
+   "priority": 3,
+   "definition": "The parcel arrived outside the delivery window the customer selected."
+  },
+  {
+   "id": "FB-011",
+   "name": "Slow shipping",
+   "group": "Delivery",
+   "priority": 2,
+   "definition": "The parcel took longer than the customer expected."
+  },
+  {
+   "id": "FB-012",
+   "name": "Item Out Of Stock",
+   "group": "Delivery",
+   "priority": 3,
+   "definition": "An ordered item could not be shipped because it was out of stock."
+  },
+  {
+   "id": "FB-013",
+   "name": "Missing parts",
+   "group": "Delivery",
+   "priority": 2,
+   "definition": "The parcel arrived without some of the parts listed for the product."
+  },
+  {
+   "id": "FB-014",
+   "name": "Defective product",
+   "group": "Product",
+   "priority": 1,
+   "definition": "The product does not work as expected."
+  },
+  {
+   "id": "FB-015",
+   "name": "Product not as described",
+   "group": "Product",
+   "priority": 2,
+   "definition": "The product differs from its listing in size, color, material, or features."
+  },
+  {
+   "id": "FB-016",
+   "name": "Login problem",
+   "group": "Account",
+   "priority": 1,
+   "definition": "The customer cannot use their account."
+  },
+  {
+   "id": "FB-017",
+   "name": "Size guide inaccurate",
+   "group": "Product",
+   "priority": 4,
+   "definition": "The size guide on the listing did not match the delivered product."
+  },
+  {
+   "id": "FB-018",
+   "name": "Email change request",
+   "group": "Account",
+   "priority": 3,
+   "definition": "The customer asks to change the email address on their account."
+  },
+  {
+   "id": "FB-019",
+   "name": "Fax support request",
+   "group": "Support",
+   "priority": 4,
+   "definition": "The customer asks to reach support by fax."
+  },
+  {
+   "id": "FB-020",
+   "name": "Data export request",
+   "group": "Support",
+   "priority": 3,
+   "definition": "The customer asks for a copy of the personal data stored in their account."
+  },
+  {
+   "id": "FB-021",
+   "name": "Agent was rude",
+   "group": "Support",
+   "priority": 2,
+   "definition": "The customer reports that a support agent was impolite or dismissive."
+  },
+  {
+   "id": "FB-022",
+   "name": "No reply to ticket",
+   "group": "Support",
+   "priority": 2,
+   "definition": "A support ticket received no reply within the promised time."
+  }
+ ]
+}

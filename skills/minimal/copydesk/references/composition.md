@@ -14,6 +14,7 @@ Use when document work also involves internal sharing, a dashboard, focused lang
 | [Official shadcn skill](https://ui.shadcn.com/docs/skills) | Maintainer-provided shadcn project and component guidance for an actual implementation |
 | `frontend-design` | Design intensity, composition, and visual/interaction review for a user-visible change |
 | `vuln-report`, when installed | Vulnerability reports, security advisories, and their evidence packages |
+| `release-notes`, when installed | Team release notes comparing two versions of an artifact, with counts from a version diff and PDF, HTML, and GitHub release outputs |
 | `share-internal-doc`, `slop-aware-writing`, `korean-clarity` | Merged into this skill: [sharing and delivery](sharing-and-delivery.md), [authoring and revision](authoring-and-revision.md) under the [MIT notice](../LICENSE.slop-aware-writing), and [Korean writing](korean-writing.md) |
 
 `insight-dashboard` and `frontend-design` are in the minimal set. The paper skills belong to the additional set and are used when installed; without them this writer still covers the document's content, structure, and a native production route.
