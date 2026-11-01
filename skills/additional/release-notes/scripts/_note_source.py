@@ -23,6 +23,7 @@ from typing import Any
 from _diff_data import DiffData
 from _errors import NoteSourceError
 from _overview_svg import check_overview
+from _strings import NounForm, noun_forms
 
 SCHEMA: str = "release-notes/note@1"
 LANGUAGES: frozenset[str] = frozenset({"en", "ko"})
@@ -127,6 +128,7 @@ class Link:
 @dataclass(frozen=True)
 class Note:
     lang: str
+    record_noun: dict[NounForm, str]  # the artifact's word for one record, in the forms the language's strings use
     title: str
     subtitle: str | None
     overview: Overview | None
@@ -143,7 +145,12 @@ class Note:
     full_list: FullList
 
     def prose(self) -> Iterator[tuple[str, str]]:
-        """Yield (location, text) for every string that may carry inline markup."""
+        """Yield (location, text) for every string in the writer's words that the note prints.
+
+        Each may carry inline markup, except the record noun's forms, which the builder's own sentences print as text.
+        """
+        for form, word in self.record_noun.items():
+            yield f"record_noun.{form.value}", word
         yield "title", self.title
         if self.subtitle:
             yield "subtitle", self.subtitle
@@ -179,7 +186,7 @@ def load_note(path: Path, diff: DiffData) -> Note:
         raw: Any = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as err:
         raise NoteSourceError(f"{path}: cannot read the note source: {err}") from err
-    top: dict[str, Any] = _object(raw, "note.json", required={"schema", "lang", "title", "summary"}, optional={
+    top: dict[str, Any] = _object(raw, "note.json", required={"schema", "lang", "record_noun", "title", "summary"}, optional={
         "subtitle", "overview", "actions", "figures", "changes", "sections", "open_questions", "links", "field_labels",
         "reasons", "field_list", "full_list"})
     if top["schema"] != SCHEMA:
@@ -188,6 +195,7 @@ def load_note(path: Path, diff: DiffData) -> Note:
         raise NoteSourceError(f"{path}: lang must be one of {sorted(LANGUAGES)}; add strings to assets/strings.json for another")
     note = Note(
         lang=top["lang"],
+        record_noun=_record_noun(top["record_noun"], top["lang"]),
         title=_text(top["title"], "title"),
         subtitle=_text(top["subtitle"], "subtitle") if "subtitle" in top else None,
         overview=_overview(top["overview"], path.parent) if "overview" in top else None,
@@ -273,6 +281,23 @@ def _overview(value: Any, base: Path) -> Overview:
     check_overview(src)
     caption: str | None = _text(item["caption"], "overview.caption") if "caption" in item else None
     return Overview(src, _text(item["alt"], "overview.alt"), caption)
+
+
+def _record_noun(value: Any, lang: str) -> dict[NounForm, str]:
+    """The word for one record in each form the language's builder strings use, such as ``{"singular": "유형", "counter": "개"}``.
+
+    A form fills the builder's string templates before they are formatted, so it cannot hold a brace.
+    """
+    forms: list[NounForm] = sorted(noun_forms(lang))
+    where: str = f"record_noun (the {lang} strings use {', '.join(f.value for f in forms)})"
+    item: dict[str, Any] = _object(value, where, required={f.value for f in forms}, optional=set())
+    noun: dict[NounForm, str] = {}
+    for form in forms:
+        word: str = _text(item[form.value], f"record_noun.{form.value}")
+        if "{" in word or "}" in word:
+            raise NoteSourceError(f"record_noun.{form.value}: {word!r} holds a brace; a noun form is a plain word")
+        noun[form] = word
+    return noun
 
 
 def _full_list(value: Any) -> FullList:

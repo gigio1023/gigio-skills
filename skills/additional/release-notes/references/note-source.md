@@ -30,14 +30,14 @@ Read when running `version_diff.py`, writing `note.json`, or looking up a token 
 | `--source-base` | Directory the recorded export and data-file paths are relative to, default `.`; the source section prints them |
 | `--fields` | Comma-separated fields to compare; default every field except the key |
 | `--successors` | CSV with header `old_id,new_id`, one row per successor of a removed ID |
-| `--facts` | JSON object `{name: {"value": number, "source": "..."}}` for numbers the versions cannot give |
+| `--facts` | JSON object `{name: {"value": number, "source": "...", "label": "..."}}` for numbers the versions cannot give; `label` is optional |
 | `--out` | Path of the data file |
 
-Errors stop the run with the file, the record, and the fix: a missing key field, a duplicate ID within one version, a nested list without `--records-path`, a successor that does not exist, a role field that appears in no record, a `--path-pattern` that does not match a file, or a name or group path holding an object or list. YAML exports are not read; convert them to JSON first.
+Errors stop the run with the file, the record, and the fix: a missing key field, a duplicate ID within one version, a nested list without `--records-path`, a successor that does not exist, a role field that appears in no record, a `--path-pattern` that does not match a file, a name or group path holding an object or list, or a fact without a numeric `value` and a `source`, or with a key other than `value`, `source`, and `label`. YAML exports are not read; convert them to JSON first.
 
 Export each version from its released state: the tag or release commit, not a working branch. When the artifact lives in a repository, check out each tag into its own directory or export from it, and pass the tag as `--old-ref` and `--new-ref` so the note names exactly what was compared.
 
-`--facts` is for a number the note needs that the two versions cannot produce, such as the count of stored labels that need remapping. Its `source` says where the number came from, and the note cites it as `{{facts.<name>}}`. Keep facts few; most notes need none. The source section lists each fact the note cites, through a token or a figure row, with its value and source.
+`--facts` is for a number the note needs that the two versions cannot produce, such as the count of stored labels that need remapping. Its `source` says where the number came from, and the note cites it as `{{facts.<name>}}`. Its `label` is the name a reader sees, in the note's language and with the words the note uses for the same number elsewhere, such as the overview's label: `{"label": "FB-006 stored tags before re-tagging", "value": 1280, "source": "..."}`. A label is the writer's words, so it follows the prose rules below, inline markup and tokens included. Keep facts few; most notes need none. The source section lists each fact the note cites, through a token or a figure row, with its label, value, and source; a fact without a label shows its name instead, an identifier the reader cannot match to the note's own words. The name stays the token path and the data file's key either way.
 
 ## The data file
 
@@ -56,7 +56,7 @@ Export each version from its released state: the tag or release commit, not a wo
 | `groups` | Per group value, `before`, `after`, `added`, `removed`, `moved_in`, `moved_out` |
 | `identities` | The two reconciling identities as text |
 | `added`, `removed`, `changed`, `minor_only` | Records per class; changed entries hold `old`, `new`, `major_fields`, `minor_fields`, and each field `change` |
-| `facts` | Values passed with `--facts` |
+| `facts` | Facts passed with `--facts`, each with its `value`, `source`, and `label` when given |
 | `ids` | Every ID of each version, for checking IDs the note names |
 
 ## Writing note.json
@@ -67,6 +67,7 @@ Schema `release-notes/note@1`; [the example](../assets/example/note.en.json) use
 | --- | --- | --- |
 | `schema` | yes | `release-notes/note@1` |
 | `lang` | yes | `en` or `ko`; other languages need an entry in `assets/strings.json` |
+| `record_noun` | yes | The artifact's own word for one record, such as "type" for a taxonomy of vulnerability types, in the forms the language's builder strings use: `{"singular": "record", "plural": "records"}` in English, `{"singular": "유형", "counter": "개"}` in Korean. Every builder heading, sentence, and column that names the records uses it, such as "Type counts", "유형 수", or "빠진 유형 3개" |
 | `title` | yes | Artifact name and version, usually with `{{new.label}}` |
 | `subtitle` | no | The audience or scope in one line |
 | `overview` | no, but D22 fails without it | `{src, alt, caption?}`: the page-one SVG relative to note.json, its values as text with each number as a token, and an optional caption of a few words |
@@ -82,13 +83,15 @@ Schema `release-notes/note@1`; [the example](../assets/example/note.en.json) use
 | `field_list` | no | A compared field, such as `definition`, listed with both values and word-level marks for every added record and every record with a major change in it, except records with their own change section |
 | `full_list` | no | `appendix` (default): a compact table of every listed ID at the end. `omit`: no table; the source section says the data file lists every change, and the number check stops requiring every ID in the output |
 
+A string in `assets/strings.json` names the records with the placeholders `{singular}`, `{plural}`, and `{counter}`, capitalized as `{Singular}` where the noun starts a heading or sentence; the placeholders a language uses are the forms its notes must give. Korean strings attach no particle whose form depends on the noun's last syllable, such as 은/는 or 이/가, so any noun and counter read correctly.
+
 An item is a string or `{"text": "...", "items": [item, ...]}`, nested at most three levels: `"summary": ["FB-007 is merged into FB-006", {"text": "{{counts.added}} records are added:", "items": ["FB-023 Refund delay", "FB-024 Damaged packaging"]}]`. A change's `why` and `impact` take a string or a list of items.
 
 ## Tokens and inline markup
 
 Prose fields accept `{{dotted.path}}` tokens, `` `code` ``, `**bold**`, and `[text](url)`. A token resolves against the data file: `{{counts.added}}`, `{{counts.before}}`, `{{groups.Account.after}}`, `{{field_changes.definition.major}}`, `{{removal_kinds.merged}}`, `{{old.label}}`, `{{facts.remapped_labels}}`. Numbers print with thousands separators. In the HTML, each token number carries its path in a `data-count` attribute, which `check_numbers.py` uses to catch an HTML built from an older data file.
 
-The builder rejects digits typed in prose, which is every field in the writer's words, the overview's `alt` included; excerpts are copied from the data file and checked against it instead. Digits are allowed in code spans, URLs, version labels and refs from the data file, ISO dates, and words in which a letter directly precedes a digit: `v4.0`, `H200`, the commit `3e1f09a7`, the `v2.1` of the tag `taxonomy-v2.1`, or the Korean word `제3자`. Digits followed only by letters are a count with its unit or counter, such as `3x` or `23개`, and are rejected. A count glued to the word before it, such as `총23개`, reads as one word and escapes the rule, so put a space before the token: `총 {{counts.after}}개`. IDs that exist in either version are fine; an ID-shaped string that exists in neither is rejected. The error lists every location, so one build reports all of them. Write numbers that are not counts in words, in a code span, or rephrase: "Lower priority numbers are handled first" rather than citing a priority value.
+The builder rejects digits typed in prose, which is every field in the writer's words, the overview's `alt`, the record noun, and the label of each fact the note cites included; excerpts are copied from the data file and checked against it instead. Digits are allowed in code spans, URLs, version labels and refs from the data file, ISO dates, and words in which a letter directly precedes a digit: `v4.0`, `H200`, the commit `3e1f09a7`, the `v2.1` of the tag `taxonomy-v2.1`, or the Korean word `제3자`. Digits followed only by letters are a count with its unit or counter, such as `3x` or `23개`, and are rejected. A count glued to the word before it, such as `총23개`, reads as one word and escapes the rule, so put a space before the token: `총 {{counts.after}}개`. IDs that exist in either version are fine; an ID-shaped string that exists in neither is rejected. Paths, fact names, and fact sources are not exempt in prose: the builder prints them from the data file as identifiers, which the number check reads whole, the way it reads code spans, so a path with digits typed into prose, such as `recount-14.json`, must be a code span. The error lists every location, so one build reports all of them. Write numbers that are not counts in words, in a code span, or rephrase: "Lower priority numbers are handled first" rather than citing a priority value.
 
 An alt text written by a figure tool usually types its numbers. Replace each with the token of the same value, such as `{{counts.before}}` or `{{facts.paths_after}}`, and leave IDs, labels, and commits as text; the build error names each number to replace.
 

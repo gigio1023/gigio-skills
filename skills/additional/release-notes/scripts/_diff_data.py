@@ -18,7 +18,6 @@ from _errors import NoteSourceError
 
 SCHEMA: str = "release-notes/diff@2"
 NUMBER_PATTERN: re.Pattern[str] = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?")
-COUNT_WORD: re.Pattern[str] = re.compile(rf"[+\-−]?(?:{NUMBER_PATTERN.pattern})[^\W\d_]*")
 
 
 @dataclass(frozen=True)
@@ -61,23 +60,20 @@ class DiffData:
         return set(self.document["ids"]["old"]) | set(self.document["ids"]["new"])
 
     def identifier_strings(self) -> list[str]:
-        """Strings that may contain digits without being counts.
+        """The version labels, refs, and the date: data-file strings that prose may cite and that hold digits without being counts.
 
-        These are the version labels, refs, and source paths, the data file's path, the date, and each
-        fact's name and source, all of which the source section prints. A fact's source is free text, so
-        its identifier words are listed too: a match of the whole source can fail where markup in it was
-        read or a line broke, and each word still matches.
+        Paths, fact names, and fact sources are not listed. The builder prints them as identifier runs,
+        which the number check reads whole, the way it reads code spans, so a count typed into prose is
+        caught even when the same text appears in a fact source.
         """
-        found: list[str] = [str(self.document["data_file"])]
+        found: list[str] = []
         for side in ("old", "new"):
-            for key in ("label", "ref", "source"):
+            for key in ("label", "ref"):
                 value: Any = self.document[side].get(key)
                 if value:
                     found.append(str(value))
         if self.document.get("date"):
             found.append(str(self.document["date"]))
-        for name, fact in self.document["facts"].items():
-            found += [name, fact["source"], *_identifier_words(fact["source"])]
         return sorted(set(found), key=len, reverse=True)
 
     def allowed_numbers(self) -> set[str]:
@@ -130,20 +126,6 @@ def load_diff(path: Path) -> DiffData:
     if not isinstance(document, dict) or document.get("schema") != SCHEMA:
         raise NoteSourceError(f"{path}: not a {SCHEMA} data file; produce it with version_diff.py")
     return DiffData(path=path, document=document)
-
-
-def _identifier_words(text: str) -> list[str]:
-    """Words of free text that hold a digit without being a count: file names, commits, versions, dates.
-
-    A word is taken without surrounding brackets, quotes, backticks, and punctuation. A plain number, or
-    a number followed only by letters such as ``3x`` or ``23개``, stays a count and is not listed.
-    """
-    words: list[str] = []
-    for word in text.split():
-        core: str = word.strip("()[]{}<>,;:'\"`")
-        if re.search(r"\d", core) and not COUNT_WORD.fullmatch(core):
-            words.append(core)
-    return words
 
 
 def canonical_number(text: str) -> str:

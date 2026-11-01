@@ -13,7 +13,9 @@ Checks, each reported with what it found:
   data file holds; version labels, refs, ISO dates, IDs, code spans, URLs,
   and words in which a letter directly precedes a digit (``v4.0``,
   ``3e1f09a7``, ``제3자``) are not numbers, the rule the builder applies to
-  note.json
+  note.json. Nor are the identifier runs the builder prints from the data
+  file, such as paths and fact sources, which the HTML marks
+  ``data-identifier`` and the Markdown prints as code spans
 - N3 every ``data-count`` number in the HTML equals the current value at its
   path, which catches an HTML built from an older data file
 - N4 every ID-shaped string exists in one of the two versions, and every
@@ -22,8 +24,8 @@ Checks, each reported with what it found:
   are checked, because the data file carries the full list
 - N5 the reconciliation identity is printed
 - N6 the PDF's prose carries exactly the HTML prose's numbers, and the PDF
-  text holds every figure text, code span, URL, and identifier word that has
-  a digit; a stale or truncated PDF fails here
+  text holds every figure text, code span, URL, identifier run, and
+  identifier word that has a digit; a stale or truncated PDF fails here
 - N7 every ``data-label`` in the HTML reads the one label its path has in
   ``assets/strings.json`` for the note's language, and its number is bound
   to the same path; a merge count under the removed label fails here
@@ -36,11 +38,12 @@ loses characters from IDs here (N4.pdf) even when the page image is right.
 The PDF checks read prose only. Text extraction joins adjacent boxes without
 a space: SVG text runs (``2.0`` and ``3e1f09a7`` read ``2.03e1f09a7``) and
 neighboring cells (``우선순위`` and ``4`` read ``우선순위4``). It also drops
-code markup and breaks long URLs across lines. So every figure text, code
-span, URL, and identifier word such as ``v4.0`` that the HTML holds is
-removed from the PDF text first, matched with any whitespace between its
-characters, and the rest is read without the word rule. Figure numbers are
-checked in the HTML, where each text run is its own node.
+code markup and breaks long URLs, paths, and fact sources across lines,
+even inside a word. So every figure text, code span, URL, identifier run,
+and identifier word such as ``v4.0`` that the HTML holds is removed from the
+PDF text first, matched with any whitespace between its characters, and the
+rest is read without the word rule. Figure numbers are checked in the HTML,
+where each text run is its own node.
 
 HTML and Markdown need only the standard library. ``--pdf`` needs pypdf:
 run the script with ``uv run --with pypdf python scripts/check_numbers.py``.
@@ -68,7 +71,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _diff_data import DiffData, canonical_number, load_diff
 from _errors import EnvironmentSetupError, ReleaseNoteError
 from _inline import URL, format_value, identifier_words, scan_joined, scan_literals
-from _note_content import expected_label, load_strings
+from _note_content import expected_label
+from _strings import load_strings
 
 PAGE_NUMBER: re.Pattern[str] = re.compile(r"^\s*\d+\s*/\s*\d+\s*$")
 # scan_literals for text whose words are intact, scan_joined for PDF text.
@@ -88,7 +92,8 @@ class _RenderedHtml(HTMLParser):
 
     ``text`` is prose: sentences, table cells, and labels drawn as HTML text.
     ``figures`` holds the drawn text runs of each inline SVG, ``code`` each
-    code span, and ``urls`` each address printed in prose. ``labels`` holds
+    code span, ``identifiers`` each run marked ``data-identifier``, such as a
+    path or a fact source, and ``urls`` each address printed in prose. ``labels`` holds
     accessible text that is not drawn: aria labels and SVG titles and
     descriptions. Also collected: data-count and data-label bindings, the
     document language, and its title.
@@ -99,6 +104,7 @@ class _RenderedHtml(HTMLParser):
         self.text: list[str] = []
         self.figures: list[list[str]] = []
         self.code: list[str] = []
+        self.identifiers: list[str] = []
         self.urls: list[str] = []
         self.labels: list[str] = []
         self.bindings: list[tuple[str, str]] = []
@@ -107,6 +113,8 @@ class _RenderedHtml(HTMLParser):
         self.full_list_omitted: bool = False
         self.title: str = ""
         self._stack: list[str] = []
+        # Stack depth of the open identifier run, whose element closes when the stack drops below it; runs do not nest.
+        self._identifier_depth: int | None = None
         # One open binding at a time: (attribute, path, tag, collected text). Bound elements do not nest.
         self._open: tuple[str, str, str, list[str]] | None = None
 
@@ -115,6 +123,9 @@ class _RenderedHtml(HTMLParser):
         if tag == "svg" and "svg" not in self._stack:
             self.figures.append([])
         self._stack.append(tag)
+        if "data-identifier" in attributes:
+            self._identifier_depth = len(self._stack)
+            self.identifiers.append("")
         if attributes.get("aria-label"):
             self.labels.append(attributes["aria-label"] or "")
         if attributes.get("data-full-list") == "omitted":
@@ -133,6 +144,8 @@ class _RenderedHtml(HTMLParser):
         while self._stack:
             if self._stack.pop() == tag:
                 break
+        if self._identifier_depth is not None and len(self._stack) < self._identifier_depth:
+            self._identifier_depth = None
 
     def handle_data(self, data: str) -> None:
         if "svg" in self._stack:
@@ -146,6 +159,8 @@ class _RenderedHtml(HTMLParser):
             return
         elif "code" in self._stack:
             self.code.append(data)
+        elif self._identifier_depth is not None:
+            self.identifiers[-1] += data
         else:
             self.text.append(data)
             self.urls.extend(URL.findall(data))
@@ -153,9 +168,9 @@ class _RenderedHtml(HTMLParser):
             self._open[3].append(data)
 
     def non_prose(self) -> list[str]:
-        """Each figure's text, code span, and printed URL: the strings the PDF comparison removes."""
+        """Each figure's text, code span, identifier run, and printed URL: the strings the PDF comparison removes."""
         figures: list[str] = ["".join(runs) for runs in self.figures if runs]
-        return [text for text in figures + self.code + self.urls if text.strip()]
+        return [text for text in figures + self.code + self.identifiers + self.urls if text.strip()]
 
 
 def main(argv: list[str]) -> int:
@@ -177,7 +192,7 @@ def main(argv: list[str]) -> int:
         checks.append(_bindings(page.bindings, diff))
         checks.append(_labels(page, diff))
         if args.md:
-            md_text: str = re.sub(r"```(?!diff).*?```", " ", Path(args.md).read_text(encoding="utf-8"), flags=re.S)
+            md_text: str = _markdown_text(Path(args.md).read_text(encoding="utf-8"))
             checks += _text_checks("md", md_text, diff, complete, scan_literals)
         if args.pdf:
             non_prose: list[str] = page.non_prose() + identifier_words(html_prose, diff)
@@ -189,6 +204,18 @@ def main(argv: list[str]) -> int:
         return 2
     print(json.dumps({"diff": args.diff, "checks": [asdict(c) for c in checks]}, ensure_ascii=False, indent=1))
     return 0 if all(c.ok for c in checks) else 1
+
+
+def _markdown_text(markdown: str) -> str:
+    """The Markdown as the number check reads it, with code spans where GitHub sees them.
+
+    A diff block quotes field values as literal text: its lines are read as prose, without the fence
+    lines and without backticks, so a backtick inside a quoted value cannot pair with one outside the
+    block and turn the following prose into a code span, or a code span into prose. Other fenced blocks
+    are dropped.
+    """
+    text: str = re.sub(r"^```diff\n(.*?)^```$", lambda m: m.group(1).replace("`", " "), markdown, flags=re.S | re.M)
+    return re.sub(r"^```.*?^```$", " ", text, flags=re.S | re.M)
 
 
 def _reconciles(diff: DiffData) -> Check:
@@ -265,9 +292,10 @@ def _pdf_text(pdf: Path, title: str) -> str:
 def _pdf_prose(pdf_text: str, non_prose: list[str]) -> tuple[str, list[str]]:
     """Remove each non-prose string of the HTML from the PDF text once; also return those with a digit that are missing.
 
-    Non-prose strings are figure texts, code spans, URLs, and identifier
-    words. A string matches with any whitespace between its characters,
-    because extraction joins SVG text runs and breaks long URLs across lines.
+    Non-prose strings are figure texts, code spans, identifier runs, URLs,
+    and identifier words. A string matches with any whitespace between its
+    characters, because extraction joins SVG text runs and breaks long URLs,
+    paths, and fact sources across lines.
     Longer strings go first, and a match never starts or ends inside a
     number, so a short code span cannot cut digits out of a longer string or
     a count.

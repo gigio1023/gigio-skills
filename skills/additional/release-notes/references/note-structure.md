@@ -71,7 +71,7 @@ Per group, `after = before − removed − moved_out + added + moved_in`. MITRE'
 
 ## A second record set
 
-`version_diff.py` compares one record set. When the release also changed a second set, such as test guides or attack paths beside the taxonomy records, count that set in both versions with your own script and pass each count to `--facts` with a `source` naming the script, the input, and both refs. The note cites the counts through `{{facts.<name>}}` tokens and draws before and after pairs with a `facts-dumbbell` figure. The source section lists every cited fact with its value and source, so the reader can trace a number that the record diff does not hold. Keep facts the note does not cite out of the facts file, or expect them to stay in the data file only.
+`version_diff.py` compares one record set. When the release also changed a second set, such as test guides or attack paths beside the taxonomy records, count that set in both versions with your own script and pass each count to `--facts` with a `source` naming the script, the input, and both refs. The note cites the counts through `{{facts.<name>}}` tokens and draws before and after pairs with a `facts-dumbbell` figure. The source section lists every cited fact with its label, value, and source, so the reader can trace a number that the record diff does not hold; give each fact the `label` the note uses for that number elsewhere. Keep facts the note does not cite out of the facts file, or expect them to stay in the data file only.
 
 ## What is material
 
