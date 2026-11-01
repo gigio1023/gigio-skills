@@ -14,7 +14,9 @@ stay on the elements for meaning and for the design checks.
 
 As-is and to-be differ by more than hue: as-is marks are hollow rings, to-be
 marks are filled, and every value is printed beside its mark, so the chart
-reads in grayscale and without a legend lookup.
+reads in grayscale and without a legend lookup. The bars of the change-kinds
+chart follow the same rule: records that exist only in the as-is version
+(removed, merged, split, replaced) are hollow bars, added records filled bars.
 """
 
 from __future__ import annotations
@@ -76,10 +78,11 @@ class PairRow:
 def change_kind_bars(rows: list[BarRow], aria_label: str, palette: Palette) -> str:
     """Horizontal bars of record counts per kind of change, values at the bar ends.
 
-    Each label carries ``data-label`` and each value ``data-count`` with the row's diff.json path,
-    so the number check can confirm that a number sits under the label of what it counts.
+    Added rows are filled to-be bars and removal rows hollow as-is bars, both with semibold label and
+    value, so they stand apart from the gray field rows without color. Each label carries ``data-label``
+    and each value ``data-count`` with the row's diff.json path, so the number check can confirm that a
+    number sits under the label of what it counts.
     """
-    fills: dict[str, str] = {"added": palette.blue, "removed": palette.vermillion, "neutral": palette.line}
     label_width: float = _label_column(r.label for r in rows)
     x0: float = label_width + 12
     span: float = WIDTH - VALUE_SPACE - x0
@@ -90,13 +93,24 @@ def change_kind_bars(rows: list[BarRow], aria_label: str, palette: Palette) -> s
         mid: float = 4 + i * row_h + row_h / 2
         length: float = span * row.value / top_value
         bound: str = html.escape(row.path, quote=True)
-        parts.append(_text(palette, 0, mid + 4, row.label, "label", palette.ink, attrs=f' data-label="{bound}"'))
+        strong: bool = row.tone != "neutral"
+        parts.append(_text(palette, 0, mid + 4, row.label, "label", palette.ink, bold=strong, attrs=f' data-label="{bound}"'))
         if length > 0:
-            parts.append(f'<rect class="bar bar-{row.tone}" x="{x0:.1f}" y="{mid - bar_h / 2:.1f}" width="{length:.1f}" '
-                         f'height="{bar_h}" rx="2" fill="{fills[row.tone]}"/>')
-        parts.append(_text(palette, x0 + length + 8, mid + 4, _number(row.value), "value", palette.ink_2,
+            parts.append(_bar(palette, row.tone, x0, mid - bar_h / 2, length, bar_h))
+        parts.append(_text(palette, x0 + length + 8, mid + 4, _number(row.value), "value", palette.ink_2, bold=strong,
                            attrs=f' data-count="{bound}"'))
     return _svg(4 + len(rows) * row_h + 4, aria_label, parts)
+
+
+def _bar(palette: Palette, tone: str, x: float, y: float, length: float, height: float) -> str:
+    """One bar: hollow vermillion for removals, filled blue for additions, filled gray otherwise."""
+    if tone == "removed":
+        # The stroke sits inside the bar's extent, so a hollow bar is as long as a filled one of the same value.
+        return (f'<rect class="bar bar-removed mark-as-is" x="{x + 0.75:.1f}" y="{y + 0.75:.1f}" width="{max(length - 1.5, 0):.1f}" '
+                f'height="{height - 1.5:.1f}" rx="2" fill="{palette.bg}" stroke="{palette.vermillion}" stroke-width="1.5"/>')
+    fill: str = palette.blue if tone == "added" else palette.line
+    mark: str = " mark-to-be" if tone == "added" else ""
+    return f'<rect class="bar bar-{tone}{mark}" x="{x:.1f}" y="{y:.1f}" width="{length:.1f}" height="{height}" rx="2" fill="{fill}"/>'
 
 
 @dataclass(frozen=True)

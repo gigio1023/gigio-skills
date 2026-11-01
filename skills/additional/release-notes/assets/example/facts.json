@@ -1,0 +1,10 @@
+{
+ "stored_fb006_before": {"value": 1280, "source": "Synthetic feedback store export, tags counted before re-tagging"},
+ "stored_fb006_after": {"value": 1692, "source": "Synthetic feedback store export, tags counted after re-tagging"},
+ "stored_fb007_before": {"value": 412, "source": "Synthetic feedback store export, tags counted before re-tagging"},
+ "stored_fb007_after": {"value": 0, "source": "Synthetic feedback store export, tags counted after re-tagging"},
+ "stored_fb016_before": {"value": 655, "source": "Synthetic feedback store export, tags counted before re-tagging"},
+ "stored_fb016_after": {"value": 431, "source": "Synthetic feedback store export, tags counted after re-tagging"},
+ "stored_fb025_before": {"value": 0, "source": "Synthetic feedback store export, tags counted before re-tagging"},
+ "stored_fb025_after": {"value": 224, "source": "Synthetic feedback store export, tags counted after re-tagging"}
+}

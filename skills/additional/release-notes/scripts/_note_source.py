@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import date
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
@@ -31,6 +32,7 @@ class FigureType(StrEnum):
     CHANGE_KINDS = "change-kinds"
     GROUP_DUMBBELL = "group-dumbbell"
     FIELD_DUMBBELL = "field-dumbbell"
+    FACTS_DUMBBELL = "facts-dumbbell"
     SVG = "svg"
 
 
@@ -67,9 +69,21 @@ class Overview:
 
 @dataclass(frozen=True)
 class Action:
+    """One role's required action; ``effective`` is the ISO date from which it applies, when the note gives one."""
+
     who: str
     what: str
+    effective: str | None
     items: list[Item]
+
+
+@dataclass(frozen=True)
+class FactPair:
+    """One row of a facts-dumbbell: a label and the names of the as-is and to-be facts in diff.json."""
+
+    label: str
+    before: str
+    after: str
 
 
 @dataclass(frozen=True)
@@ -80,6 +94,7 @@ class Figure:
     field: str | None
     src: Path | None
     alt: str | None
+    rows: list[FactPair]  # facts-dumbbell rows; empty for every other type
 
 
 @dataclass(frozen=True)
@@ -142,15 +157,13 @@ class Note:
             yield f"actions[{i}].what", action.what
             yield from _item_texts(action.items, f"actions[{i}].items")
         for i, figure in enumerate(self.figures):
-            yield f"figures[{i}].title", figure.title
-            yield f"figures[{i}].caption", figure.caption
+            yield from _figure_texts(figure, f"figures[{i}]")
         for i, change in enumerate(self.changes):
             yield f"changes[{i}].title", change.title
             yield from _item_texts(change.why, f"changes[{i}].why")
             yield from _item_texts(change.impact, f"changes[{i}].impact")
             if change.figure is not None:
-                yield f"changes[{i}].figure.title", change.figure.title
-                yield f"changes[{i}].figure.caption", change.figure.caption
+                yield from _figure_texts(change.figure, f"changes[{i}].figure")
         for i, section in enumerate(self.sections):
             yield f"sections[{i}].heading", section.heading
             yield from _item_texts(section.items, f"sections[{i}].items")
@@ -237,6 +250,15 @@ def _points(value: Any, where: str) -> list[Item]:
     return [Item(_text(value, where), [])] if isinstance(value, str) else _items(value, where)
 
 
+def _figure_texts(figure: Figure, where: str) -> Iterator[tuple[str, str]]:
+    yield f"{where}.title", figure.title
+    yield f"{where}.caption", figure.caption
+    if figure.alt is not None:
+        yield f"{where}.alt", figure.alt
+    for j, row in enumerate(figure.rows):
+        yield f"{where}.rows[{j}].label", row.label
+
+
 def _item_texts(items: list[Item], where: str) -> Iterator[tuple[str, str]]:
     for i, item in enumerate(items):
         yield f"{where}[{i}]", item.text
@@ -267,19 +289,32 @@ def _labels(value: Any, where: str) -> dict[str, str]:
 
 
 def _action(value: Any, where: str) -> Action:
-    item: dict[str, Any] = _object(value, where, required={"who", "what"}, optional={"items"})
+    item: dict[str, Any] = _object(value, where, required={"who", "what"}, optional={"effective", "items"})
+    effective: str | None = _iso_date(item["effective"], f"{where}.effective") if "effective" in item else None
     return Action(who=_text(item["who"], f"{where}.who"), what=_text(item["what"], f"{where}.what"),
-                  items=_items(item.get("items", []), f"{where}.items", 2))
+                  effective=effective, items=_items(item.get("items", []), f"{where}.items", 2))
+
+
+def _iso_date(value: Any, where: str) -> str:
+    try:
+        return date.fromisoformat(_text(value, where)).isoformat()
+    except ValueError as err:
+        raise NoteSourceError(f"{where}: expected a date as YYYY-MM-DD, found {value!r}") from err
 
 
 def _figure(value: Any, where: str, base: Path) -> Figure:
-    item: dict[str, Any] = _object(value, where, required={"type", "title", "caption"}, optional={"field", "src", "alt"})
+    item: dict[str, Any] = _object(value, where, required={"type", "title", "caption"}, optional={"field", "src", "alt", "rows"})
     try:
         kind: FigureType = FigureType(item["type"])
     except ValueError as err:
         raise NoteSourceError(f"{where}.type: one of {[t.value for t in FigureType]}") from err
     if kind is FigureType.FIELD_DUMBBELL and "field" not in item:
         raise NoteSourceError(f"{where}: a field-dumbbell names the numeric field to compare in 'field'")
+    if (kind is FigureType.FACTS_DUMBBELL) != ("rows" in item):
+        raise NoteSourceError(f"{where}: 'rows' belongs to a facts-dumbbell, which needs it")
+    rows: list[FactPair] = [_fact_pair(r, f"{where}.rows[{j}]") for j, r in enumerate(_list(item.get("rows", []), f"{where}.rows"))]
+    if kind is FigureType.FACTS_DUMBBELL and not rows:
+        raise NoteSourceError(f"{where}.rows: list at least one {{label, before, after}} pair of fact names")
     src: Path | None = None
     if kind is FigureType.SVG:
         if "src" not in item or "alt" not in item:
@@ -288,7 +323,13 @@ def _figure(value: Any, where: str, base: Path) -> Figure:
         if not src.is_file():
             raise NoteSourceError(f"{where}.src: {src} does not exist")
     return Figure(kind, _text(item["title"], f"{where}.title"), _text(item["caption"], f"{where}.caption"),
-                  item.get("field"), src, item.get("alt"))
+                  item.get("field"), src, item.get("alt"), rows)
+
+
+def _fact_pair(value: Any, where: str) -> FactPair:
+    item: dict[str, Any] = _object(value, where, required={"label", "before", "after"}, optional=set())
+    return FactPair(_text(item["label"], f"{where}.label"), _text(item["before"], f"{where}.before"),
+                    _text(item["after"], f"{where}.after"))
 
 
 def _highlight(value: Any, where: str, base: Path) -> Highlight:
@@ -329,12 +370,21 @@ def _link(value: Any, where: str) -> Link:
 
 
 def field_text(raw: Any) -> str:
-    """A field value as the text a reader sees: lists joined with commas, objects as JSON."""
+    """A field value as the text a reader sees: a list's items joined with commas, anything else not a string as JSON.
+
+    Every level follows the same rule, so an object inside a list prints as the same JSON as an object
+    field, never as Python's notation. An excerpt is checked against this text, so it must be copied
+    from what the card or text difference shows.
+    """
+    if raw is None:
+        return ""
     if isinstance(raw, list):
-        return ", ".join(str(item) for item in raw)
-    if isinstance(raw, dict):
-        return json.dumps(raw, ensure_ascii=False)
-    return "" if raw is None else str(raw)
+        return ", ".join(_item_text(item) for item in raw)
+    return _item_text(raw)
+
+
+def _item_text(raw: Any) -> str:
+    return raw if isinstance(raw, str) else json.dumps(raw, ensure_ascii=False)
 
 
 def _check_against_diff(note: Note, diff: DiffData) -> None:
@@ -365,14 +415,20 @@ def _check_against_diff(note: Note, diff: DiffData) -> None:
                                       f"changed text fields: {fields or 'none'}")
     figures: list[tuple[str, Figure]] = [(f"figures[{i}]", f) for i, f in enumerate(note.figures)]
     figures += [(f"changes[{i}].figure", c.figure) for i, c in enumerate(note.changes) if c.figure is not None]
+    facts: dict[str, Any] = diff.document["facts"]
     for where, figure in figures:
         if figure.type is FigureType.FIELD_DUMBBELL and figure.field not in compared:
             raise NoteSourceError(f"{where}.field: {figure.field!r} is not a compared field ({compared})")
         if figure.type is FigureType.GROUP_DUMBBELL and not diff.document["groups"]:
             raise NoteSourceError(f"{where}: group-dumbbell needs version_diff.py --group-field")
+        unknown: list[str] = [name for row in figure.rows for name in (row.before, row.after) if name not in facts]
+        if unknown:
+            raise NoteSourceError(f"{where}.rows: {unknown} are not facts in {diff.path.name} ({sorted(facts) or 'none'})")
+    # A label names a compared field or a role path such as label.en, which a chart or table may print as a heading.
+    labelled: set[str] = set(compared) | {path for role, path in diff.document["roles"].items() if role != "key" and path}
     for name in note.field_labels:
-        if name not in compared:
-            raise NoteSourceError(f"field_labels: {name!r} is not a compared field ({compared})")
+        if name not in labelled:
+            raise NoteSourceError(f"field_labels: {name!r} is not a compared field or role path ({sorted(labelled)})")
     for record_id in note.reasons:
         if record_id not in listed:
             raise NoteSourceError(f"reasons: {record_id} is not added, removed, or changed in {diff.path.name}")

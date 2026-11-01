@@ -16,7 +16,7 @@ from typing import Any
 
 from _errors import NoteSourceError
 
-SCHEMA: str = "release-notes/diff@1"
+SCHEMA: str = "release-notes/diff@2"
 NUMBER_PATTERN: re.Pattern[str] = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?")
 
 
@@ -60,8 +60,12 @@ class DiffData:
         return set(self.document["ids"]["old"]) | set(self.document["ids"]["new"])
 
     def identifier_strings(self) -> list[str]:
-        """Strings that contain digits without being counts: version labels, refs, sources, the date."""
-        found: list[str] = []
+        """Strings that may contain digits without being counts.
+
+        These are the version labels, refs, and source paths, the data file's path, the date, and each
+        fact's name and source, all of which the source section prints.
+        """
+        found: list[str] = [str(self.document["data_file"])]
         for side in ("old", "new"):
             for key in ("label", "ref", "source"):
                 value: Any = self.document[side].get(key)
@@ -69,6 +73,8 @@ class DiffData:
                     found.append(str(value))
         if self.document.get("date"):
             found.append(str(self.document["date"]))
+        for name, fact in self.document["facts"].items():
+            found += [name, fact["source"]]
         return sorted(set(found), key=len, reverse=True)
 
     def allowed_numbers(self) -> set[str]:

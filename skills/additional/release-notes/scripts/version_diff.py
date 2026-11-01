@@ -13,12 +13,19 @@ Change classes, defined once:
 - removed: the ID exists only in the old version; a successor file can mark it
   merged (into an ID that also existed before, or together with other IDs),
   split (into several IDs), or replaced (by one new ID)
-- changed: a shared ID with at least one major field change; the name field
-  counts as renamed and the parent field as moved
+- changed: a shared ID with at least one major field change; a change in the
+  field that holds the name counts as renamed, and in the field that holds the
+  parent as moved
 - minor only: every field change is minor, meaning the two strings differ only
   in letter case, punctuation, or whitespace (the rule MITRE's CWE diff reports
   use); minor changes are counted and not narrated
 - unchanged: a shared ID with identical compared fields
+
+Fields compared are top-level fields. The name, parent, and group roles are
+dotted paths, so a name inside an object field reads as ``--name-field
+label.en``: the note prints the value at the path, and a change anywhere in
+``label`` counts as renamed. Source files are recorded relative to
+``--source-base`` so the note can print where each one is.
 
 The counts satisfy ``before - removed + added = after`` and
 ``shared = changed + minor_only + unchanged``; the script checks both, and the
@@ -31,6 +38,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import re
 import sys
 import unicodedata
@@ -45,9 +53,9 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _errors import InputDataError, ReleaseNoteError
-from _records import Record, load_version
+from _records import Record, SourceLayout, field_of, has_path, load_version, value_at
 
-SCHEMA: str = "release-notes/diff@1"
+SCHEMA: str = "release-notes/diff@2"
 MINOR_RULE: str = "strings that differ only in letter case, punctuation, or whitespace"
 
 # Records are dataclasses because the bundled scripts run with the standard
@@ -68,7 +76,7 @@ class RemovalKind(StrEnum):
 
 @dataclass(frozen=True)
 class Roles:
-    """Which record fields carry the ID, the display name, the parent, and the group."""
+    """The ID field, and the dotted paths of the display name, the parent, and the group."""
 
     key: str
     name: str | None
@@ -98,7 +106,7 @@ class GroupTally:
 class VersionInfo:
     label: str
     ref: str | None
-    source: str
+    source: str  # the export's path relative to --source-base, in POSIX form
     records: int
 
 
@@ -108,6 +116,7 @@ class DiffResult:
 
     old: VersionInfo
     new: VersionInfo
+    data_file: str  # this file's path relative to --source-base
     release_date: str | None
     roles: Roles
     compared_fields: list[str]
@@ -124,15 +133,19 @@ class DiffResult:
 
 def main(argv: list[str]) -> int:
     args: argparse.Namespace = _parse_args(argv)
+    base: Path = Path(args.source_base)
+    out: Path = Path(args.out)
     try:
-        old: dict[str, Record] = load_version(Path(args.old), args.key, args.records_path)
-        new: dict[str, Record] = load_version(Path(args.new), args.key, args.records_path)
+        layout: SourceLayout = SourceLayout(args.records_path, args.include, _pattern(args.path_pattern))
+        old: dict[str, Record] = load_version(Path(args.old), args.key, layout)
+        new: dict[str, Record] = load_version(Path(args.new), args.key, layout)
         roles: Roles = _resolve_roles(args, old, new)
         fields: list[str] = _compared_fields(args.fields, roles, old, new)
         successors: dict[str, list[str]] = _read_successors(Path(args.successors), old, new) if args.successors else {}
         result: DiffResult = DiffResult(
-            old=VersionInfo(args.old_label, args.old_ref, Path(args.old).name, len(old)),
-            new=VersionInfo(args.new_label, args.new_ref, Path(args.new).name, len(new)),
+            old=VersionInfo(args.old_label, args.old_ref, _relative(Path(args.old), base), len(old)),
+            new=VersionInfo(args.new_label, args.new_ref, _relative(Path(args.new), base), len(new)),
+            data_file=_relative(out, base),
             release_date=_check_date(args.date),
             roles=roles,
             compared_fields=fields,
@@ -147,7 +160,6 @@ def main(argv: list[str]) -> int:
     except ReleaseNoteError as err:
         print(f"version_diff: {err}", file=sys.stderr)
         return 2
-    out: Path = Path(args.out)
     out.write_text(json.dumps(document, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     _print_summary(document, out)
     return 0
@@ -163,23 +175,52 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--new-ref")
     parser.add_argument("--date", help="release date of the new version, YYYY-MM-DD")
     parser.add_argument("--key", default="id", help="ID field (default: id)")
-    parser.add_argument("--name-field", help="display-name field; a change counts as renamed (default: name, when present)")
-    parser.add_argument("--parent-field", help="parent or category field; a change counts as moved")
-    parser.add_argument("--group-field", help="field whose values get before and after counts, often the parent")
-    parser.add_argument("--fields", help="comma-separated fields to compare (default: every field except the key)")
+    parser.add_argument("--name-field", help="dotted path of the display name, such as name or label.en; a change in its "
+                        "top-level field counts as renamed (default: name, when present)")
+    parser.add_argument("--parent-field", help="dotted path of the parent or category; a change in its top-level field counts as moved")
+    parser.add_argument("--group-field", help="dotted path whose values get before and after counts, often the parent")
+    parser.add_argument("--fields", help="comma-separated top-level fields to compare (default: every field except the key)")
     parser.add_argument("--records-path", help="dotted path to the record list inside a .json object")
+    parser.add_argument("--include", help="glob of the record files below a directory source (default: **/*.json)")
+    parser.add_argument("--path-pattern", help="regex searched in each record file's path relative to a directory source; "
+                        "named groups become record fields, such as '^(?P<category>[^/]+)/'")
+    parser.add_argument("--source-base", default=".", help="directory that the recorded export and data file paths are relative to (default: .)")
     parser.add_argument("--successors", help="CSV with columns old_id,new_id for removed IDs that have a successor")
     parser.add_argument("--facts", help="JSON object of extra numbers: {name: {value, source}}")
     parser.add_argument("--out", required=True, help="path of the data file to write, such as diff.json")
     return parser.parse_args(argv)
 
 
+def _pattern(text: str | None) -> re.Pattern[str] | None:
+    if text is None:
+        return None
+    try:
+        pattern: re.Pattern[str] = re.compile(text)
+    except re.error as err:
+        raise InputDataError(f"--path-pattern {text!r} is not a valid regex: {err}") from err
+    if not pattern.groupindex:
+        raise InputDataError(f"--path-pattern {text!r} has no named group; write (?P<field>...) for each field it adds")
+    return pattern
+
+
+def _relative(path: Path, base: Path) -> str:
+    return Path(os.path.relpath(path.resolve(), base.resolve())).as_posix()
+
+
 def _resolve_roles(args: argparse.Namespace, old: dict[str, Record], new: dict[str, Record]) -> Roles:
-    present: set[str] = {name for record in [*old.values(), *new.values()] for name in record}
-    name: str | None = args.name_field or ("name" if "name" in present else None)
-    for flag, value in (("--name-field", name), ("--parent-field", args.parent_field), ("--group-field", args.group_field)):
-        if value is not None and value not in present:
-            raise InputDataError(f"{flag} {value!r} appears in no record of either version")
+    records: list[Record] = [*old.values(), *new.values()]
+    name: str | None = args.name_field or ("name" if any("name" in record for record in records) else None)
+    for flag, path in (("--name-field", name), ("--parent-field", args.parent_field), ("--group-field", args.group_field)):
+        if path is not None and not any(has_path(record, path) for record in records):
+            raise InputDataError(f"{flag} {path!r} appears in no record of either version")
+    # The name and the group print as labels and count as keys, so each must be one scalar value.
+    for flag, path in (("--name-field", name), ("--group-field", args.group_field)):
+        if path is None:
+            continue
+        nested: list[str] = [str(record[args.key]) for record in records if isinstance(value_at(record, path), (dict, list))]
+        if nested:
+            raise InputDataError(f"{flag} {path!r} holds an object or a list in {', '.join(sorted(set(nested))[:5])}; "
+                                 f"name one member with a dotted path such as {path}.en")
     return Roles(key=args.key, name=name, parent=args.parent_field, group=args.group_field)
 
 
@@ -191,7 +232,7 @@ def _compared_fields(requested: str | None, roles: Roles, old: dict[str, Record]
         for record in [*old.values(), *new.values()]:
             fields.extend(f for f in record if f not in fields)
     fields = [f for f in fields if f != roles.key]
-    leading: list[str] = [f for f in (roles.name, roles.parent) if f is not None and f in fields]
+    leading: list[str] = list(dict.fromkeys(field_of(r) for r in (roles.name, roles.parent) if r is not None and field_of(r) in fields))
     return leading + [f for f in fields if f not in leading]
 
 
@@ -306,6 +347,7 @@ def _to_document(result: DiffResult) -> dict[str, Any]:
         "schema": SCHEMA,
         "old": vars(result.old),
         "new": vars(result.new),
+        "data_file": result.data_file,
         "date": result.release_date,
         "roles": vars(result.roles),
         "compared_fields": result.compared_fields,
@@ -342,7 +384,7 @@ def _field_tallies(result: DiffResult) -> dict[str, dict[str, int]]:
     return tallies
 
 
-def _group_tallies(group_field: str, result: DiffResult, old: dict[str, Record], new: dict[str, Record]) -> dict[str, GroupTally]:
+def _group_tallies(group: str, result: DiffResult, old: dict[str, Record], new: dict[str, Record]) -> dict[str, GroupTally]:
     """Count records per group in both versions and the flows that explain the difference.
 
     Groups appear in first-seen order across the old and then the new version.
@@ -354,15 +396,15 @@ def _group_tallies(group_field: str, result: DiffResult, old: dict[str, Record],
         return tallies.setdefault(str(value), GroupTally())
 
     for record in old.values():
-        tally(record.get(group_field)).before += 1
+        tally(value_at(record, group)).before += 1
     for record in new.values():
-        tally(record.get(group_field)).after += 1
+        tally(value_at(record, group)).after += 1
     for entry in result.removed:
-        tally(entry["record"].get(group_field)).removed += 1
+        tally(value_at(entry["record"], group)).removed += 1
     for entry in result.added:
-        tally(entry["record"].get(group_field)).added += 1
+        tally(value_at(entry["record"], group)).added += 1
     for entry in [*result.changed, *result.minor_only]:
-        before, after = entry["old"].get(group_field), entry["new"].get(group_field)
+        before, after = value_at(entry["old"], group), value_at(entry["new"], group)
         if before != after:
             tally(before).moved_out += 1
             tally(after).moved_in += 1

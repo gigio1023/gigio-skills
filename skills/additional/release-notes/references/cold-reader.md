@@ -21,6 +21,7 @@ Ask all of them, in this order, and ask the reader to quote the page and sentenc
 5. Pick one material change. What did it look like before, what does it look like now, and why did it change?
 6. Which sentence, label, or chart did you have to read twice, and what did you first take it to mean?
 7. What did you expect to find that is missing?
+8. Which names for concepts did you not recognize? For each, say whether the note explains it or points to where the artifact defines it.
 
 ## Turning answers into fixes
 
@@ -28,11 +29,12 @@ Compare answers 1 to 5 with `diff.json` and the material changes in `note.json`.
 
 | Reader answer | Fix |
 | --- | --- |
-| Wrong or missing count | Move the count closer to the claim it supports, or label it; check the stat row and caption tokens |
+| Wrong or missing count | Move the count closer to the claim it supports, or label it; check the overview and caption tokens |
 | Missed a required action | Lead the actions with the role, or move the action into the opening |
 | Wrong successor for a removed ID | Add the successor to the action line and the change card; check the successor file |
 | Cannot state why a change was made | Write the reason the decision record gives, or state that none is recorded |
 | Reread a sentence | Apply the writing review prompts to that sentence |
+| Did not recognize a concept name | Replace it with the artifact's term or the field's standard term; when it is the artifact's own term, explain it at first use |
 | Misread a chart | Rewrite the caption's first sentence as the finding, or choose a different pattern |
 | Expected something missing | Add it when it belongs to the net change between the versions; otherwise leave it out and say why in the report |
 

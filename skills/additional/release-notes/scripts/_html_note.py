@@ -6,6 +6,10 @@ required actions, counts that reconcile with their figures, material changes
 as as-is and to-be pairs, the field list, the ID mapping, extra sections,
 open questions, the optional appendix of every change, and the source of the
 numbers. Every piece of text from note.json or diff.json is escaped.
+
+Each number is printed once where the reader meets it. With an overview,
+page one already shows the counts, so the reconciling sentences move to the
+source section and the counts section holds only its figures.
 """
 
 from __future__ import annotations
@@ -16,9 +20,10 @@ from pathlib import Path
 
 from _diff_data import DiffData
 from _errors import NoteSourceError
-from _inline import escape_text, render_html
-from _note_content import CardField, DiffPiece, FieldEntry, NoteContent, word_diff
+from _inline import bound_number, escape_text, render_html
+from _note_content import CardField, DiffPiece, FieldEntry, NoteContent, ends_sentence, word_diff
 from _note_source import (
+    Action,
     ChangeView,
     Figure,
     FigureType,
@@ -38,6 +43,8 @@ from _svg_charts import (
 
 ASSETS: Path = Path(__file__).resolve().parent.parent / "assets"
 KEEP_ROWS: int = 12  # about a third of a page at 9 pt; longer tables break between rows
+KEEP_CHARS: int = 480  # a text difference this short stays whole; a longer one may break between as-is and to-be
+URL: re.Pattern[str] = re.compile(r"https?://\S+")
 
 
 def render_document(content: NoteContent) -> str:
@@ -90,14 +97,14 @@ def _body(content: NoteContent, palette: Palette) -> str:
     out.append(f'<section class="summary">{_bullets(note.summary, diff)}</section>')
     out.append(f"<h2>{html.escape(s['h_actions'])}</h2>")
     if note.actions:
-        # The colon keeps role and action apart in extracted text and Markdown, where bold is lost.
-        items: str = "".join(f"<li><strong>{r(a.who)}:</strong> {r(a.what)}{_bullets(a.items, diff)}</li>" for a in note.actions)
+        items: str = "".join(_action(content, a) for a in note.actions)
         out.append(f'<ul class="actions">{items}</ul>')
     else:
         out.append(f"<p>{html.escape(s['no_actions'])}</p>")
-    out.append(f"<h2>{html.escape(s['h_glance'])}</h2>")
-    reconcile: str = "".join(f"<li>{html.escape(sentence)}</li>" for sentence in content.reconcile_sentences())
-    out.append(f'<ul class="reconcile">{reconcile}</ul>')
+    if note.overview is None or note.figures:
+        out.append(f"<h2>{html.escape(s['h_glance'])}</h2>")
+    if note.overview is None:
+        out.append(_reconcile(content))
     out.extend(_figure(content, figure, palette) for figure in note.figures)
     if note.changes:
         out.append(f"<h2>{html.escape(s['h_changes'])}</h2>")
@@ -125,15 +132,46 @@ def _body(content: NoteContent, palette: Palette) -> str:
 
 
 def _meta(content: NoteContent) -> str:
+    """The identity strip: each version's label, with its ref on its own line, and the release date."""
     s, doc = content.s, content.diff.document
-    cells: list[tuple[str, str]] = [
-        (s["as_is"], " ".join(v for v in (doc["old"]["label"], doc["old"].get("ref")) if v)),
-        (s["to_be"], " ".join(v for v in (doc["new"]["label"], doc["new"].get("ref")) if v)),
+    cells: list[tuple[str, str, str | None]] = [
+        (s["as_is"], doc["old"]["label"], doc["old"].get("ref")),
+        (s["to_be"], doc["new"]["label"], doc["new"].get("ref")),
     ]
     if doc.get("date"):
-        cells.append((s["released"], doc["date"]))
-    inner: str = "".join(f"<div><span>{html.escape(k)}</span>{html.escape(v)}</div>" for k, v in cells)
+        cells.append((s["released"], doc["date"], None))
+    inner: str = "".join(
+        f'<div><span class="k">{html.escape(k)}</span><span class="v">{html.escape(v)}</span>'
+        + (f'<span class="ref">{_ref(ref)}</span>' if ref else "") + "</div>"
+        for k, v, ref in cells)
     return f'<div class="meta">{inner}</div>'
+
+
+def _ref(ref: str) -> str:
+    """A version ref as printed: a link when it is a URL, else its text."""
+    if URL.fullmatch(ref):
+        return f'<a href="{html.escape(ref, quote=True)}">{html.escape(ref)}</a>'
+    return html.escape(ref)
+
+
+def _action(content: NoteContent, action: Action) -> str:
+    """One required action; the colon keeps role and action apart in extracted text and Markdown, where bold is lost."""
+    diff: DiffData = content.diff
+    who: str = render_html(action.who, diff)
+    if action.effective is not None:
+        who += ", " + html.escape(content.s["action_from"].format(date=action.effective))
+    return f"<li><strong>{who}:</strong> {render_html(action.what, diff)}{_bullets(action.items, diff)}</li>"
+
+
+def _reconcile(content: NoteContent) -> str:
+    sentences: str = "".join(f"<li>{_sentence(content, sentence)}</li>" for sentence in content.reconcile_sentences())
+    return f'<ul class="reconcile">{sentences}</ul>'
+
+
+def _sentence(content: NoteContent, sentence: str) -> str:
+    """A reconciling sentence; its identity stays on one line, so the equation never breaks between its terms."""
+    identity: str = html.escape(content.identity())
+    return html.escape(sentence).replace(identity, f'<span class="nb">{identity}</span>')
 
 
 def _bullets(items: list[Item], diff: DiffData) -> str:
@@ -144,11 +182,14 @@ def _bullets(items: list[Item], diff: DiffData) -> str:
 
 
 def _points(label: str, items: list[Item], css: str, diff: DiffData) -> str:
-    """A labelled why or impact: inline after the label when it is one bullet without children, else a list."""
+    """A labelled why or impact: inline after the label when it is one bullet without children, else a list.
+
+    The label of a list is its own paragraph, which the stylesheet keeps on the page of the first bullet.
+    """
     head: str = f"<strong>{html.escape(label)}:</strong>"
     if len(items) == 1 and not items[0].items:
         return f'<p class="{css}">{head} {render_html(items[0].text, diff)}</p>'
-    return f'<div class="{css}"><p>{head}</p>{_bullets(items, diff)}</div>'
+    return f'<div class="{css}"><p class="points-label">{head}</p>{_bullets(items, diff)}</div>'
 
 
 def _overview(content: NoteContent, overview: Overview) -> str:
@@ -166,12 +207,16 @@ def _figure(content: NoteContent, figure: Figure, palette: Palette) -> str:
     key = DumbbellKey(s["as_is"], s["to_be"], s["key_same"], diff.old_label, diff.new_label)
     if figure.type is FigureType.CHANGE_KINDS:
         svg: str = change_kind_bars(content.kind_bars(), content.bars_aria(title_text), palette)
-        caption += " " + html.escape(s["kinds_overlap"])
+        # The builder's sentence follows the author's caption, which may end without a period.
+        caption += ("" if ends_sentence(_strip_tags(caption)) else ".") + " " + html.escape(s["kinds_overlap"])
     elif figure.type is FigureType.GROUP_DUMBBELL:
         rows = content.group_rows()
         svg = pair_dumbbell(rows, key, content.pairs_aria(title_text, rows), palette)
     elif figure.type is FigureType.FIELD_DUMBBELL:
         rows = content.field_rows(figure.field or "")
+        svg = pair_dumbbell(rows, key, content.pairs_aria(title_text, rows), palette)
+    elif figure.type is FigureType.FACTS_DUMBBELL:
+        rows = content.fact_rows(figure.rows, lambda text: html.unescape(_strip_tags(render_html(text, diff))))
         svg = pair_dumbbell(rows, key, content.pairs_aria(title_text, rows), palette)
     elif figure.src is not None and figure.alt is not None:
         svg = embedded_svg(figure.src, html.unescape(_strip_tags(render_html(figure.alt, diff))))
@@ -237,15 +282,19 @@ def _cards(content: NoteContent, record_id: str, palette: Palette, only: list[st
 
 
 def _diff_block(content: NoteContent, before: list[DiffPiece], after: list[DiffPiece], field_label: str, palette: Palette) -> str:
+    """As-is and to-be rows of a word-level difference; a short one keeps together, a long one may break between rows."""
     tag: dict[str, str] = {"same": "", "removed": "del", "added": "ins"}
 
     def pieces(items: list[DiffPiece]) -> str:
-        return "".join(f"<{tag[p.op]}>{escape_text(p.text, content.diff)}</{tag[p.op]}>" if tag[p.op]
-                       else escape_text(p.text, content.diff) for p in items)
+        return "".join(
+            '<span class="elided">' + html.escape(p.text) + "</span>" if p.op == "elided"
+            else f"<{tag[p.op]}>{escape_text(p.text, content.diff)}</{tag[p.op]}>" if tag[p.op]
+            else escape_text(p.text, content.diff) for p in items)
 
     label: str = html.escape(field_label)
-    return (f'<div class="textdiff">{_head(content, "old", palette, label)}<p>{pieces(before)}</p>'
-            f'{_head(content, "new", palette, label)}<p>{pieces(after)}</p></div>')
+    keep: str = " keep" if sum(len(p.text) for p in before + after) <= KEEP_CHARS else ""
+    return (f'<div class="textdiff{keep}"><div class="side">{_head(content, "old", palette, label)}<p>{pieces(before)}</p></div>'
+            f'<div class="side">{_head(content, "new", palette, label)}<p>{pieces(after)}</p></div></div>')
 
 
 def _field_entry(content: NoteContent, entry: FieldEntry, field: str, palette: Palette) -> str:
@@ -253,19 +302,21 @@ def _field_entry(content: NoteContent, entry: FieldEntry, field: str, palette: P
     title: str = f'<p class="entry-title">{escape_text(entry.title, content.diff)}</p>'
     if entry.section == "added":
         absent: str = html.escape(content.s["not_in"].format(label=content.diff.old_label))
-        block: str = (f'<div class="textdiff">{_head(content, "old", palette)}<p>{absent}</p>'
-                      f'{_head(content, "new", palette)}<p>{escape_text(entry.new or "", content.diff)}</p></div>')
+        block: str = (f'<div class="textdiff keep"><div class="side">{_head(content, "old", palette)}<p>{absent}</p></div>'
+                      f'<div class="side">{_head(content, "new", palette)}<p>{escape_text(entry.new or "", content.diff)}</p></div></div>')
     else:
         before, after = content.text_diff(entry.record_id, field)
         block = _diff_block(content, before, after, "", palette)
     return f'<section class="field-entry">{title}{block}</section>'
 
 
-def _table(headers: list[str], rows: list[list[str]]) -> str:
-    """A borderless table; cells arrive as HTML, already escaped, and the first column holds IDs."""
-    head: str = "".join(f'<th scope="col">{html.escape(h)}</th>' for h in headers)
+def _table(headers: list[str], rows: list[list[str]], *, numeric: frozenset[int] = frozenset()) -> str:
+    """A borderless table; cells arrive as HTML, already escaped, the first column holds IDs, ``numeric`` columns align right."""
+    num: str = ' class="num"'
+    head: str = "".join(f'<th scope="col"{num if i in numeric else ""}>{html.escape(h)}</th>' for i, h in enumerate(headers))
     body: str = "".join(
-        "<tr>" + "".join(f'<td class="id">{c}</td>' if i == 0 else f"<td>{c}</td>" for i, c in enumerate(row)) + "</tr>"
+        "<tr>" + "".join(f'<td class="id">{c}</td>' if i == 0 else f'<td class="num">{c}</td>' if i in numeric else f"<td>{c}</td>"
+                         for i, c in enumerate(row)) + "</tr>"
         for row in rows
     )
     # A short table stays on one page, so a heading never sits above a lone first row.
@@ -274,27 +325,42 @@ def _table(headers: list[str], rows: list[list[str]]) -> str:
 
 
 def _source(content: NoteContent) -> str:
-    s, doc = content.s, content.diff.document
+    """Where every number comes from: file paths as the data file records them, refs, links, and each fact's source.
+
+    With an overview, the reconciling sentences print here, since page one shows the counts. Each path and
+    fact source is one text run, as the data file spells it; the stylesheet lets a long one wrap anywhere
+    rather than widen the page.
+    """
+    s, doc, diff = content.s, content.diff.document, content.diff
 
     def version(side: str) -> str:
-        parts: list[str] = [doc[side]["source"], doc[side].get("ref") or ""]
-        return " ".join(p for p in parts if p)
+        ref: str | None = doc[side].get("ref")
+        return html.escape(doc[side]["source"]) + (" " + _ref(ref) if ref else "")
 
     rows: list[tuple[str, str]] = [
-        (html.escape(s["src_data"]), html.escape(content.diff.path.name)),
-        (html.escape(s["as_is"]), html.escape(version("old"))),
-        (html.escape(s["to_be"]), html.escape(version("new"))),
+        (html.escape(s["src_data"]), html.escape(doc["data_file"])),
+        (html.escape(s["as_is"]), version("old")),
+        (html.escape(s["to_be"]), version("new")),
         (html.escape(s["src_tool"]), "version_diff.py"),
         (html.escape(s["src_minor"]), html.escape(s["minor_rule"])),
     ]
+    if content.note.overview is not None:
+        rows.append((html.escape(s["h_glance"]), " ".join(_sentence(content, t) for t in content.reconcile_sentences())))
     if content.note.full_list is FullList.OMIT:
         # check_numbers reads this marker: without the appendix, the data file is where every listed ID appears.
         rows.append((html.escape(s["src_full_list"]), f'<span data-full-list="omitted">{html.escape(s["full_list_omitted"])}</span>'))
     # Links print as rows with the address visible, so a printed copy still shows where they lead.
-    rows += [(render_html(link.label, content.diff), f'<a href="{html.escape(link.url, quote=True)}">{html.escape(link.url)}</a>')
+    rows += [(render_html(link.label, diff), f'<a href="{html.escape(link.url, quote=True)}">{html.escape(link.url)}</a>')
              for link in content.note.links]
     items: str = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows)
-    return f'<section class="source"><h2>{html.escape(s["h_source"])}</h2><dl>{items}</dl></section>'
+    facts: str = ""
+    cited: list[str] = content.cited_facts()
+    if cited:
+        fact_rows: list[list[str]] = [[html.escape(name), bound_number(f"facts.{name}", doc["facts"][name]["value"]),
+                                       html.escape(doc["facts"][name]["source"])] for name in cited]
+        facts = _table([s["col_fact"], s["col_value"], s["col_source"]], fact_rows, numeric=frozenset({1}))
+    return f'<section class="source"><h2>{html.escape(s["h_source"])}</h2><dl>{items}</dl>{facts}</section>'
+
 
 
 def _strip_tags(markup: str) -> str:

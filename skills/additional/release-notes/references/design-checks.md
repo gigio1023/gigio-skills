@@ -54,10 +54,10 @@ Thresholds are this skill's rules, not external standards except where WCAG is n
 
 1. The contact sheet: page rhythm, a figure or card split across pages, a near-empty last page, one page much denser than the rest.
 2. Every page at full size: clipped or overlapping text, a value beside the wrong mark, a struck or bold word that is not part of the change, a missing glyph, a heading stranded at the bottom, a card whose fields do not line up.
-3. The grayscale sheet: every as-is and to-be pair still distinct by shape, fill, strike, or weight.
+3. The grayscale sheet: every as-is and to-be pair still distinct by shape, fill, strike, or weight, including the hollow removal bars and filled added bars of the change-kinds chart.
 4. `check_design.mjs --shots` screenshots at 794 and 1280 px for the HTML deliverable.
 
-Cards and figures keep together across page breaks, which can leave white space at the bottom of a page. That is expected; do not shrink type or remove content to close the gap. Fix only the flagged element, rebuild, and rerun the affected checks and neighboring pages. Two automatic fix rounds is the limit; refinement past that was not monotonic in the slide-generation work this loop rule comes from, so report what remains.
+Card pairs, figures, and short text differences keep together across page breaks; a long text difference may break between its as-is and to-be rows, so moving it whole never leaves most of a page empty. The white space a kept unit leaves at a page bottom is expected; do not shrink type or remove content to close the gap. Fix only the flagged element, rebuild, and rerun the affected checks and neighboring pages. Two automatic fix rounds is the limit; refinement past that was not monotonic in the slide-generation work this loop rule comes from, so report what remains.
 
 ## Sources
 
