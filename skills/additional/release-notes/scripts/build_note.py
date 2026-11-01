@@ -9,7 +9,10 @@ Writes ``<stem>.html`` (the HTML deliverable and the PDF source) and
 file's stem. Before writing anything it refuses a note whose prose types a
 number by hand or names an ID that exists in neither version: numbers enter
 the note only through ``{{...}}`` tokens that resolve against diff.json.
-Code spans, version labels, refs, and ISO dates may contain digits.
+Every prose field follows this rule, the overview's ``alt`` included. Code
+spans, URLs, version labels, refs, ISO dates, and words in which a letter
+directly precedes a digit, such as ``v4.0``, the commit ``3e1f09a7``, or
+``제3자``, may contain digits; ``_inline.scan_literals`` holds the rule.
 
 Python 3.11+ and the standard library only. Exit status 0 on success, 2 when
 the note source or data file breaks its contract (the message lists every
@@ -21,6 +24,10 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+
+# `python3 -I` leaves the script's directory off sys.path, and the sibling
+# modules live there, so add it before importing them.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _diff_data import DiffData, load_diff
 from _errors import NoteSourceError, ReleaseNoteError

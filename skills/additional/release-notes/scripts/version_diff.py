@@ -40,6 +40,10 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+# `python3 -I` leaves the script's directory off sys.path, and the sibling
+# modules live there, so add it before importing them.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 from _errors import InputDataError, ReleaseNoteError
 from _records import Record, load_version
 
