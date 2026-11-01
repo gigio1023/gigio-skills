@@ -6,7 +6,10 @@ is escaped for the target format, because prose can quote record text written
 by other people.
 
 ``scan_literals`` finds what the builder refuses: numbers typed by hand
-instead of tokens, and ID-shaped strings that exist in neither version.
+instead of tokens, and ID-shaped strings that exist in neither version. The
+number check reads rendered HTML and Markdown with the same function, so the
+builder and the check agree on what counts as a number, and reads PDF text,
+whose adjacent boxes join without a space, with ``scan_joined``.
 """
 
 from __future__ import annotations
@@ -19,6 +22,10 @@ from _diff_data import NUMBER_PATTERN, DiffData
 
 INLINE: re.Pattern[str] = re.compile(r"\{\{\s*([^{}]+?)\s*\}\}|`([^`]+)`|\*\*(.+?)\*\*|\[([^\]]+)\]\(([^)\s]+)\)")
 ISO_DATE: re.Pattern[str] = re.compile(r"\d{4}-\d{2}-\d{2}")
+URL: re.Pattern[str] = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*://[^\s<>]+")
+# A run of word characters and dots: a word, a number with its unit, or an identifier such as v2.1.
+WORD: re.Pattern[str] = re.compile(r"[\w.]+")
+LETTER_THEN_DIGIT: re.Pattern[str] = re.compile(r"[^\W\d_]\d")
 
 
 def format_value(value: Any) -> str:
@@ -98,12 +105,44 @@ def escape_markdown(text: str) -> str:
 
 
 def scan_literals(text: str, diff: DiffData) -> tuple[list[str], list[str]]:
-    """Return hand-typed numbers and unknown ID-shaped strings in one prose string.
+    """Return hand-typed numbers and unknown ID-shaped strings in prose whose words are intact.
 
-    Tokens, code spans, link targets, version identifiers, ISO dates, and known
-    IDs are removed first; what digits remain were typed by hand.
+    Intact means note.json prose, HTML text, or Markdown, where a word ends at
+    a space or a markup boundary. Removed first, because none of them is a
+    count: tokens, code spans, link targets and printed URLs, known IDs,
+    version identifiers, ISO dates, and every word in which a letter is
+    directly followed by a digit, such as ``v4.0``, ``H200``, the commit
+    ``3e1f09a7``, the ``v2.1`` of a tag, or the Korean word ``제3자``.
+    Digits followed only by letters stay a number with its unit or counter,
+    such as ``3x`` or ``23개``. What digits remain were typed by hand.
     """
+    plain, unknown = _without_non_counts(text, diff)
+    plain = WORD.sub(lambda m: " " if LETTER_THEN_DIGIT.search(m.group(0)) else m.group(0), plain)
+    return NUMBER_PATTERN.findall(plain), unknown
+
+
+def identifier_words(text: str, diff: DiffData) -> list[str]:
+    """The words ``scan_literals`` drops from ``text`` because a letter directly precedes a digit in them, in order."""
+    plain, _ = _without_non_counts(text, diff)
+    return [word for word in WORD.findall(plain) if LETTER_THEN_DIGIT.search(word)]
+
+
+def scan_joined(text: str, diff: DiffData) -> tuple[list[str], list[str]]:
+    """Return the numbers and unknown ID-shaped strings in text whose adjacent boxes join without a space.
+
+    PDF text extraction is such text: a field label and its value in
+    neighboring cells read ``우선순위4``, so a letter before a digit does not
+    mark an identifier here and the word rule of ``scan_literals`` does not
+    apply. The caller removes the source's ``identifier_words`` first.
+    """
+    plain, unknown = _without_non_counts(text, diff)
+    return NUMBER_PATTERN.findall(plain), unknown
+
+
+def _without_non_counts(text: str, diff: DiffData) -> tuple[str, list[str]]:
+    """Blank out markup, URLs, known IDs, version identifiers, and ISO dates; also return the unknown ID-shaped strings."""
     plain: str = INLINE.sub(lambda m: " " if m.group(1) or m.group(2) else (m.group(3) or m.group(4) or ""), text)
+    plain = URL.sub(" ", plain)
     unknown: list[str] = []
     shape: re.Pattern[str] | None = diff.id_shape()
     if shape is not None:
@@ -112,5 +151,4 @@ def scan_literals(text: str, diff: DiffData) -> tuple[list[str], list[str]]:
         plain = shape.sub(" ", plain)
     for identifier in diff.identifier_strings():
         plain = re.sub(rf"(?<![A-Za-z0-9_.]){re.escape(identifier)}(?![A-Za-z0-9_])", " ", plain)
-    plain = ISO_DATE.sub(" ", plain)
-    return NUMBER_PATTERN.findall(plain), unknown
+    return ISO_DATE.sub(" ", plain), unknown

@@ -84,7 +84,7 @@ An item is a string or `{"text": "...", "items": [item, ...]}`, nested at most t
 
 Prose fields accept `{{dotted.path}}` tokens, `` `code` ``, `**bold**`, and `[text](url)`. A token resolves against the data file: `{{counts.added}}`, `{{counts.before}}`, `{{groups.Account.after}}`, `{{field_changes.definition.major}}`, `{{removal_kinds.merged}}`, `{{old.label}}`, `{{facts.remapped_labels}}`. Numbers print with thousands separators. In the HTML, each token number carries its path in a `data-count` attribute, which `check_numbers.py` uses to catch an HTML built from an older data file.
 
-The builder rejects digits typed in prose, with three exceptions: code spans, version labels and refs from the data file, and ISO dates. IDs that exist in either version are fine; an ID-shaped string that exists in neither is rejected. The error lists every location, so one build reports all of them. Write numbers that are not counts in words or rephrase: "Lower priority numbers are handled first" rather than citing a priority value.
+The builder rejects digits typed in prose, which is every field in the writer's words; excerpts are copied from the data file and checked against it instead. Digits are allowed in code spans, URLs, version labels and refs from the data file, ISO dates, and words in which a letter directly precedes a digit: `v4.0`, `H200`, the commit `3e1f09a7`, the `v2.1` of the tag `taxonomy-v2.1`, or the Korean word `제3자`. Digits followed only by letters are a count with its unit or counter, such as `3x` or `23개`, and are rejected. A count glued to the word before it, such as `총23개`, reads as one word and escapes the rule, so put a space before the token: `총 {{counts.after}}개`. IDs that exist in either version are fine; an ID-shaped string that exists in neither is rejected. The error lists every location, so one build reports all of them. Write numbers that are not counts in words, in a code span, or rephrase: "Lower priority numbers are handled first" rather than citing a priority value.
 
 ## Figures and change views
 
@@ -95,7 +95,7 @@ The builder rejects digits typed in prose, with three exceptions: code spans, ve
 | `field-dumbbell` | Per changed record, the old and new value of one numeric field | `field` naming a numeric compared field |
 | `svg` | An SVG drawn elsewhere, such as by `technical-figure` | `src` relative to note.json, `alt` stating the values as text |
 
-Every figure has a `title` and a `caption`. The `svg` type's text must be SVG text, not outlined paths, so the PDF keeps it searchable and the number check can read it; its numbers must come from the data file like any other.
+Every figure has a `title` and a `caption`. The `svg` type's text, and the overview's, must be SVG text, not outlined paths, so the PDF keeps it searchable and the number check can read it. Its numbers must be numbers the data file holds; the number check reads them in the HTML, where each text run is its own node, because PDF text extraction joins adjacent runs.
 
 | `changes[].view` | Shows | Needs |
 | --- | --- | --- |
