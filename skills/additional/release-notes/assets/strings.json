@@ -41,7 +41,7 @@
     "col_why": "Why",
     "not_recorded": "Not recorded",
     "h_field_list": "{field}: added and changed records",
-    "reconcile_identity": "{before} − {gone} + {added} = {after}.",
+    "reconcile_identity": "The {old_label} count minus the records that left plus the added records gives the {new_label} count: {identity}.",
     "reconcile_gone": "The {gone} records that left are {gone_parts}.",
     "reconcile_shared": "Of the {shared} records in both versions, {changed} changed, {minor_only} had only minor edits, meaning changes in letter case, punctuation, or whitespace, and {unchanged} are unchanged.",
     "part_merged": "{n} merged",
@@ -58,7 +58,11 @@
     "src_link": "Link",
     "excerpt_of": "{field}, excerpt",
     "full_list_omitted": "Every added, removed, and changed record is listed in the data file.",
-    "src_full_list": "All changes"
+    "src_full_list": "All changes",
+    "action_from": "from {date}",
+    "col_fact": "Fact",
+    "col_value": "Value",
+    "col_source": "Source"
   },
   "ko": {
     "kicker": "릴리스 노트",
@@ -102,7 +106,7 @@
     "col_why": "이유",
     "not_recorded": "기록 없음",
     "h_field_list": "{field}: 추가되거나 바뀐 항목",
-    "reconcile_identity": "{before} − {gone} + {added} = {after}.",
+    "reconcile_identity": "{old_label} 항목 수에서 빠진 항목을 빼고 추가된 항목을 더하면 {new_label} 항목 수가 된다: {identity}.",
     "reconcile_gone": "빠진 {gone}개는 {gone_parts}다.",
     "reconcile_shared": "두 버전에 모두 있는 {shared}개 가운데 {changed}개가 바뀌었고, {minor_only}개는 대소문자, 문장부호, 공백만 바뀐 사소한 수정이었으며, {unchanged}개는 그대로다.",
     "part_merged": "병합 {n}개",
@@ -119,6 +123,10 @@
     "src_link": "링크",
     "excerpt_of": "{field} 발췌",
     "full_list_omitted": "추가, 삭제, 변경된 항목은 모두 데이터 파일에 있다.",
-    "src_full_list": "전체 변경 목록"
+    "src_full_list": "전체 변경 목록",
+    "action_from": "{date}부터",
+    "col_fact": "수치",
+    "col_value": "값",
+    "col_source": "출처"
   }
 }

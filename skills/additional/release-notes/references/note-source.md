@@ -22,29 +22,33 @@ Read when running `version_diff.py`, writing `note.json`, or looking up a token 
 | `--old-ref`, `--new-ref` | Tag, commit, or release URL of each version |
 | `--date` | Release date of the new version, `YYYY-MM-DD` |
 | `--key` | ID field, default `id` |
-| `--name-field` | Field whose change counts as renamed; `name` when present |
-| `--parent-field` | Field whose change counts as moved |
-| `--group-field` | Field whose values get before and after counts; often the parent |
+| `--name-field` | Dotted path of the display name, such as `name` or `label.en`; a change in its top-level field counts as renamed; `name` when present. The value must be a string or number |
+| `--parent-field` | Dotted path of the parent; a change in its top-level field counts as moved |
+| `--group-field` | Dotted path whose values get before and after counts; often the parent. The value must be a string or number |
+| `--include` | Glob of the record files below a directory source, default `**/*.json` |
+| `--path-pattern` | Regex searched in each record file's path relative to the directory; each named group becomes a field, such as `^(?P<category>[^/]+/[^/]+)/`. Every file must match, and a field the record already has is an error |
+| `--source-base` | Directory the recorded export and data-file paths are relative to, default `.`; the source section prints them |
 | `--fields` | Comma-separated fields to compare; default every field except the key |
 | `--successors` | CSV with header `old_id,new_id`, one row per successor of a removed ID |
 | `--facts` | JSON object `{name: {"value": number, "source": "..."}}` for numbers the versions cannot give |
 | `--out` | Path of the data file |
 
-Errors stop the run with the file, the record, and the fix: a missing key field, a duplicate ID within one version, a nested list without `--records-path`, a successor that does not exist, or a role field that appears in no record. YAML exports are not read; convert them to JSON first.
+Errors stop the run with the file, the record, and the fix: a missing key field, a duplicate ID within one version, a nested list without `--records-path`, a successor that does not exist, a role field that appears in no record, a `--path-pattern` that does not match a file, or a name or group path holding an object or list. YAML exports are not read; convert them to JSON first.
 
 Export each version from its released state: the tag or release commit, not a working branch. When the artifact lives in a repository, check out each tag into its own directory or export from it, and pass the tag as `--old-ref` and `--new-ref` so the note names exactly what was compared.
 
-`--facts` is for a number the note needs that the two versions cannot produce, such as the count of stored labels that need remapping. Its `source` says where the number came from, and the note cites it as `{{facts.<name>}}`. Keep facts few; most notes need none.
+`--facts` is for a number the note needs that the two versions cannot produce, such as the count of stored labels that need remapping. Its `source` says where the number came from, and the note cites it as `{{facts.<name>}}`. Keep facts few; most notes need none. The source section lists each fact the note cites, through a token or a figure row, with its value and source.
 
 ## The data file
 
-`diff.json` has schema `release-notes/diff@1`. The parts a writer cites:
+`diff.json` has schema `release-notes/diff@2`; a data file of an older schema stops the build with a request to rerun `version_diff.py`. The parts a writer cites:
 
 | Key | Holds |
 | --- | --- |
-| `old`, `new` | `label`, `ref`, `source` file name, `records` count |
+| `old`, `new` | `label`, `ref`, `source` path relative to `--source-base`, `records` count |
+| `data_file` | This file's path relative to `--source-base` |
 | `date` | Release date or null |
-| `roles` | Which fields are the key, name, parent, and group |
+| `roles` | The key field, and the dotted paths of the name, parent, and group |
 | `compared_fields` | Fields compared, name and parent first |
 | `counts` | `before`, `after`, `added`, `removed`, `shared`, `changed`, `minor_only`, `unchanged`, `net` |
 | `removal_kinds` | Counts of `merged`, `split`, `replaced`, `removed` |
@@ -67,13 +71,13 @@ Schema `release-notes/note@1`; [the example](../assets/example/note.en.json) use
 | `subtitle` | no | The audience or scope in one line |
 | `overview` | no, but D22 fails without it | `{src, alt, caption?}`: the page-one SVG relative to note.json, its values as text with each number as a token, and an optional caption of a few words |
 | `summary` | yes | Opening bullets: a list of items |
-| `actions` | no | List of `{who, what, items?}`: the role, a one-line action, and nested bullets; empty prints that no action is needed |
+| `actions` | no | List of `{who, what, effective?, items?}`: the role, a one-line action, the `YYYY-MM-DD` date it applies from, printed after the role, and nested bullets; empty prints that no action is needed |
 | `figures` | no | List of figures, below |
 | `changes` | no | List of material changes, below |
 | `sections` | no | List of `{heading, items}` for compatibility, migration, known issues |
 | `open_questions` | no | List of items, each a question |
 | `links` | no | List of `{label, url}`, such as the full change list |
-| `field_labels` | no | Display names for compared fields, such as `{"group": "Category"}` |
+| `field_labels` | no | Display names for compared fields or role paths, such as `{"group": "Category"}`; a field without one prints its identifier as spelled |
 | `reasons` | no | One short reason per listed ID without a change section, `{"FB-013": "..."}`; the appendix Why column prints it, points to the change section for IDs that have one, says "Wording only" for minor edits, and "Not recorded" otherwise. An ID in both `reasons` and `changes` is an error, so a record never shows two reasons |
 | `field_list` | no | A compared field, such as `definition`, listed with both values and word-level marks for every added record and every record with a major change in it, except records with their own change section |
 | `full_list` | no | `appendix` (default): a compact table of every listed ID at the end. `omit`: no table; the source section says the data file lists every change, and the number check stops requiring every ID in the output |
@@ -95,6 +99,7 @@ An alt text written by a figure tool usually types its numbers. Replace each wit
 | `change-kinds` | Horizontal bars per kind: added, each removal kind, each field with major changes, minor-only; zero rows dropped, sorted by count | Nothing more; the caption gets a sentence on overlapping kinds |
 | `group-dumbbell` | Per group, hollow as-is ring and filled to-be dot, sorted by change | `version_diff.py --group-field` |
 | `field-dumbbell` | Per changed record, the old and new value of one numeric field | `field` naming a numeric compared field |
+| `facts-dumbbell` | Per row, the as-is and to-be fact as hollow and filled dots, in the order given | `rows: [{label, before, after}]` naming facts in the data file |
 | `svg` | An SVG drawn elsewhere, such as by `technical-figure` | `src` relative to note.json, `alt` stating the values as text with each number as a token |
 
 Every figure has a `title` and a `caption`. The `svg` type's text, and the overview's, must be SVG text, not outlined paths, so the PDF keeps it searchable and the number check can read it. Its numbers must be numbers the data file holds; the number check reads them in the HTML, where each text run is its own node, because PDF text extraction joins adjacent runs.
@@ -103,7 +108,7 @@ Every figure has a `title` and a `caption`. The `svg` type's text, and the overv
 | --- | --- | --- |
 | `cards` (default) | Two field cards, as-is and to-be; changed fields in bold, unchanged in gray; an added or removed record shows "Not in" the other version, or its successor | `id` of any listed record |
 | `text-diff` | One text field word by word: removed words struck through on a vermillion tint, added words bold on a blue tint | `id` of a changed record and `field` naming one of its changed text fields |
-| `excerpt` | A chosen part of one long field, as-is beside to-be, with the same word-level marks | `field`, plus `as_is` and `to_be` copied verbatim from the old and new values; the build fails when either is not found in the data file |
+| `excerpt` | A chosen part of one long field, as-is beside to-be, with the same word-level marks | `field`, plus `as_is` and `to_be` copied verbatim from the old and new values; the build fails when either is not found in the data file. Non-string values print as JSON, so an excerpt of an object field quotes its JSON text |
 
 A `cards` view may list `fields`, such as `["name", "definition"]`, to show only those fields, for records with many compared fields.
 

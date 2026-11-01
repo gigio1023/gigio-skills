@@ -9,17 +9,25 @@ from __future__ import annotations
 
 import difflib
 import json
+import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from _diff_data import DiffData
 from _errors import NoteSourceError
-from _note_source import Note
+from _note_source import FactPair, Note, field_text
+from _records import field_of, value_at
 from _svg_charts import BarRow, PairRow
 
 STRINGS_PATH: Path = Path(__file__).resolve().parent.parent / "assets" / "strings.json"
 REMOVAL_KINDS: tuple[str, ...] = ("merged", "split", "replaced", "removed")
+# A word that ends a sentence: terminal punctuation, then any closing quotes or brackets.
+SENTENCE_END: re.Pattern[str] = re.compile(r"[.!?。！？][\"'”’)\]」』]*$")
+FACT_TOKEN: re.Pattern[str] = re.compile(r"\{\{\s*facts\.([^{}\s]+?)\s*\}\}")
+CONTEXT_WORDS: int = 12  # unchanged words kept beside a change in a text difference, at most, on each side
+ELLIPSIS: str = "…"
 
 # The one label each counted path carries wherever a number is printed under a label.
 # check_numbers.py reads the same table, so a correct number under another kind's label fails.
@@ -39,10 +47,9 @@ def expected_label(path: str, strings: dict[str, str], roles: dict[str, str | No
     """The label a counted path must carry, or None when the label depends on note.json field labels."""
     if path in LABEL_KEYS:
         return strings[LABEL_KEYS[path]]
-    if path == f"field_changes.{roles['name']}.major":
-        return strings["kind_renamed"]
-    if path == f"field_changes.{roles['parent']}.major":
-        return strings["kind_moved"]
+    for role, key in (("name", "kind_renamed"), ("parent", "kind_moved")):
+        if roles[role] is not None and path == f"field_changes.{field_of(roles[role])}.major":
+            return strings[key]
     return None
 
 
@@ -72,7 +79,12 @@ class FieldEntry:
 @dataclass(frozen=True)
 class DiffPiece:
     text: str
-    op: str  # "same", "removed", or "added"
+    op: str  # "same", "removed", "added", or "elided" for unchanged words left out
+
+
+def ends_sentence(text: str) -> bool:
+    """Whether plain text ends with sentence-final punctuation, so another sentence can follow after a space."""
+    return bool(SENTENCE_END.search(text.rstrip()))
 
 
 class NoteContent:
@@ -83,8 +95,11 @@ class NoteContent:
         self.diff: DiffData = diff
         self.s: dict[str, str] = _strings(note.lang)
         roles: dict[str, str | None] = diff.document["roles"]
-        self.name_field: str | None = roles["name"]
-        self.parent_field: str | None = roles["parent"]
+        # Roles are dotted paths; a change in the top-level field that holds one counts as that kind.
+        self.name_path: str | None = roles["name"]
+        self.parent_path: str | None = roles["parent"]
+        self.name_field: str | None = field_of(self.name_path) if self.name_path else None
+        self.parent_field: str | None = field_of(self.parent_path) if self.parent_path else None
         self.entries: dict[str, tuple[str, dict[str, Any]]] = {
             entry["id"]: (section, entry)
             for section in ("added", "removed", "changed", "minor_only")
@@ -92,17 +107,23 @@ class NoteContent:
         }
 
     def field_label(self, field: str) -> str:
-        return self.note.field_labels.get(field, field.replace("_", " ").capitalize())
+        """The note's label for a field, or the field's identifier as the data spells it."""
+        return self.note.field_labels.get(field, field)
 
     def removal_parts(self) -> list[tuple[str, int]]:
         """Nonzero removal kinds in a fixed order: merged, split, replaced, removed."""
         kinds: dict[str, int] = self.diff.document["removal_kinds"]
         return [(kind, kinds[kind]) for kind in REMOVAL_KINDS if kinds[kind]]
 
+    def identity(self) -> str:
+        """The reconciling identity as printed, ``before − removed + added = after``."""
+        c: dict[str, int] = self.diff.counts
+        return f"{c['before']:,} − {c['removed']:,} + {c['added']:,} = {c['after']:,}"
+
     def reconcile_sentences(self) -> list[str]:
-        """The identity, how the records that left divide by kind, and how shared records divide."""
+        """The identity with its terms named, how the records that left divide by kind, and how shared records divide."""
         values: dict[str, str] = {k: f"{v:,}" for k, v in self.diff.counts.items()}
-        values["gone"] = values["removed"]
+        values.update(gone=values["removed"], old_label=self.diff.old_label, new_label=self.diff.new_label, identity=self.identity())
         sentences: list[str] = [self.s["reconcile_identity"].format(**values)]
         parts: list[str] = [self.s[f"part_{kind}"].format(n=f"{n:,}") for kind, n in self.removal_parts()]
         if parts:
@@ -127,7 +148,7 @@ class NoteContent:
     def name_of(self, record_id: str) -> str:
         section, entry = self.entries[record_id]
         record: dict[str, Any] = entry["new"] if section in ("changed", "minor_only") else entry["record"]
-        return str(record.get(self.name_field, "")) if self.name_field else ""
+        return field_text(value_at(record, self.name_path)) if self.name_path else ""
 
     def change_labels(self, record_id: str) -> list[str]:
         """Change kinds of one listed record, in the closed vocabulary of diff.json."""
@@ -165,6 +186,24 @@ class NoteContent:
         rows: list[PairRow] = [PairRow(name, g["before"], g["after"]) for name, g in groups.items()]
         return sorted(rows, key=lambda r: (-(r.after - r.before), r.label))
 
+    def cited_facts(self) -> list[str]:
+        """Facts the note prints, through a token in any prose or a facts-dumbbell row, in data-file order.
+
+        The source section lists these with their sources; a fact the note never prints stays in the data file only.
+        """
+        cited: set[str] = {name for _, text in self.note.prose() for name in FACT_TOKEN.findall(text)}
+        figures = self.note.figures + [change.figure for change in self.note.changes if change.figure is not None]
+        cited |= {name for figure in figures for row in figure.rows for name in (row.before, row.after)}
+        return [name for name in self.diff.document["facts"] if name in cited]
+
+    def fact_rows(self, pairs: list[FactPair], label: Callable[[str], str]) -> list[PairRow]:
+        """Rows of a facts-dumbbell in the order given; ``label`` renders a row label's inline markup as plain text."""
+        rows: list[PairRow] = []
+        for pair in pairs:
+            before, after = (self.diff.resolve(f"facts.{name}") for name in (pair.before, pair.after))
+            rows.append(PairRow(label(pair.label), before, after))
+        return rows
+
     def field_rows(self, field: str) -> list[PairRow]:
         rows: list[PairRow] = []
         for entry in self.diff.document["changed"]:
@@ -187,12 +226,12 @@ class NoteContent:
     def mapping_rows(self) -> list[tuple[str, str, str, str]]:
         """Rows of ID, as-is, to-be, change for renamed, moved, and removed records."""
         rows: list[tuple[str, str, str, str]] = []
-        for field, label in ((self.name_field, self.s["kind_renamed"]), (self.parent_field, self.s["kind_moved"])):
-            if field is None:
+        for path, label in ((self.name_path, self.s["kind_renamed"]), (self.parent_path, self.s["kind_moved"])):
+            if path is None:
                 continue
             for entry in self.diff.document["changed"]:
-                if field in entry["major_fields"]:
-                    rows.append((entry["id"], self.value(entry["old"].get(field)), self.value(entry["new"].get(field)), label))
+                if field_of(path) in entry["major_fields"]:
+                    rows.append((entry["id"], self.value(value_at(entry["old"], path)), self.value(value_at(entry["new"], path)), label))
         for entry in self.diff.document["removed"]:
             old_name: str = self.name_of(entry["id"]) or entry["id"]
             successors: str = ", ".join(self._id_and_name(r) for r in entry["successor_records"])
@@ -268,17 +307,14 @@ class NoteContent:
 
     def _id_and_name(self, record: dict[str, Any]) -> str:
         key: str = self.diff.document["roles"]["key"]
-        name: str = str(record.get(self.name_field, "")) if self.name_field else ""
+        name: str = field_text(value_at(record, self.name_path)) if self.name_path else ""
         return f"{record[key]} {name}".strip()
 
     def value(self, raw: Any) -> str:
-        if raw is None or raw == "":
+        """A field value as printed: the empty text for nothing, numbers with separators, the rest as field_text."""
+        if raw is None or raw == "" or raw == []:
             return self.s["empty"]
-        if isinstance(raw, list):
-            return ", ".join(str(item) for item in raw)
-        if isinstance(raw, dict):
-            return json.dumps(raw, ensure_ascii=False)
-        return _plain(raw) if isinstance(raw, (int, float)) and not isinstance(raw, bool) else str(raw)
+        return _plain(raw) if isinstance(raw, (int, float)) and not isinstance(raw, bool) else field_text(raw)
 
     def _removal_label(self, entry: dict[str, Any]) -> str:
         ids: str = ", ".join(entry["successors"])
@@ -291,7 +327,8 @@ def word_diff(old_text: str, new_text: str) -> tuple[list[DiffPiece], list[DiffP
     Words are compared without the spaces between them, so a changed run of words is one piece.
     A single shared word between two changes joins the change on both sides: difflib matches
     short words such as "as" or "the" that belong to different phrases, and a reader sees one
-    rewritten phrase more clearly than two fragments around a coincidental match.
+    rewritten phrase more clearly than two fragments around a coincidental match. Unchanged text
+    keeps only the sentence around each change, see _elide_context.
     """
     old_words: list[str] = old_text.split()
     new_words: list[str] = new_text.split()
@@ -310,12 +347,75 @@ def word_diff(old_text: str, new_text: str) -> tuple[list[DiffPiece], list[DiffP
             merged.append([segment[0], list(segment[1]), list(segment[2])])
     before: list[DiffPiece] = []
     after: list[DiffPiece] = []
-    for same, old_part, new_part in merged:
+    for same, old_part, new_part in _elide_context(merged):
         if old_part:
-            before.append(DiffPiece(" ".join(old_part), "same" if same else "removed"))
+            before.extend(_context_pieces(old_part) if same else [DiffPiece(" ".join(old_part), "removed")])
         if new_part:
-            after.append(DiffPiece(" ".join(new_part), "same" if same else "added"))
+            after.extend(_context_pieces(new_part) if same else [DiffPiece(" ".join(new_part), "added")])
     return _spaced(before), _spaced(after)
+
+
+def _elide_context(segments: list[list[Any]]) -> list[list[Any]]:
+    """Shorten each unchanged run to the sentence around the neighboring change, so the change reads first.
+
+    Unchanged text before a change keeps the start of the change's sentence, or the whole sentence
+    before it when the change starts a new sentence, so an inserted sentence still has an anchor on
+    the as-is side. Text after a change keeps the rest of that sentence. Each keeps at most
+    CONTEXT_WORDS words. What is left out becomes one None in the word list, which prints as
+    ELLIPSIS. Texts without a change are returned whole.
+    """
+    if all(same for same, _, _ in segments):
+        return segments
+    shortened: list[list[Any]] = []
+    for index, (same, words, _) in enumerate(segments):
+        if not same:
+            shortened.append(segments[index])
+            continue
+        after_change: list[str] = [] if index == 0 or _sentence_closed(segments[index - 1]) else _sentence_head(words)
+        before_change: list[str] = [] if index == len(segments) - 1 else _sentence_tail(words)
+        if len(after_change) + len(before_change) >= len(words):
+            shortened.append(segments[index])
+            continue
+        kept: list[str | None] = [*after_change, None, *before_change]
+        shortened.append([True, kept, kept])
+    return shortened
+
+
+def _sentence_closed(change: list[Any]) -> bool:
+    """Whether a change ends its sentence on both sides, so the unchanged text after it starts a new one."""
+    return all(not words or SENTENCE_END.search(words[-1]) for words in change[1:])
+
+
+def _sentence_head(words: list[str]) -> list[str]:
+    """The words up to the first sentence end, at most CONTEXT_WORDS."""
+    end: int = next((i + 1 for i, word in enumerate(words) if SENTENCE_END.search(word)), len(words))
+    return words[: min(end, CONTEXT_WORDS)]
+
+
+def _sentence_tail(words: list[str]) -> list[str]:
+    """The words after the last sentence end, or the last whole sentence when the words end one; at most CONTEXT_WORDS."""
+    ends: list[int] = [i + 1 for i, word in enumerate(words) if SENTENCE_END.search(word)]
+    if ends and ends[-1] == len(words):
+        ends.pop()
+    start: int = ends[-1] if ends else 0
+    return words[max(start, len(words) - CONTEXT_WORDS):]
+
+
+def _context_pieces(words: list[str | None]) -> list[DiffPiece]:
+    """Unchanged words as pieces; each None that _elide_context left becomes an elided ELLIPSIS piece."""
+    pieces: list[DiffPiece] = []
+    run: list[str] = []
+    for word in words:
+        if word is not None:
+            run.append(word)
+            continue
+        if run:
+            pieces.append(DiffPiece(" ".join(run), "same"))
+            run = []
+        pieces.append(DiffPiece(ELLIPSIS, "elided"))
+    if run:
+        pieces.append(DiffPiece(" ".join(run), "same"))
+    return pieces
 
 
 def _strings(lang: str) -> dict[str, str]:

@@ -6,18 +6,20 @@ Read when choosing a note's sections, deciding which changes are material, or na
 
 | Section | Holds | Comes from |
 | --- | --- | --- |
-| Identity | Both version labels with their tag, commit, or release URL, and the release date | `version_diff.py` options |
+| Identity | Both version labels, each with its tag, commit, or release URL on its own line, and the release date | `version_diff.py` options |
 | Overview figure | One drawn figure of the whole as-is to to-be change: what left, what arrived, what moved, which totals changed | `note.json` `overview`, an SVG the author draws |
 | Opening | At most six one-line bullets on what changed and what it means for this reader, with nested detail | `note.json` `summary` |
-| Required actions | Who must do what, by role, one line each, with the IDs involved as nested bullets | `note.json` `actions` |
-| Record counts | The reconciling identity, the removal kinds, and how shared records divide, then one or two figures | data file and `note.json` `figures` |
+| Required actions | Who must do what, by role, one line each, with the date it applies from when there is one and the IDs involved as nested bullets | `note.json` `actions` |
+| Record counts | The reconciling identity, the removal kinds, and how shared records divide, then one or two figures; with an overview, the figures only | data file and `note.json` `figures` |
 | Material changes | Per change: ID and title, as-is and to-be pair, why, impact, and an optional figure | `note.json` `changes` |
 | New and changed field values | Both values of one field, usually the definition, for every added and changed record without its own change section | `note.json` `field_list`, values from the data file |
 | ID mapping | Old and new name or parent per renamed, moved, merged, or removed ID, each removed ID with its successor or none | data file |
 | Extra sections | Compatibility, migration steps, known issues, acknowledgments, as the release needs | `note.json` `sections` |
 | Open questions | Undecided points, phrased as questions | `note.json` `open_questions` |
 | All changes | Optional appendix: every added, removed, changed, and minor-only ID with its change kinds and one reason | data file and `note.json` `reasons`; `full_list` |
-| Source of the numbers | Data file, both version sources, the tool, the minor-edit rule, links | data file and `note.json` `links` |
+| Source of the numbers | Paths of the data file and both exports, the refs, the tool, the minor-edit rule, the reconciling sentences when an overview shows the counts, links, and each cited fact with its value and source | data file and `note.json` `links` |
+
+Each number and ref prints once where the reader meets it. The overview already shows the totals on page one, so with an overview the reconciling sentences move to the source section. Refs print in the identity strip and the source section; prose and figures name the version by its label.
 
 PostgreSQL's release notes put migration before the change list, and Common Changelog puts breaking changes first; the required actions sit right after the opening for the same reason. Keep the opening to the change and its consequence. A sentence that announces the note, praises the release, or narrates how it was prepared gives the reader nothing to act on.
 
@@ -60,12 +62,16 @@ A changed record can have several kinds; the per-kind counts overlap and say so 
 
 ## Counts that reconcile
 
-Print counts a reader can add up. The data file guarantees two identities, and the builder prints both:
+Print counts a reader can add up. The data file guarantees two identities, and the builder prints both, the first with its terms named, since a bare `22 − 2 + 3 = 23` does not say which term is the old total:
 
 - `before − removed + added = after`
 - `shared = changed + minor_only + unchanged`, where `shared = before − removed`
 
 Per group, `after = before − removed − moved_out + added + moved_in`. MITRE's CWE diff report from 4.15 to 4.16 is the model: 66 entries with major changes plus 1,361 unchanged equals the 1,427 shared entries, and 1,427 shared plus 2 new equals the 1,429 entries of the new version. A number that cannot be placed in one of these identities needs its source stated beside it, through `--facts`.
+
+## A second record set
+
+`version_diff.py` compares one record set. When the release also changed a second set, such as test guides or attack paths beside the taxonomy records, count that set in both versions with your own script and pass each count to `--facts` with a `source` naming the script, the input, and both refs. The note cites the counts through `{{facts.<name>}}` tokens and draws before and after pairs with a `facts-dumbbell` figure. The source section lists every cited fact with its value and source, so the reader can trace a number that the record diff does not hold. Keep facts the note does not cite out of the facts file, or expect them to stay in the data file only.
 
 ## What is material
 
@@ -77,8 +83,9 @@ Impact names the reader role and the action or consequence: which tags to remap,
 
 ## Writing the parts the builder does not compute
 
+- **Terms.** Name every concept with the versioned artifact's own term, from its glossary or termbase, its field names, or its decision documents, or with the field's standard term. Never coin a label for the note, in prose or in a figure. When the artifact has no term for a concept, describe it in plain words at first use.
 - **Opening.** Name the version, the two or three changes that matter most, and the consequence for the reader. Counts come through tokens. When it names the groups whose totals move, take them from `groups` in the data file: every group whose before and after differ, or whose members changed.
-- **Actions.** One line per role. Start with the role, then the action and the IDs, including the new IDs to start using and what to do with stored data under removed or narrowed IDs.
+- **Actions.** One line per role. Start with the role, then the action and the IDs, including the new IDs to start using and what to do with stored data under removed or narrowed IDs. Give `effective` when the action applies from a set date; it prints after the role.
 - **Titles.** A noun phrase or a short statement of the change, such as "Slow shipping becomes Late delivery". The ID is printed beside it.
 - **Captions.** The first sentence says what the figure shows for this release, with tokens for its numbers. Later sentences explain an encoding the reader would not guess.
 - **Extra sections.** Compatibility, migration steps, known issues, or acknowledgments, each under a noun-phrase heading.

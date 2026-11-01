@@ -25,7 +25,7 @@ RELEASE_NOTES_NODE_MODULES=<node_modules> node scripts/render_pdf.mjs out/note.h
 
 ## Fonts and the text layer
 
-Chromium embeds Pretendard as Type3 fonts and maps each drawn glyph back to a character for the PDF's text layer. Glyphs that come from an OpenType feature, such as the `ss06` stylistic set or tabular figures, got no mapping on 2026-11-01: the page images were correct while pypdf and copy and paste returned `Exampe` for `Example` and private-use characters for table digits. The stylesheet therefore sets no `font-feature-settings` or `font-variant-numeric`. Keep it that way when restyling, and run the number check with `--pdf` after any font change.
+Chromium embeds Pretendard as Type3 fonts and maps each drawn glyph back to a character for the PDF's text layer. Glyphs that come from an OpenType feature, such as the `ss06` stylistic set or tabular figures, got no mapping on 2026-11-01: the page images were correct while pypdf and copy and paste returned `Exampe` for `Example` and private-use characters for table digits. The stylesheet therefore sets no `font-feature-settings` or `font-variant-numeric`. Ligatures are off for a related reason: Pretendard draws `->` as one arrow glyph, which the text layer returned as `→`. Keep both settings when restyling, and run the number check with `--pdf` after any font change.
 
 ## Failure messages
 

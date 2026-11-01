@@ -5,7 +5,9 @@
    and hollow, to-be is blue and filled, removed or action-needed is vermillion.
    No font-feature-settings or font-variant-numeric: Chromium's PDF gives
    Pretendard's alternate glyphs (ss06, tabular figures) no Unicode mapping,
-   so copied or extracted text loses those characters. */
+   so copied or extracted text loses those characters. Ligatures are off for
+   the same reason: Pretendard draws "->" as one arrow glyph, which copies
+   and extracts as "→". */
 
 :root {
   --bg: #FFFFFF;
@@ -27,6 +29,7 @@ html {
   background: var(--bg);
   color: var(--ink);
   font: 10pt/1.55 var(--font);
+  font-variant-ligatures: none;
   word-break: keep-all;
   overflow-wrap: break-word;
   line-break: strict;
@@ -55,7 +58,10 @@ code { font-family: var(--mono); font-size: 9pt; background: var(--surface); bor
 .subtitle { color: var(--ink-2); margin-bottom: 16px; }
 .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
 .meta div { background: var(--surface); border-radius: 8px; padding: 8px 12px; }
-.meta div > span { display: block; font-size: 8.5pt; color: var(--ink-2); }
+.meta .k { display: block; font-size: 8.5pt; color: var(--ink-2); }
+.meta .v { display: block; font-weight: 600; }
+/* The ref sits on its own line in the code face, so a version label never runs into its tag or commit. */
+.meta .ref { display: block; font-family: var(--mono); font-size: 9pt; color: var(--ink-2); overflow-wrap: anywhere; }
 
 /* The overview is the author's own drawing at the full text width: no panel around it. */
 figure.overview { background: none; border-radius: 0; padding: 0; margin: 8px 0 20px; }
@@ -64,6 +70,8 @@ figure.overview svg { display: block; width: 100%; height: auto; }
 .reconcile { color: var(--ink-2); }
 .why ul, .impact ul { margin-bottom: 4px; }
 .why p, .impact p { margin-bottom: 4px; }
+/* A Why or Impact label above its bullets stays on the page of the first bullet. */
+.points-label { break-after: avoid; }
 
 .actions li strong { color: var(--ink); }
 
@@ -73,11 +81,13 @@ figcaption { font-size: 8.5pt; color: var(--ink-2); margin-top: 8px; }
 svg.chart { display: block; width: 100%; height: auto; }
 /* Chart paint and type are SVG attributes written from the tokens above by scripts/_svg_charts.py. */
 
-/* A change section may break between its blocks; the heading stays with the first block,
-   and each card pair, text difference, and figure stays whole. */
+/* A change section may break between its blocks; the heading stays with the first block.
+   A card pair and a figure stay whole. A short text difference stays whole; a long one may
+   break between its as-is and to-be rows, never inside a row, so moving it whole never
+   leaves most of a page empty. */
 .change { margin-bottom: 16px; }
 .change figure { margin-top: 12px; }
-.pair, .textdiff, .field-entry { break-inside: avoid; }
+.pair, .textdiff.keep { break-inside: avoid; }
 .change h3 .id { color: var(--ink-2); }
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .card { background: var(--surface); border-radius: 8px; padding: 12px 16px; }
@@ -90,10 +100,17 @@ svg.chart { display: block; width: 100%; height: auto; }
 .card dd.same { color: var(--ink-2); }
 .card dd.diff { font-weight: 600; }
 .card .absent { color: var(--ink-2); font-size: 9pt; margin: 0; }
-.textdiff { background: var(--surface); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; }
+/* Each side of a text difference is its own surface row, aligned through a subgrid, so a page break
+   between the as-is and to-be rows leaves white space rather than an empty panel. */
+.textdiff { display: grid; grid-template-columns: max-content 1fr; margin-bottom: 12px; }
+.textdiff .side { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; column-gap: 16px;
+  background: var(--surface); padding: 4px 16px; break-inside: avoid; }
+.textdiff .side:first-child { border-radius: 8px 8px 0 0; padding-top: 12px; }
+.textdiff .side:last-child { border-radius: 0 0 8px 8px; padding-bottom: 12px; }
 .textdiff .card-head { margin: 0; }
 .textdiff p { margin: 0; }
 del { background: var(--vermillion-fill); text-decoration: line-through; color: var(--ink); }
+.elided { color: var(--ink-2); }
 ins { background: var(--blue-fill); text-decoration: none; font-weight: 600; }
 .why, .impact { margin-bottom: 4px; }
 
@@ -114,6 +131,9 @@ td.id, .nb { white-space: nowrap; }
 .appendix td { padding: 0 8px; }
 
 .entry-title { font-weight: 600; font-size: 9pt; margin-bottom: 4px; break-after: avoid; }
-.source { break-inside: avoid; }
-.source dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; font-size: 9pt; }
+.source dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; font-size: 9pt; margin-bottom: 16px; break-inside: avoid; }
 .source dt { color: var(--ink-2); }
+/* Paths and fact sources are single text runs; a long one wraps anywhere instead of widening the page.
+   The fact name and value columns keep their width. */
+.source dd, .source td:last-child { overflow-wrap: anywhere; }
+td.num { white-space: nowrap; }

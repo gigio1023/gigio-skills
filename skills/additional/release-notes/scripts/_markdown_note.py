@@ -4,15 +4,18 @@ A GitHub release body cannot carry the note's inline SVG, so each chart
 becomes the table of values it draws, a card pair becomes a field table, and
 a text change becomes a ``diff`` block. The release title is entered
 separately on GitHub, so the body starts with the summary. Section order and
-every number match the HTML output, because both read ``NoteContent``.
+every number match the HTML output, because both read ``NoteContent``; with
+an overview, the reconciling sentences sit in the source section there too.
 """
 
 from __future__ import annotations
 
+import re
+
 from _diff_data import DiffData
 from _inline import escape_markdown, render_markdown
-from _note_content import DiffPiece, FieldEntry, NoteContent, word_diff
-from _note_source import ChangeView, Figure, FigureType, FullList, Highlight, Item
+from _note_content import DiffPiece, FieldEntry, NoteContent, ends_sentence, word_diff
+from _note_source import Action, ChangeView, Figure, FigureType, FullList, Highlight, Item
 
 
 def render_markdown_note(content: NoteContent) -> str:
@@ -30,19 +33,18 @@ def render_markdown_note(content: NoteContent) -> str:
         out.append(f"*{r(note.overview.alt)}*")
     out.append(_bullets(note.summary, diff))
     meta_heads: list[str] = [s["as_is"], s["to_be"]] + ([s["released"]] if doc.get("date") else [])
-    meta_cells: list[str] = [
-        " ".join(v for v in (doc["old"]["label"], doc["old"].get("ref")) if v),
-        " ".join(v for v in (doc["new"]["label"], doc["new"].get("ref")) if v),
-    ] + ([doc["date"]] if doc.get("date") else [])
-    out.append(_table(meta_heads, [meta_cells]))
+    # The ref is a code span beside the label, so the two read as separate values.
+    meta_cells: list[str] = [_version(doc["old"]), _version(doc["new"])] + ([doc["date"]] if doc.get("date") else [])
+    out.append(_table(meta_heads, [meta_cells], escape=False))
     out.append(f"## {escape_markdown(s['h_actions'])}")
     if note.actions:
-        out.append("\n".join(f"- **{r(a.who)}:** {r(a.what)}" + ("\n" + _bullets(a.items, diff, 1) if a.items else "")
-                             for a in note.actions))
+        out.append("\n".join(_action(content, a) for a in note.actions))
     else:
         out.append(escape_markdown(s["no_actions"]))
-    out.append(f"## {escape_markdown(s['h_glance'])}")
-    out.append("\n".join(f"- {escape_markdown(sentence)}" for sentence in content.reconcile_sentences()))
+    if note.overview is None or note.figures:
+        out.append(f"## {escape_markdown(s['h_glance'])}")
+    if note.overview is None:
+        out.append("\n".join(f"- {escape_markdown(sentence)}" for sentence in content.reconcile_sentences()))
     out.extend(_figure(content, figure) for figure in note.figures)
     if note.changes:
         out.append(f"## {escape_markdown(s['h_changes'])}")
@@ -68,6 +70,19 @@ def render_markdown_note(content: NoteContent) -> str:
     out.append(f"## {escape_markdown(s['h_source'])}")
     out.append(_source(content))
     return "\n\n".join(out) + "\n"
+
+
+def _version(side: dict[str, str | None]) -> str:
+    label: str = escape_markdown(str(side["label"]))
+    return f"{label} `{side['ref']}`" if side.get("ref") else label
+
+
+def _action(content: NoteContent, action: Action) -> str:
+    who: str = render_markdown(action.who, content.diff)
+    if action.effective is not None:
+        who += ", " + escape_markdown(content.s["action_from"].format(date=action.effective))
+    nested: str = "\n" + _bullets(action.items, content.diff, 1) if action.items else ""
+    return f"- **{who}:** {render_markdown(action.what, content.diff)}{nested}"
 
 
 def _appendix(content: NoteContent) -> str:
@@ -105,16 +120,21 @@ def _figure(content: NoteContent, figure: Figure) -> str:
     caption: str = render_markdown(figure.caption, diff)
     if figure.type is FigureType.CHANGE_KINDS:
         table: str = _table([s["col_change"], s["stat_records"]], [[b.label, f"{b.value:,}"] for b in content.kind_bars()], numeric=True)
-        caption += " " + escape_markdown(s["kinds_overlap"])
-    elif figure.type in (FigureType.GROUP_DUMBBELL, FigureType.FIELD_DUMBBELL):
+        caption += ("" if ends_sentence(figure.caption) else ".") + " " + escape_markdown(s["kinds_overlap"])
+    elif figure.type in (FigureType.GROUP_DUMBBELL, FigureType.FIELD_DUMBBELL, FigureType.FACTS_DUMBBELL):
         if figure.type is FigureType.GROUP_DUMBBELL:
             rows = content.group_rows()
             first: str = content.field_label(diff.document["roles"]["group"])
-        else:
+        elif figure.type is FigureType.FIELD_DUMBBELL:
             rows = content.field_rows(figure.field or "")
             first = s["col_name"]
-        table = _table([first, f"{s['as_is']} {old_label}", f"{s['to_be']} {new_label}"],
-                       [[row.label, content.value(row.before), content.value(row.after)] for row in rows], numeric=True)
+        else:
+            # Row labels are rendered Markdown already, so the table leaves them unescaped.
+            rows = content.fact_rows(figure.rows, lambda text: render_markdown(text, diff))
+            first = s["col_fact"]
+        table = _table([escape_markdown(first), escape_markdown(f"{s['as_is']} {old_label}"), escape_markdown(f"{s['to_be']} {new_label}")],
+                       [[row.label if figure.type is FigureType.FACTS_DUMBBELL else escape_markdown(row.label),
+                         content.value(row.before), content.value(row.after)] for row in rows], numeric=True, escape=False)
     else:
         table = render_markdown(figure.alt or "", diff)
     return f"{title}\n\n{table}\n\n{caption}"
@@ -160,17 +180,40 @@ def _highlight(content: NoteContent, change: Highlight) -> str:
 
 def _source(content: NoteContent) -> str:
     s, doc = content.s, content.diff.document
+
+    def version(side: str) -> str:
+        ref: str | None = doc[side].get("ref")
+        return _code(doc[side]["source"]) + (" " + _code(ref) if ref else "")
+
     lines: list[str] = [
-        f"- {escape_markdown(s['src_data'])}: `{content.diff.path.name}`",
-        f"- {escape_markdown(s['as_is'])}: {escape_markdown(' '.join(v for v in (doc['old']['source'], doc['old'].get('ref')) if v))}",
-        f"- {escape_markdown(s['to_be'])}: {escape_markdown(' '.join(v for v in (doc['new']['source'], doc['new'].get('ref')) if v))}",
+        f"- {escape_markdown(s['src_data'])}: {_code(doc['data_file'])}",
+        f"- {escape_markdown(s['as_is'])}: {version('old')}",
+        f"- {escape_markdown(s['to_be'])}: {version('new')}",
         f"- {escape_markdown(s['src_tool'])}: `version_diff.py`",
         f"- {escape_markdown(s['src_minor'])}: {escape_markdown(s['minor_rule'])}",
     ]
+    if content.note.overview is not None:
+        lines.append(f"- {escape_markdown(s['h_glance'])}: {escape_markdown(' '.join(content.reconcile_sentences()))}")
     if content.note.full_list is FullList.OMIT:
         lines.append(f"- {escape_markdown(s['src_full_list'])}: {escape_markdown(s['full_list_omitted'])}")
     lines.extend(f"- {render_markdown(link.label, content.diff)}: <{link.url}>" for link in content.note.links)
+    cited: list[str] = content.cited_facts()
+    if cited:
+        rows: list[list[str]] = [[_code(name), content.value(doc["facts"][name]["value"]), _code(doc["facts"][name]["source"])] for name in cited]
+        lines.append("\n" + _table([s["col_fact"], s["col_value"], s["col_source"]], rows, escape=False))
     return "\n".join(lines)
+
+
+def _code(text: str) -> str:
+    """A code span for literal text: the fence is one backtick longer than any run inside, as CommonMark requires.
+
+    A pipe is escaped even inside the span, because GitHub splits table cells before it reads code spans.
+    """
+    runs: list[int] = [len(run) for run in re.findall(r"`+", text)]
+    fence: str = "`" * (max(runs, default=0) + 1)
+    padded: str = f" {text} " if runs else text
+    escaped: str = padded.replace("|", r"\|")
+    return f"{fence}{escaped}{fence}"
 
 
 def _field_entry(content: NoteContent, entry: FieldEntry) -> str:
