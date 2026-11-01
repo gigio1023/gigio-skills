@@ -18,6 +18,9 @@ Checks, each reported with what it found:
 - N5 the reconciliation identity is printed
 - N6 the PDF text carries exactly the HTML's numbers, after removing the
   running header and page numbers; a stale or truncated PDF fails here
+- N7 every ``data-label`` in the HTML reads the one label its path has in
+  ``assets/strings.json`` for the note's language, and its number is bound
+  to the same path; a merge count under the removed label fails here
 
 The PDF text is read with pypdf, which maps glyphs to characters only through
 the PDF's own ToUnicode tables, as copy and paste does. A PDF whose glyphs
@@ -45,6 +48,7 @@ from typing import Any
 from _diff_data import DiffData, canonical_number, load_diff
 from _errors import EnvironmentSetupError, ReleaseNoteError
 from _inline import format_value, scan_literals
+from _note_content import expected_label, load_strings
 
 PAGE_NUMBER: re.Pattern[str] = re.compile(r"^\s*\d+\s*/\s*\d+\s*$")
 
@@ -58,7 +62,7 @@ class Check:
 
 
 class _RenderedHtml(HTMLParser):
-    """Visible text, code text, aria labels, data-count bindings, and the title of a note."""
+    """Visible text, code text, aria labels, data-count and data-label bindings, language, and title of a note."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -66,23 +70,29 @@ class _RenderedHtml(HTMLParser):
         self.code: list[str] = []
         self.labels: list[str] = []
         self.bindings: list[tuple[str, str]] = []
+        self.label_bindings: list[tuple[str, str]] = []
+        self.lang: str = ""
         self.title: str = ""
         self._stack: list[str] = []
-        self._binding: str | None = None
-        self._bound: list[str] = []
+        # One open binding at a time: (attribute, path, tag, collected text). Bound elements do not nest.
+        self._open: tuple[str, str, str, list[str]] | None = None
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attributes: dict[str, str | None] = dict(attrs)
         self._stack.append(tag)
         if attributes.get("aria-label"):
             self.labels.append(attributes["aria-label"] or "")
-        if attributes.get("data-count"):
-            self._binding, self._bound = attributes["data-count"], []
+        if tag == "html":
+            self.lang = attributes.get("lang") or ""
+        for attribute in ("data-count", "data-label"):
+            if attributes.get(attribute):
+                self._open = (attribute, attributes[attribute] or "", tag, [])
 
     def handle_endtag(self, tag: str) -> None:
-        if self._binding is not None and tag == "span":
-            self.bindings.append((self._binding, "".join(self._bound)))
-            self._binding = None
+        if self._open is not None and tag == self._open[2]:
+            attribute, path, _, text = self._open
+            (self.bindings if attribute == "data-count" else self.label_bindings).append((path, "".join(text)))
+            self._open = None
         while self._stack:
             if self._stack.pop() == tag:
                 break
@@ -96,8 +106,8 @@ class _RenderedHtml(HTMLParser):
             self.code.append(data)
         else:
             self.text.append(data)
-        if self._binding is not None:
-            self._bound.append(data)
+        if self._open is not None:
+            self._open[3].append(data)
 
 
 def main(argv: list[str]) -> int:
@@ -115,6 +125,7 @@ def main(argv: list[str]) -> int:
         html_text: str = " ".join(page.text)
         checks += _text_checks("html", html_text + " " + " ".join(page.labels), diff)
         checks.append(_bindings(page.bindings, diff))
+        checks.append(_labels(page, diff))
         if args.md:
             md_text: str = re.sub(r"```(?!diff).*?```", " ", Path(args.md).read_text(encoding="utf-8"), flags=re.S)
             checks += _text_checks("md", md_text, diff)
@@ -171,6 +182,21 @@ def _bindings(bindings: list[tuple[str, str]], diff: DiffData) -> Check:
         if shown.strip() != expected:
             stale.append(f"{path}: shows {shown.strip()}, data file has {expected}")
     return Check("N3", f"{len(bindings)} bound numbers equal the data file", not stale, stale)
+
+
+def _labels(page: _RenderedHtml, diff: DiffData) -> Check:
+    """Each labelled count reads its path's label, so a merge count cannot sit under the removed label."""
+    strings: dict[str, str] = load_strings(page.lang)
+    roles: dict[str, str | None] = diff.document["roles"]
+    bound_paths: set[str] = {path for path, _ in page.bindings}
+    wrong: list[str] = []
+    for path, shown in page.label_bindings:
+        expected: str | None = expected_label(path, strings, roles)
+        if expected is not None and shown.strip() != expected:
+            wrong.append(f"{path}: labelled {shown.strip()!r}, should read {expected!r}")
+        if path not in bound_paths:
+            wrong.append(f"{path}: labelled but its number is not bound to the same path")
+    return Check("N7", f"{len(page.label_bindings)} count labels read their path's label", not wrong, wrong)
 
 
 def _pdf_text(pdf: Path, title: str) -> str:

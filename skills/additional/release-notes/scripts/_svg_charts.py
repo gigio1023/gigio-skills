@@ -63,6 +63,7 @@ class BarRow:
     label: str
     value: int
     tone: str  # "added", "removed", or "neutral"
+    path: str  # diff.json path of the value, written as data-count for the number check
 
 
 @dataclass(frozen=True)
@@ -73,7 +74,11 @@ class PairRow:
 
 
 def change_kind_bars(rows: list[BarRow], aria_label: str, palette: Palette) -> str:
-    """Horizontal bars of record counts per kind of change, values at the bar ends."""
+    """Horizontal bars of record counts per kind of change, values at the bar ends.
+
+    Each label carries ``data-label`` and each value ``data-count`` with the row's diff.json path,
+    so the number check can confirm that a number sits under the label of what it counts.
+    """
     fills: dict[str, str] = {"added": palette.blue, "removed": palette.vermillion, "neutral": palette.line}
     label_width: float = _label_column(r.label for r in rows)
     x0: float = label_width + 12
@@ -84,56 +89,72 @@ def change_kind_bars(rows: list[BarRow], aria_label: str, palette: Palette) -> s
     for i, row in enumerate(rows):
         mid: float = 4 + i * row_h + row_h / 2
         length: float = span * row.value / top_value
-        parts.append(_text(palette, 0, mid + 4, row.label, "label", palette.ink))
+        bound: str = html.escape(row.path, quote=True)
+        parts.append(_text(palette, 0, mid + 4, row.label, "label", palette.ink, attrs=f' data-label="{bound}"'))
         if length > 0:
             parts.append(f'<rect class="bar bar-{row.tone}" x="{x0:.1f}" y="{mid - bar_h / 2:.1f}" width="{length:.1f}" '
                          f'height="{bar_h}" rx="2" fill="{fills[row.tone]}"/>')
-        parts.append(_text(palette, x0 + length + 8, mid + 4, _number(row.value), "value", palette.ink_2))
+        parts.append(_text(palette, x0 + length + 8, mid + 4, _number(row.value), "value", palette.ink_2,
+                           attrs=f' data-count="{bound}"'))
     return _svg(4 + len(rows) * row_h + 4, aria_label, parts)
 
 
-def pair_dumbbell(rows: list[PairRow], before_key: str, after_key: str, aria_label: str, palette: Palette) -> str:
-    """One row per item: hollow as-is ring, filled to-be dot, both values printed.
+@dataclass(frozen=True)
+class DumbbellKey:
+    """Words for the key and the two value columns of a dumbbell chart."""
 
-    The axis starts at zero so dot positions compare as magnitudes; rows keep
-    the order given, which the caller sorts by change.
+    as_is: str
+    to_be: str
+    same: str
+    old_label: str
+    new_label: str
+
+
+def pair_dumbbell(rows: list[PairRow], key: DumbbellKey, aria_label: str, palette: Palette) -> str:
+    """One row per item: hollow as-is ring, filled to-be dot, and both values in two columns.
+
+    The values sit in fixed columns at the right, as-is then to-be under the version labels, so
+    every row reads in the same order on the page and in extracted text. A ring around a dot
+    marks a value that is the same in both versions, and the key says so. The axis starts at
+    zero so dot positions compare as magnitudes; rows keep the order given.
     """
     label_width: float = _label_column(r.label for r in rows)
-    x0: float = label_width + 12 + 40
-    x1: float = WIDTH - VALUE_SPACE
+    col_old: float = WIDTH - 64
+    col_new: float = WIDTH - 8
+    x0: float = label_width + 20
+    x1: float = WIDTH - 112
     top_value: float = max([max(r.before, r.after) for r in rows] + [1])
 
     def x(value: float) -> float:
         return x0 + (x1 - x0) * value / top_value
 
     key_y: float = 12
-    second_key: float = x0 + 24 + _text_width(before_key) + 16
+    second: float = x0 + 20 + _text_width(key.as_is) + 16
+    third: float = second + 20 + _text_width(key.to_be) + 16
     parts: list[str] = [
-        _ring(palette, x0, key_y - 4, 5),
-        _text(palette, x0 + 12, key_y, before_key, "key", palette.ink_2),
-        _dot(palette, second_key, key_y - 4),
-        _text(palette, second_key + 12, key_y, after_key, "key", palette.ink_2),
+        _ring(palette, x0 + 4, key_y - 4, 5),
+        _text(palette, x0 + 16, key_y, key.as_is, "key", palette.ink_2),
+        _dot(palette, second, key_y - 4),
+        _text(palette, second + 12, key_y, key.to_be, "key", palette.ink_2),
+        _ring(palette, third, key_y - 4, 8),
+        _dot(palette, third, key_y - 4),
+        _text(palette, third + 14, key_y, key.same, "key", palette.ink_2),
+        _text(palette, col_old, key_y, key.old_label, "key", palette.ink_2, anchor="end"),
+        _text(palette, col_new, key_y, key.new_label, "key", palette.ink_2, anchor="end", bold=True),
     ]
     row_h: int = 26
     for i, row in enumerate(rows):
-        mid: float = 36 + i * row_h
+        mid: float = 40 + i * row_h
         xb, xa = x(row.before), x(row.after)
         parts.append(_text(palette, 0, mid + 4, row.label, "label", palette.ink))
         parts.append(f'<line class="link" x1="{min(xb, xa):.1f}" y1="{mid}" x2="{max(xb, xa):.1f}" y2="{mid}" '
                      f'stroke="{palette.line}" stroke-width="1.5"/>')
-        if row.after == row.before:
-            # One printed value stands for both versions; the ring around the dot shows they coincide.
-            parts.append(_text(palette, xa + 14, mid + 4, _number(row.after), "value", palette.ink_2))
-        elif row.after > row.before:
-            parts.append(_text(palette, xb - 10, mid + 4, _number(row.before), "value", palette.ink_2, anchor="end"))
-            parts.append(_text(palette, xa + 10, mid + 4, _number(row.after), "value value-to-be", palette.blue_text, bold=True))
-        else:
-            parts.append(_text(palette, xa - 10, mid + 4, _number(row.after), "value value-to-be", palette.blue_text,
-                               anchor="end", bold=True))
-            parts.append(_text(palette, xb + 10, mid + 4, _number(row.before), "value", palette.ink_2))
         parts.append(_ring(palette, xb, mid, 8 if row.after == row.before else 5))
         parts.append(_dot(palette, xa, mid))
-    return _svg(36 + len(rows) * row_h - 8, aria_label, parts)
+        parts.append(_text(palette, col_old, mid + 4, _number(row.before), "value", palette.ink_2, anchor="end"))
+        parts.append(_text(palette, col_new, mid + 4, _number(row.after), "value value-to-be", palette.blue_text,
+                           anchor="end", bold=True))
+    return _svg(40 + len(rows) * row_h - 8, aria_label, parts)
 
 
 def embedded_svg(src: Path, aria_label: str) -> str:
@@ -154,6 +175,12 @@ def _svg(height: float, aria_label: str, parts: list[str]) -> str:
             f'aria-label="{html.escape(aria_label, quote=True)}">{body}</svg>')
 
 
+def mark_svg(palette: Palette, side: str) -> str:
+    """A 12 px inline mark for a card head: the hollow as-is ring or the filled to-be dot of the charts."""
+    circle: str = _ring(palette, 6, 6, 4) if side == "old" else f'<circle class="mark-to-be" cx="6" cy="6" r="4" fill="{palette.blue}"/>'
+    return f'<svg class="mark" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">{circle}</svg>'
+
+
 def _ring(palette: Palette, cx: float, cy: float, r: int) -> str:
     return (f'<circle class="mark-as-is" cx="{cx:.1f}" cy="{cy}" r="{r}" fill="{palette.bg}" '
             f'stroke="{palette.ink_2}" stroke-width="1.5"/>')
@@ -164,8 +191,8 @@ def _dot(palette: Palette, cx: float, cy: float) -> str:
 
 
 def _text(palette: Palette, x: float, y: float, content: str, cls: str, fill: str, *, anchor: str = "start",
-          bold: bool = False) -> str:
-    extra: str = (f' text-anchor="{anchor}"' if anchor != "start" else "") + (' font-weight="600"' if bold else "")
+          bold: bool = False, attrs: str = "") -> str:
+    extra: str = (f' text-anchor="{anchor}"' if anchor != "start" else "") + (' font-weight="600"' if bold else "") + attrs
     # The font stack goes in single quotes so it appears in the HTML exactly as in the stylesheet.
     return (f"<text class=\"{cls}\" x=\"{x:.1f}\" y=\"{y:.1f}\" font-family='{palette.font}' font-size=\"{FONT_PX:g}\" "
             f'fill="{fill}"{extra}>{html.escape(content)}</text>')

@@ -41,7 +41,7 @@ try {
       ok: Math.min(...measured.sizes) >= 7.95 },
     { id: 'D8', name: 'text below 4.5:1 contrast', threshold: '0', value: measured.lowText, ok: !measured.lowText.length },
     { id: 'D9', name: 'chart marks below 3:1 contrast', threshold: '0', value: measured.lowMarks, ok: !measured.lowMarks.length },
-    { id: 'D10', name: 'as-is and to-be marks differ without hue', threshold: 'hollow as-is, or luminance ratio >= 1.5',
+    { id: 'D10', name: 'as-is and to-be marks differ without hue', threshold: 'hollow as-is, or luminance ratio >= 1.5, in charts and card heads',
       value: measured.pairSeparation, ok: measured.pairSeparation.every((p) => p.ok) },
     { id: 'D11', name: 'borders, shadows, gradients', threshold: '0', value: measured.chrome, ok: !measured.chrome.length },
     { id: 'D12', name: 'corner radii in px', threshold: 'subset of 4, 8, 12', value: measured.radii,
@@ -157,8 +157,22 @@ function measure() {
     const bg = background(svg);
     const hollow = asIs.slice(0, 3).join() === bg.slice(0, 3).join() || asIs.slice(0, 3).join() === '255,255,255';
     const r = ratio(asIs, toBe);
-    return { hollow, ratio: round(r), ok: hollow || r >= 1.5 };
+    return { where: 'chart', hollow, ratio: round(r), ok: hollow || r >= 1.5 };
   });
+  // Card pairs and text differences: the as-is head carries the hollow mark and the to-be head the
+  // filled one, so the two sides stay apart in grayscale even though the card fills barely differ.
+  for (const box of document.querySelectorAll('.pair, .textdiff')) {
+    const asIs = box.querySelector('.card-head .mark-as-is');
+    const toBe = box.querySelector('.card-head .mark-to-be');
+    if (!asIs || !toBe) {
+      pairSeparation.push({ where: box.className, hollow: false, ratio: 0, ok: false });
+      continue;
+    }
+    const fill = parse(getComputedStyle(asIs).fill);
+    const hollow = fill.slice(0, 3).join() === background(asIs.ownerSVGElement).slice(0, 3).join() || fill.slice(0, 3).join() === '255,255,255';
+    const r = ratio(fill, parse(getComputedStyle(toBe).fill));
+    pairSeparation.push({ where: box.className, hollow, ratio: round(r), ok: hollow || r >= 1.5 });
+  }
 
   const chrome = [];
   const radii = new Set();
@@ -209,7 +223,9 @@ function measure() {
   const access = {
     oneH1: document.querySelectorAll('h1').length === 1,
     lang: !!document.documentElement.lang,
-    chartsLabelled: [...document.querySelectorAll('svg')].every((s) => s.getAttribute('role') === 'img' && s.getAttribute('aria-label')),
+    // Decorative marks are aria-hidden: the card head text beside them names the side.
+    chartsLabelled: [...document.querySelectorAll('svg:not([aria-hidden="true"])')].every((s) => s.getAttribute('role') === 'img' && s.getAttribute('aria-label')),
+    marksHidden: [...document.querySelectorAll('svg.mark')].every((s) => s.getAttribute('aria-hidden') === 'true' && s.parentElement.textContent.trim().length > 0),
     headersScoped: [...document.querySelectorAll('table')].every((t) => t.querySelectorAll('thead th[scope]').length > 0),
   };
 

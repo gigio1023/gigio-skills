@@ -265,5 +265,9 @@ def _check_against_diff(note: Note, diff: DiffData) -> None:
     for record_id in note.reasons:
         if record_id not in listed:
             raise NoteSourceError(f"reasons: {record_id} is not added, removed, or changed in {diff.path.name}")
+    # One reason per record: a change section carries its own why, and the index points to it.
+    both: list[str] = sorted(set(note.reasons) & {change.id for change in note.changes})
+    if both:
+        raise NoteSourceError(f"reasons: {', '.join(both)} also have a change section; keep the reason in changes[].why only")
     if note.field_list is not None and note.field_list not in compared:
         raise NoteSourceError(f"field_list: {note.field_list!r} is not a compared field ({compared})")

@@ -10,14 +10,13 @@ every number match the HTML output, because both read ``NoteContent``.
 from __future__ import annotations
 
 from _inline import escape_markdown, render_markdown
-from _note_content import NoteContent
+from _note_content import DiffPiece, FieldEntry, NoteContent
 from _note_source import ChangeView, Figure, FigureType, Highlight
 
 
 def render_markdown_note(content: NoteContent) -> str:
     note, s, diff = content.note, content.s, content.diff
     doc = diff.document
-    c: dict[str, int] = diff.counts
 
     def r(text: str) -> str:
         return render_markdown(text, diff)
@@ -32,15 +31,13 @@ def render_markdown_note(content: NoteContent) -> str:
         " ".join(v for v in (doc["new"]["label"], doc["new"].get("ref")) if v),
     ] + ([doc["date"]] if doc.get("date") else [])
     out.append(_table(meta_heads, [meta_cells]))
-    out.append(_table(
-        [s["stat_records"], s["stat_added"], s["stat_removed"], s["stat_changed"]],
-        [[f"{c['before']:,} → {c['after']:,}", f"{c['added']:,}", f"{c['removed']:,}", f"{c['changed']:,}"]],
-        numeric=True,
-    ))
-    out.append(escape_markdown(content.reconcile_sentence()))
+    tiles = content.tiles()
+    out.append(_table([t.label for t in tiles],
+                      [[" → ".join(_number(diff.resolve(path)) for path in t.paths) for t in tiles]], numeric=True))
+    out.append(escape_markdown(" ".join(content.reconcile_sentences())))
     out.append(f"## {escape_markdown(s['h_actions'])}")
     if note.actions:
-        out.append("\n".join(f"- **{r(a.who)}** {r(a.what)}" for a in note.actions))
+        out.append("\n".join(f"- **{r(a.who)}:** {r(a.what)}" for a in note.actions))
     else:
         out.append(escape_markdown(s["no_actions"]))
     if note.figures:
@@ -50,21 +47,15 @@ def render_markdown_note(content: NoteContent) -> str:
         out.append(f"## {escape_markdown(s['h_changes'])}")
         out.extend(_highlight(content, change) for change in note.changes)
     if note.field_list is not None:
-        heading: str = s["h_field_list"].format(field=content.field_label(note.field_list).lower())
-        out.append(f"## {escape_markdown(heading)}")
-        out.append("\n".join(f"- **{escape_markdown(name)}**: {escape_markdown(value)}"
-                             for name, value in content.field_list(note.field_list)))
+        entries = content.field_list(note.field_list)
+        if entries:
+            heading: str = s["h_field_list"].format(field=content.field_label(note.field_list))
+            out.append(f"## {escape_markdown(heading)}")
+            out.extend(_field_entry(content, entry) for entry in entries)
     mapping = content.mapping_rows()
     if mapping:
         out.append(f"## {escape_markdown(s['h_mapping'])}")
-        headers: list[str] = [s["col_id"], s["as_is"], s["to_be"], s["col_change"]]
-        rows: list[list[str]] = [[escape_markdown(v) for v in row] for row in mapping]
-        if note.reasons:
-            headers.append(s["col_why"])
-            for source_row, row in zip(mapping, rows, strict=True):
-                reason: str | None = note.reasons.get(source_row[0])
-                row.append(r(reason) if reason else escape_markdown(s["not_recorded"]))
-        out.append(_table(headers, rows, escape=False))
+        out.append(_table([s["col_id"], s["as_is"], s["to_be"], s["col_change"]], [list(row) for row in mapping]))
     for section in note.sections:
         out.append(f"## {r(section.heading)}")
         out.extend(r(p) for p in section.paragraphs)
@@ -72,7 +63,9 @@ def render_markdown_note(content: NoteContent) -> str:
         out.append(f"## {escape_markdown(s['h_questions'])}")
         out.append("\n".join(f"- {r(q)}" for q in note.open_questions))
     out.append(f"## {escape_markdown(s['h_index'])}")
-    index_table: str = _table([s["col_id"], s["col_name"], s["col_change"]], [list(row) for row in content.index_rows()])
+    index_heads: list[str] = [s["col_id"], s["col_name"], s["col_change"]] + ([s["col_why"]] if content.shows_reasons() else [])
+    index_rows: list[list[str]] = [[r(v) if i == 3 else escape_markdown(v) for i, v in enumerate(row)] for row in content.index_rows()]
+    index_table: str = _table([escape_markdown(h) for h in index_heads], index_rows, escape=False)
     out.append(f"<details><summary>{escape_markdown(s['h_index'])}</summary>\n\n{index_table}\n\n</details>")
     out.append(f"## {escape_markdown(s['h_source'])}")
     out.append(_source(content))
@@ -106,9 +99,7 @@ def _highlight(content: NoteContent, change: Highlight) -> str:
     head: str = f"### {escape_markdown(change.id)} {render_markdown(change.title, diff)}"
     if change.view is ChangeView.TEXT_DIFF:
         before, after = content.text_diff(change.id, change.field or "")
-        old_text: str = "".join(p.text for p in before)
-        new_text: str = "".join(p.text for p in after)
-        body: str = f"{escape_markdown(content.field_label(change.field or ''))}\n\n```diff\n- {old_text}\n+ {new_text}\n```"
+        body: str = f"{escape_markdown(content.field_label(change.field or ''))}\n\n{_diff_fence(before, after)}"
     else:
         fields, section, entry = content.card_fields(change.id)
         old_head: str = f"{s['as_is']} {diff.old_label}"
@@ -117,15 +108,22 @@ def _highlight(content: NoteContent, change: Highlight) -> str:
             status: str = escape_markdown(s["not_in"].format(label=diff.old_label))
             table = _table([s["col_field"], new_head], [[f.label, _bold(f.new or "", True)] for f in fields], escape=False)
             body = f"{status}\n\n{table}"
+        elif section == "removed" and entry["successors"]:
+            # A merged or replaced record: its fields beside each successor's, as in the HTML cards.
+            successors = content.successor_fields(change.id)
+            heads: list[str] = [s["col_field"], old_head] + [f"{new_head} {title}" for title, _ in successors]
+            rows = [[f.label, _bold(f.old or "", any(items[i].changed for _, items in successors))]
+                    + [_bold(items[i].new or "", items[i].changed) for _, items in successors]
+                    for i, f in enumerate(fields)]
+            body = f"{escape_markdown(content.change_labels(change.id)[0])}\n\n{_table(heads, rows, escape=False)}"
         elif section == "removed":
-            gone: str = content.change_labels(change.id)[0] if entry.get("successors") else s["not_in"].format(label=diff.new_label)
             table = _table([s["col_field"], old_head], [[f.label, _bold(f.old or "", True)] for f in fields], escape=False)
-            body = f"{escape_markdown(gone)}\n\n{table}"
+            body = f"{escape_markdown(s['not_in'].format(label=diff.new_label))}\n\n{table}"
         else:
             rows = [[f.label, _bold(f.old or "", f.changed), _bold(f.new or "", f.changed)] for f in fields]
             body = _table([s["col_field"], old_head, new_head], rows, escape=False)
-    why: str = f"**{escape_markdown(s['why'])}** {render_markdown(change.why, diff)}"
-    impact: str = f"**{escape_markdown(s['impact'])}** {render_markdown(change.impact, diff)}"
+    why: str = f"**{escape_markdown(s['why'])}:** {render_markdown(change.why, diff)}"
+    impact: str = f"**{escape_markdown(s['impact'])}:** {render_markdown(change.impact, diff)}"
     figure: str = f"\n\n{_figure(content, change.figure)}" if change.figure is not None else ""
     return f"{head}\n\n{body}\n\n{why}\n\n{impact}{figure}"
 
@@ -139,8 +137,27 @@ def _source(content: NoteContent) -> str:
         f"- {escape_markdown(s['src_tool'])}: `version_diff.py`",
         f"- {escape_markdown(s['src_minor'])}: {escape_markdown(s['minor_rule'])}",
     ]
-    lines.extend(f"- [{render_markdown(link.label, content.diff)}]({link.url})" for link in content.note.links)
+    lines.extend(f"- {render_markdown(link.label, content.diff)}: <{link.url}>" for link in content.note.links)
     return "\n".join(lines)
+
+
+def _field_entry(content: NoteContent, entry: FieldEntry) -> str:
+    title: str = f"**{escape_markdown(entry.title)}**"
+    if entry.section == "added":
+        absent: str = escape_markdown(content.s["not_in"].format(label=content.diff.old_label))
+        return f"{title}\n\n{absent}\n\n```diff\n+ {entry.new}\n```"
+    before, after = content.text_diff(entry.record_id, content.note.field_list or "")
+    return f"{title}\n\n{_diff_fence(before, after)}"
+
+
+def _diff_fence(before: list[DiffPiece], after: list[DiffPiece]) -> str:
+    old_text: str = "".join(p.text for p in before)
+    new_text: str = "".join(p.text for p in after)
+    return f"```diff\n- {old_text}\n+ {new_text}\n```"
+
+
+def _number(value: float) -> str:
+    return f"{value:,}"
 
 
 def _bold(text: str, on: bool) -> str:

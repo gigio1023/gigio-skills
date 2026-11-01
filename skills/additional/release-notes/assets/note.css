@@ -46,7 +46,7 @@ ul, ol { padding-left: 20px; }
 li { margin-bottom: 4px; }
 p, li { orphans: 3; widows: 3; }
 strong { font-weight: 600; }
-a { color: var(--blue-text); }
+a { color: var(--ink); text-decoration: underline; overflow-wrap: anywhere; }
 code { font-family: var(--mono); font-size: 9pt; background: var(--surface); border-radius: 4px; padding: 0 4px; }
 
 .kicker { font-size: 8.5pt; color: var(--ink-2); font-weight: 600; margin-bottom: 4px; }
@@ -56,8 +56,9 @@ code { font-family: var(--mono); font-size: 9pt; background: var(--surface); bor
 .meta div > span, .stat > span { display: block; font-size: 8.5pt; color: var(--ink-2); }
 
 .summary p { margin-bottom: 12px; }
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0 8px; break-inside: avoid; }
-.stat { background: var(--surface); border-radius: 8px; padding: 12px 16px; }
+/* Tiles share the row equally, however many removal kinds the release has. */
+.stats { display: flex; gap: 12px; margin: 16px 0 8px; break-inside: avoid; }
+.stat { flex: 1 1 0; min-width: 0; background: var(--surface); border-radius: 8px; padding: 12px 16px; }
 .stat b { display: block; font-size: 15.5pt; line-height: 1.3; font-weight: 600; }
 .stat.added b { color: var(--blue-text); }
 .stat.removed b { color: var(--vermillion-text); }
@@ -71,13 +72,18 @@ figcaption { font-size: 8.5pt; color: var(--ink-2); margin-top: 8px; }
 svg.chart { display: block; width: 100%; height: auto; }
 /* Chart paint and type are SVG attributes written from the tokens above by scripts/_svg_charts.py. */
 
-.change { break-inside: avoid; margin-bottom: 16px; }
+/* A change section may break between its blocks; the heading stays with the first block,
+   and each card pair, text difference, and figure stays whole. */
+.change { margin-bottom: 16px; }
 .change figure { margin-top: 12px; }
+.pair, .textdiff, .field-entry { break-inside: avoid; }
 .change h3 .id { color: var(--ink-2); }
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .card { background: var(--surface); border-radius: 8px; padding: 12px 16px; }
 .card.to-be { background: var(--blue-fill); }
 .card-head { font-size: 8.5pt; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
+.card-head svg.mark { display: inline-block; vertical-align: -1px; margin-right: 4px; }
+.card .successor { font-size: 9pt; font-weight: 600; margin: 4px 0; }
 .card dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 9pt; }
 .card dt { color: var(--ink-2); }
 .card dd.same { color: var(--ink-2); }
@@ -96,14 +102,14 @@ thead { display: table-header-group; }
 th { font-weight: 600; color: var(--ink-2); font-size: 8.5pt; text-align: left; padding: 4px 8px; }
 td { padding: 4px 8px; text-align: left; vertical-align: top; }
 tr { break-inside: avoid; }
+table.keep { break-inside: avoid; }
 tbody tr:nth-child(even) > * { background: var(--surface); }
 tbody tr:nth-child(even) > :first-child { border-radius: 4px 0 0 4px; }
 tbody tr:nth-child(even) > :last-child { border-radius: 0 4px 4px 0; }
 td.num, th.num { text-align: right; }
 td.id, .nb { white-space: nowrap; }
 
-.field-list { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; font-size: 9pt; margin-bottom: 16px; }
-.field-list dt { font-weight: 600; }
+.entry-title { font-weight: 600; font-size: 9pt; margin-bottom: 4px; break-after: avoid; }
 .source { break-inside: avoid; }
 .source dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; font-size: 9pt; }
 .source dt { color: var(--ink-2); }

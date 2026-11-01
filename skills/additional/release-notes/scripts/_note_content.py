@@ -19,6 +19,35 @@ from _note_source import Note
 from _svg_charts import BarRow, PairRow
 
 STRINGS_PATH: Path = Path(__file__).resolve().parent.parent / "assets" / "strings.json"
+REMOVAL_KINDS: tuple[str, ...] = ("merged", "split", "replaced", "removed")
+
+# The one label each counted path carries wherever a number is printed under a label.
+# check_numbers.py reads the same table, so a correct number under another kind's label fails.
+LABEL_KEYS: dict[str, str] = {
+    "counts.after": "stat_records",
+    "counts.added": "stat_added",
+    "counts.changed": "stat_changed",
+    "counts.minor_only": "kind_minor",
+    "removal_kinds.merged": "label_merged",
+    "removal_kinds.split": "label_split",
+    "removal_kinds.replaced": "label_replaced",
+    "removal_kinds.removed": "stat_removed",
+}
+
+
+def expected_label(path: str, strings: dict[str, str], roles: dict[str, str | None]) -> str | None:
+    """The label a counted path must carry, or None when the label depends on note.json field labels."""
+    if path in LABEL_KEYS:
+        return strings[LABEL_KEYS[path]]
+    if path == f"field_changes.{roles['name']}.major":
+        return strings["kind_renamed"]
+    if path == f"field_changes.{roles['parent']}.major":
+        return strings["kind_moved"]
+    return None
+
+
+def load_strings(lang: str) -> dict[str, str]:
+    return _strings(lang)
 
 
 @dataclass(frozen=True)
@@ -27,6 +56,26 @@ class CardField:
     old: str | None
     new: str | None
     changed: bool
+
+
+@dataclass(frozen=True)
+class Tile:
+    """One stat tile: the value paths it prints and the path whose label it carries."""
+
+    tone: str
+    label: str
+    paths: list[str]
+
+
+@dataclass(frozen=True)
+class FieldEntry:
+    """One record in the field list: its ID, its ID and name, its list section, and the field's two values."""
+
+    record_id: str
+    title: str
+    section: str
+    old: str | None
+    new: str | None
 
 
 @dataclass(frozen=True)
@@ -54,8 +103,43 @@ class NoteContent:
     def field_label(self, field: str) -> str:
         return self.note.field_labels.get(field, field.replace("_", " ").capitalize())
 
-    def reconcile_sentence(self) -> str:
-        return self.s["reconcile"].format(**{k: f"{v:,}" for k, v in self.diff.counts.items()})
+    def removal_parts(self) -> list[tuple[str, int]]:
+        """Nonzero removal kinds in a fixed order: merged, split, replaced, removed."""
+        kinds: dict[str, int] = self.diff.document["removal_kinds"]
+        return [(kind, kinds[kind]) for kind in REMOVAL_KINDS if kinds[kind]]
+
+    def reconcile_sentences(self) -> list[str]:
+        """The identity, how the records that left divide by kind, and how shared records divide."""
+        values: dict[str, str] = {k: f"{v:,}" for k, v in self.diff.counts.items()}
+        values["gone"] = values["removed"]
+        sentences: list[str] = [self.s["reconcile_identity"].format(**values)]
+        parts: list[str] = [self.s[f"part_{kind}"].format(n=f"{n:,}") for kind, n in self.removal_parts()]
+        if parts:
+            joined: str = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + self.s["and"] + parts[-1]
+            sentences.append(self.s["reconcile_gone"].format(gone=values["gone"], gone_parts=joined))
+        sentences.append(self.s["reconcile_shared"].format(**values))
+        return sentences
+
+    def tiles(self) -> list[Tile]:
+        tiles: list[Tile] = [Tile("", self.s["stat_records"], ["counts.before", "counts.after"]),
+                             Tile("added", self.s["stat_added"], ["counts.added"])]
+        tiles += [Tile("removed", self.s[LABEL_KEYS[f"removal_kinds.{kind}"]], [f"removal_kinds.{kind}"])
+                  for kind, _ in self.removal_parts()]
+        tiles.append(Tile("", self.s["stat_changed"], ["counts.changed"]))
+        return tiles
+
+    def reason_for(self, record_id: str) -> str:
+        """The record's one reason: from note.json reasons, a pointer to its change section, or the no-reason text."""
+        if record_id in self.note.reasons:
+            return self.note.reasons[record_id]
+        if any(change.id == record_id for change in self.note.changes):
+            return self.s["see_change"].format(id=record_id)
+        if self.entries[record_id][0] == "minor_only":
+            return self.s["minor_reason"]
+        return self.s["not_recorded"]
+
+    def shows_reasons(self) -> bool:
+        return bool(self.note.reasons or self.note.changes)
 
     def name_of(self, record_id: str) -> str:
         section, entry = self.entries[record_id]
@@ -82,13 +166,14 @@ class NoteContent:
 
     def kind_bars(self) -> list[BarRow]:
         counts: dict[str, int] = self.diff.counts
-        rows: list[BarRow] = [BarRow(self.s["kind_added"], counts["added"], "added"),
-                              BarRow(self.s["kind_removed"], counts["removed"], "removed")]
+        rows: list[BarRow] = [BarRow(self.s["kind_added"], counts["added"], "added", "counts.added")]
+        rows += [BarRow(self.s[LABEL_KEYS[f"removal_kinds.{kind}"]], n, "removed", f"removal_kinds.{kind}")
+                 for kind, n in self.removal_parts()]
         for field, tally in self.diff.document["field_changes"].items():
             if tally["major"]:
-                rows.append(BarRow(self.kind_label(field), tally["major"], "neutral"))
+                rows.append(BarRow(self.kind_label(field), tally["major"], "neutral", f"field_changes.{field}.major"))
         if counts["minor_only"]:
-            rows.append(BarRow(self.s["kind_minor"], counts["minor_only"], "neutral"))
+            rows.append(BarRow(self.s["kind_minor"], counts["minor_only"], "neutral", "counts.minor_only"))
         return rows
 
     def group_rows(self) -> list[PairRow]:
@@ -131,8 +216,30 @@ class NoteContent:
             rows.append((entry["id"], old_name, to_be, self._removal_label(entry)))
         return rows
 
-    def index_rows(self) -> list[tuple[str, str, str]]:
-        return [(rid, self.name_of(rid), ", ".join(self.change_labels(rid))) for rid in sorted(self.entries)]
+    def index_rows(self) -> list[tuple[str, ...]]:
+        """ID, name, change kinds, and, when the note gives reasons, each record's one reason."""
+        rows: list[tuple[str, ...]] = []
+        for rid in sorted(self.entries):
+            labels: list[str] = self.change_labels(rid)
+            if self.note.lang == "en":
+                # A list reads as one sentence in English: only its first kind starts with a capital.
+                labels = labels[:1] + [label[:1].lower() + label[1:] for label in labels[1:]]
+            row: tuple[str, ...] = (rid, self.name_of(rid), ", ".join(labels))
+            rows.append(row + (self.reason_for(rid),) if self.shows_reasons() else row)
+        return rows
+
+    def successor_fields(self, record_id: str) -> list[tuple[str, list[CardField]]]:
+        """For a removed record with successors: each successor's ID and name and its fields beside the removed record's."""
+        _, entry = self.entries[record_id]
+        found: list[tuple[str, list[CardField]]] = []
+        for successor in entry["successor_records"]:
+            fields: list[CardField] = []
+            for field in self.diff.document["compared_fields"]:
+                old: str = self.value(entry["record"].get(field))
+                new: str = self.value(successor.get(field))
+                fields.append(CardField(self.field_label(field), old, new, old != new))
+            found.append((self._id_and_name(successor), fields))
+        return found
 
     def card_fields(self, record_id: str) -> tuple[list[CardField], str, dict[str, Any]]:
         """Fields for the as-is and to-be cards of one record, plus its list section and entry."""
@@ -180,15 +287,24 @@ class NoteContent:
                 after.append(DiffPiece(" ".join(new_part), "same" if same else "added"))
         return _spaced(before), _spaced(after)
 
-    def field_list(self, field: str) -> list[tuple[str, str]]:
-        """(ID and name, to-be value) for every added record and every record whose field changed."""
-        rows: list[tuple[str, str]] = []
+    def field_list(self, field: str) -> list[FieldEntry]:
+        """Every added record and every record whose field changed, except those with their own change section.
+
+        A changed record carries both values, so the reader sees what the field said before.
+        Records shown in a change section already show both versions there.
+        """
+        shown: set[str] = {change.id for change in self.note.changes}
+        entries: list[FieldEntry] = []
         for record_id in sorted(self.entries):
             section, entry = self.entries[record_id]
-            if section == "added" or (section == "changed" and field in entry["major_fields"]):
-                record: dict[str, Any] = entry["record"] if section == "added" else entry["new"]
-                rows.append((f"{record_id} {self.name_of(record_id)}".strip(), self.value(record.get(field))))
-        return rows
+            if record_id in shown:
+                continue
+            title: str = f"{record_id} {self.name_of(record_id)}".strip()
+            if section == "added":
+                entries.append(FieldEntry(record_id, title, section, None, self.value(entry["record"].get(field))))
+            elif section == "changed" and field in entry["major_fields"]:
+                entries.append(FieldEntry(record_id, title, section, self.value(entry["old"].get(field)), self.value(entry["new"].get(field))))
+        return entries
 
     def _id_and_name(self, record: dict[str, Any]) -> str:
         key: str = self.diff.document["roles"]["key"]
