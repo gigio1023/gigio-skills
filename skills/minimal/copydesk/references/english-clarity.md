@@ -14,6 +14,7 @@ Useful changes include:
 - Repeat a defined term for the same concept. Check the referent before treating different words as synonyms.
 - Restore an article, subject, or explicit object when omission permits the wrong reading. Unpack ambiguous modifiers without renaming an established technical term.
 - Remove praise that supplies no evidence, while keeping a word that names a method, property, or observed result.
+- Test a fluent sentence that may carry no fact, such as a portable claim, a figurative verb, or a contrast with no holder, with the [generic-sentence tests](voice-and-facts.md#test-generic-sentences).
 
 Keep useful causal and contrastive clauses. Choose sentence and paragraph boundaries by meaning and reading effort; this guide has no word, noun-stack, or sentence-count limits. Plain verbs are often easier to read, but a familiar phrasal verb is not automatically ambiguous. Keep tense and aspect when they distinguish past events, ongoing activity, completed work with current consequences, or hypothetical events.
 

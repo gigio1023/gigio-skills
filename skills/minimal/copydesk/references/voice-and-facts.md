@@ -46,6 +46,18 @@ Move from a known component or problem to the new detail. Keep a condition next 
 
 A transition must name a real relation. “Because” requires a causal explanation; “therefore” requires an inference supported by the preceding statements. If the source shows only co-occurrence, report it without manufacturing the missing experiment.
 
+## Test generic sentences
+
+Use these tests when a sentence reads fluently but may carry no fact. They apply in any language; the examples are English. A failed test marks a sentence for repair, and several distinct failures in one passage mark the passage, as [authoring and revision](authoring-and-revision.md#revise-explicit-ai-slop-requests) describes.
+
+- **Portability.** Could the sentence move into another project's document unchanged? Then it says nothing about this one. "Reliability is a core priority for the team" fits any team; "Each write is acknowledged after two replicas persist it" fits one system. Replace the portable sentence with the fact it stood in for, or delete it.
+- **Literal operation.** Name the operation instead of borrowing a metaphor or a figurative verb for it. Code and configuration do not know, want, or care: "the config knows about the queue" becomes "the config lists the queue". A lever, surface, or flywheel becomes the change, interface, or feedback loop it stands for. Verbs for literal operations, such as reads, rejects, and validates, stay, and so do established terms such as backpressure.
+- **Contrast with a real holder.** The negative half of a contrast needs someone who holds that view: the reader, a cited source, or an earlier section. Two patterns add weight without adding a claim: a contrast split across two sentences, such as "This does not mean X. It means Y.", and a rebuttal of a position nobody in the document holds. State Y directly. Keep the contrast when it corrects a belief the reader is likely to bring.
+- **Emphasis source.** Flatten the sentence: remove its cadence, contrast, and intensifiers while keeping the claim. If the flat version still names an actor, a mechanism, or a limit, the claim stands; prefer the flat version unless the original emphasis serves the reader. If nothing remains, the emphasis came from the pattern, and the sentence goes.
+- **Syntax relation.** When syntax implies a relation, as with two short sentences side by side, a dash, or a colon, restate that relation with because, although, or so that. If the evidence supplies the connective, write it. If no connective can be supplied without inventing it, the syntax stood in for a relation the source does not establish: report the facts separately or ask the author.
+
+The portability and literal-operation tests adapt EveryInc's `ce-noslop` skill in [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin/tree/a3bcedfc7136/skills/ce-noslop), whose catalog also supplies the config example. The contrast test adapts the "Not X but Y" and "Arguing with no one" patterns in [blader/humanizer](https://github.com/blader/humanizer/tree/0ef9fe5bc357). The emphasis-source and syntax-relation tests adapt [adewale/anti-slop-writing](https://github.com/adewale/anti-slop-writing/tree/5cf773433c6c). All were read on 2026-11-04.
+
 ## Express the status inside the fact
 
 | What is known | Useful construction | Do not silently turn it into |

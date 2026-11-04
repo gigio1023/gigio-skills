@@ -54,7 +54,7 @@ Return findings to their original source so the document is not the judge ("지�
 - Second-person address and "about my role" framing ("<이름>님께 제안된", "<이름>님의 역할은") become role language: "검토 담당자", "운영 담당 엔지니어".
 - Wall-clock timestamps that reveal when the author worked become relative gaps; a sentence naming the specific small models used becomes a role description. Generalize; do not leave a hole.
 - Session narration ("복구했다", "헤드리스", "폴백", "빌드 스크립트") moves to a methods appendix in the reader's language, or goes.
-- Statements that assume the conversation ("이번 주", "오늘 푸시", "1차 리포트 대비") become statements verifiable inside the document.
+- Statements that assume the conversation ("이번 주", "오늘 푸시", "1차 리포트 대비") become statements verifiable inside the document. [Conversation residue](authoring-and-revision.md#remove-conversation-residue) names the home for rejected options, change narration, reassurance, and internal plan identifiers.
 - Keep removed confidential coordinates in their authorized source. Create or send a separate handoff only when requested; redaction itself does not authorize contacting a security owner.
 
 For repeated publication of a redacted derivative, a source-to-output script can keep edits reproducible. Use checks for known secrets, disallowed links, or specific redactions rather than banning every personal name or local reference regardless of audience. Inspect the resulting copy before delivery. Use a private staging copy or a separate review round when the agreed workflow or an unresolved disclosure question needs it. If text corrupts during publication, stop the batch and repair the artifact.
