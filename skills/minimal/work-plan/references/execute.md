@@ -8,7 +8,7 @@ Scope the run from the request: a named task narrows the run to that task and it
 
 Read the goal, existing grants, current work, sources, and project context. Inspect relevant actual state before acting: results, data and model versions, changed files, or active jobs.
 
-Older plans may use `stage`, `needs`, `owns`, `avoid`, `acceptance`, `check`, `Planned against`, Results, and Run log, and a header that names `gigio-execute-plan`. Read their meaning and preserve completed records: honor an `avoid` or ownership line as a write boundary, re-check a `Planned against` anchor that the current action depends on, and read `acceptance` and `check` as the plan's assessment. Use known dependencies for current execution; do not insist on rewriting a usable old plan or treating speculative later stages as settled research decisions.
+Older plans may use `stage`, `needs`, `owns`, `avoid`, `acceptance`, `check`, `Planned against`, `Reconsider when`, Results, and Run log, and a header that names `gigio-execute-plan`. Read their meaning and preserve completed records: honor an `avoid` or ownership line as a write boundary, re-check a `Planned against` anchor that the current action depends on, read `acceptance` and `check` as the plan's assessment and completion threshold, and read `Reconsider when` as the stop-and-ask condition. Use known dependencies for current execution; do not insist on rewriting a usable old plan or treating speculative later stages as settled research decisions.
 
 Resolve discrepancies that can be checked. Preserve unrelated work. An unavailable checker remains unverified, and a missing input blocks the work that needs it. Do not substitute another dataset, model, or environment and present it as the named one. Before retrying a remote or long-running action, establish whether the original is still active.
 
@@ -48,7 +48,7 @@ Keep execution failures distinct from unwelcome research results. Retry only aft
 
 Update existing records proportionally: what happened, what was learned, the sources needed to check it, and the next decision. Keep raw attempts and operational state in their established records rather than duplicating them in the plan.
 
-Continue in-scope work until the requested outcome, decision point, limit, or real blocker is reached. When requested, use review mode for review and the appropriate publication skill, such as `commit-and-push` or `draft-pr`, for delivery. Do not commit, publish, install, or start another workstream simply because a round finished.
+Continue in-scope work until the plan's `Done when` threshold is shown by its evidence, or until a decision point, limit, or real blocker is reached. When the plan's `Stop and ask when` condition occurs, stop the work that depends on it and bring the observation to the user. A round whose plan states only an activity, such as "keep investigating", has no end the executor can recognize: propose a threshold to the user before spending beyond a quick check. When requested, use review mode for review and the appropriate publication skill, such as `commit-and-push` or `draft-pr`, for delivery. Do not commit, publish, install, or start another workstream simply because a round finished.
 
 Finish with the result, its support, any material unresolved question, the deviations recorded this round, and the next useful action. The whole project is not complete merely because the current round is complete.
 

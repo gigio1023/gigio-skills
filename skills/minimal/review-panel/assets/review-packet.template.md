@@ -7,6 +7,7 @@ You are reviewing an artifact you did not write, in a context kept separate from
 - Paths: [paths]
 - Revision: [commit, tag, or document version]; diff range: [base..head, if any]
 - Out of scope: [paths or topics]
+- Where a silent failure would surface: [callers, consumers of a format, or the metric pipeline to read beside the diff; omit when a defect would fail loudly at the change site]
 
 ## Why it exists
 
@@ -36,7 +37,8 @@ You are reviewing an artifact you did not write, in a context kept separate from
 
 1. Findings ranked by impact on the purpose above. For each: a short title; evidence as `path:line`, or a section, or a command with its output; why it matters; and a concrete fix.
 2. Parts checked and found sound, with the locations read.
-3. Questions that block a finding, if any.
-4. Verdict for the stated purpose: ready, ready after the listed fixes, or not ready, with the findings that decide it.
+3. Declined to judge: each part of the artifact or criterion you set aside, one line each with the reason, such as outside the criteria above, needing access or a run you did not have, or outside what you can assess. Write "none" when you set nothing aside.
+4. Questions that block a finding, if any.
+5. Verdict for the stated purpose: ready, ready after the listed fixes, or not ready, with the findings that decide it.
 
 Report no finding without evidence in the artifact. Mark anything you could not verify as unverified and name the check that would settle it.

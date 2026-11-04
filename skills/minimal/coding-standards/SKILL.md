@@ -80,7 +80,7 @@ A language without a reference here uses the rules above with its current standa
 
 | File | Read or run when | Content |
 | --- | --- | --- |
-| [architecture selection](references/architecture-selection.md) | Starting a project, adding a top-level directory, introducing an interface, wiring integrations, implementing from a design document, building an agent loop | Structure rule, shape table, layouts, triggers, ports and composition root, design-document mapping, agent-loop shape, stop rules, pattern catalog, evidence |
+| [architecture selection](references/architecture-selection.md) | Starting a project, adding a top-level directory, introducing an interface or a module that wraps other code, wiring integrations, implementing from a design document, building an agent loop | Structure rule, shape table, layouts, triggers, deletion test, ports and composition root, design-document mapping, agent-loop shape, stop rules, pattern catalog, evidence |
 | [functions and modules](references/functions-and-modules.md) | Writing a multi-phase function or a module, splitting or moving code, choosing size gates | Optional skeleton, intent tests, size prompts and gates, move procedure |
 | [correctness and verification](references/correctness-and-verification.md) | Changing errors, resources, concurrency, or project documents; verifying and reporting a change; deciding on tests | Error hierarchy, cleanup, cancellation, real-run checks, status report, test policy, configured checks |
 | [test author packet](references/test-author-packet.md) | Handing an essential contract's tests to an author who has not seen the implementation | Packet contents and exclusions, author instructions, example, reconciliation |

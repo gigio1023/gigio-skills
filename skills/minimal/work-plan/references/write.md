@@ -16,9 +16,13 @@ When the work spans repositories or sessions and no maintained document carries 
 
 Use [the plan template](../assets/plan-template.md) under the user's chosen root, defaulting to `.plans/<topic>.md`. The root can be a research workspace, a vault, or several repositories. Follow its established storage and visibility policy; do not silently add a Git exclusion or a competing tracking system.
 
-Bound the current round by the next decision. State the question, relevant known facts, important assumptions, selected action, expected information, how to assess the result, and when to reconsider. Later possibilities can remain short alternatives or open questions rather than scheduled tasks.
+Bound the current round by the next decision. State the question, relevant known facts, important assumptions, selected action, expected information, how to assess the result, when the round is done, and when to stop and ask. Later possibilities can remain short alternatives or open questions rather than scheduled tasks.
 
 A result can justify proceeding, reject an explanation, reveal insufficient information, or require a change in direction. Make that distinction visible before execution, so a negative or inconclusive result is recognizable as an outcome rather than a defect. Do not demand a predicted finding, code output, or pass/fail command when the work calls for judgment.
+
+Write the completion threshold as a condition someone other than the executor can check, together with the evidence that shows it: a named command and its pass condition, a metric with its threshold, measurement method, and number of runs, a stated set of cases or sources examined, or an artifact the user approves. For research and judgment work, the threshold is the decision the round must enable and the evidence standard that settles it, which a negative or inconclusive result can meet; it never names the finding in advance. Reject activity goals such as "keep investigating", "make progress on X", or "improve the pipeline", because no observation ends them. Rewrite one into the outcome it serves when the plan's context makes the rewrite safe, and ask when the rewrite could change what the user wants.
+
+Also write the condition that makes the executor stop and ask instead of continuing: a result that contradicts a premise of the round, a check that cannot run as written, a limit that will be exceeded, the same failure repeating after correction, or a choice that would change scope or authority. Name the concrete case for this round rather than repeating the general rules every mode keeps.
 
 For implementation, dependencies and checks may be known in advance. For research, record dependencies that are real now. Use task IDs when actions need separate ownership, and preserve existing IDs. Stage numbers are optional scheduling aids.
 
@@ -39,3 +43,7 @@ Use existing experiment and research records. The plan coordinates work and deci
 Provide the saved path, the first useful action, and any material proposed intent awaiting a decision. A planning-only request ends at the plan. If execution was requested too, continue in execute mode under the same grant.
 
 When revising a plan, preserve earlier results and the reason for a changed action while updating upcoming work. The next session should see the current plan immediately without reconstructing it from an append-only history.
+
+## Source note
+
+The measurable completion threshold with its evidence, the stop-and-ask condition, and the rejection of activity goals are adapted from the `define-goal` skill in [openai/skills at 49f948f](https://github.com/openai/skills/tree/49f948f/skills/.curated/define-goal) (Apache License 2.0), rewritten here for plan files and for research rounds whose result is not known in advance.
