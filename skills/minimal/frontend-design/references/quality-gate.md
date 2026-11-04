@@ -12,6 +12,7 @@ Use this for Adapt, Direct, and Review work. Preserve uses the inline fast path 
 - [Motion And Interaction](#motion-and-interaction)
 - [Performance And Platform Support](#performance-and-platform-support)
 - [Copy And Trust](#copy-and-trust)
+- [Optional Automated Scan](#optional-automated-scan)
 
 ## Common Gate
 
@@ -75,3 +76,11 @@ Use native HTML before ARIA. When a composite widget needs ARIA, follow its full
 - Visible content does not explain or praise the design itself.
 - Metrics, testimonials, citations, confidence, and status claims come from real product data or remain clearly marked as placeholders.
 - Destructive and irreversible outcomes are stated before commitment and provide confirmation or recovery appropriate to their risk.
+
+## Optional Automated Scan
+
+After building an HTML page or report, `npx --yes impeccable@4.8.0 detect <target>` runs the deterministic anti-pattern detector from [Impeccable](https://github.com/pbakaus/impeccable) (Apache-2.0). Version 4.8.0 was verified on 2026-11-04; pin a version because the rule set changes between releases. It needs Node.js 18.19 or later and downloads a platform engine binary on first use. Pass a `file://` or served URL to scan the rendered page in an installed Chrome, Chromium, or Edge. A plain file path gives a static scan that misses script-driven state and can misread browser default sizes, for example reporting unstyled headings as body size. Exit code 0 means no primary findings, 2 means findings, and 1 means a target could not be scanned; advisory findings never change the exit code, and `--json` gives machine-readable output.
+
+On a probe page it caught text contrast below WCAG AA, body text under 12px, a thick one-sided accent border on a rounded box, a skipped heading level, and, in the rendered scan only, text left at `opacity: 0` after reveal handlers ran. Its catalog also covers undersized functional text, overlong lines, and generated-UI tells such as gradient text, nested cards, and overused fonts.
+
+The same probe showed what it misses: ordinary 1px borders and card outlines, a full table frame, missing alternating row backgrounds, and a thick accent bar on a square-cornered box. When the project's style rules restrict those, check them separately. A clean scan is not a design review, and a finding is evidence to judge against the product's contract rather than an automatic failure.

@@ -42,6 +42,8 @@ Do not load references for Preserve work.
 | Review | Read [quality-gate.md](references/quality-gate.md). Add the surface and research references only when the review covers a new or substantially changed direction. |
 | Skill maintenance | Read [source-notes.md](references/source-notes.md). |
 
+When the deliverable is a standalone HTML page, a static HTML report, or a page for a hosted artifact surface, also read [html-delivery.md](references/html-delivery.md) on the Adapt, Direct, and Review routes. It covers light and dark theme tokens, a self-contained file, and host limits that a project app would otherwise supply.
+
 ## Establish Design Context
 
 Use evidence in this order:

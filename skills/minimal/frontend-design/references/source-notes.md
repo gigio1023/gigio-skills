@@ -58,6 +58,11 @@ Relevant comparison sources:
 - https://github.com/bitjaru/styleseed
 - https://github.com/vercel-labs/agent-skills
 
+Two sources added on 2026-11-04 shape specific references:
+
+- Claude's built-in `artifact-design` skill motivated the three-block theme tokens, explicit body background, self-contained file rules, and hosted-artifact limits in `html-delivery.md`. The reference restates the ideas in original text and generic terms rather than copying the skill or tying it to one host.
+- Impeccable's CLI detector supplies the optional post-build scan in `quality-gate.md`. It is Apache-2.0; version 4.8.0 was run on a probe page to record what it catches and misses. Its aesthetic opinions, such as banned typefaces and palettes, are not adopted as rules. https://github.com/pbakaus/impeccable
+
 ## Selection And Licensing Rules
 
 Prefer a source when it changes a cross-framework decision, supplies verifiable behavior, or documents a recurring failure. Quarantine trend language, unattributed brand reconstruction, one-stack assumptions, arbitrary numbers, and landing-page advice presented as universal UI guidance.
