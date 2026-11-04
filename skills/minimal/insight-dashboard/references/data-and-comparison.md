@@ -53,6 +53,8 @@ Give the decisive comparison adequate space. Put units in headings and axes, ali
 
 Use an exact table when the reader needs to inspect values, and a chart when pattern recognition is the task. Add an accessible summary or data representation where needed. Select details by what changes the reader's judgment, not by a fixed card or chart count.
 
+Write a stated finding in three parts. The conclusion comes first. At most four reasons follow, each tied to a value or view on the page. The scope closes it: the population, period, version, and selection under which the finding holds. More than four reasons usually means several findings or reasons that restate one another, so split or rank them. An important contrary result is one of the reasons or a limit in the scope, beside the conclusion rather than in a footnote. With the synthetic inputs above: *Candidate completes more requests at a lower median latency.* Reasons: 96 versus 92 of 100 completed; successful-request median 180 versus 240 ms. Scope: one 100-request replay, with timeouts excluded from latency.
+
 ## Check the result
 
 Independently compute representative values, including the combined population and a subgroup. Compare them with the displayed rows, cards, chart, finding, and export. Test zero denominator, missing records, duplicates, changed period, and an important contrary subgroup where those risks apply. Inspect the result at the delivered size.

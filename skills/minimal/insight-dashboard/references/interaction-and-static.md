@@ -10,6 +10,8 @@ Derive selection-dependent rows, totals, rates, rankings, title, chart, and expo
 
 A shared URL identifies the requested view. Live data behind that URL can change. For an immutable record, retain an authorized dataset version, snapshot, or exported result with the period and conditions needed to interpret it. Retrieval time alone does not identify an immutable dataset.
 
+Let a finding leave an interactive view as text. A copy action can place the current selection on the clipboard as a short Markdown block holding the selection, the key values with their denominators and period, the finding sentence, the as-of time, and the view's URL. A URL-only copy suits a reader who will open the view. Build the copied text from the same filtered result as the visible view so it changes with the selection. Where clipboard access may be blocked, as in a sandboxed host frame, show the same text in a selectable block.
+
 Distinguish observation time, retrieval time, and build time. Observation time says when the measured activity occurred; retrieval time says when the source was read; build time says when the artifact was generated. Show the first where freshness changes interpretation or action, and the others only when the reader needs them for source latency, reproduction, or artifact identity. A recent build cannot make old observations current. Put concise timing labels by affected values and longer useful provenance with sources or methods; omit production receipts that serve no reader task.
 
 ## Make asynchronous behavior intelligible
@@ -17,6 +19,8 @@ Distinguish observation time, retrieval time, and build time. Observation time s
 Associate each request with its selection and ensure that an older response cannot replace the result of a newer selection. During loading, either retain the previous view with a clear pending state or show a suitable placeholder. Preserve controls and keyboard focus where possible.
 
 For monitoring, show the last observation time and the freshness rule relevant to use. A failed refresh can retain the last valid result. Show the retrieval failure and mark observations stale only when they exceed that rule. Distinguish service failure from missing telemetry. Offer pause when freezing a live time window helps investigation, and make resumed updating visible.
+
+A view regenerated or refreshed on a schedule, such as a weekly status page or a rebuilt report, opens with its as-of time and what changed since the previous refresh. The as-of time is the latest observation the view reflects, or the retrieval time for a state snapshot such as open-item counts; label which one it is. Compute the change list from stored state: keep the previous refresh's values in the artifact or beside it and compare them instead of recalling them. List what a reader would act on, such as new and resolved items, status changes, and values that crossed a threshold or changed rank. "No change since" the previous as-of time is a complete result. A first refresh says that no earlier state exists rather than inventing a delta, and a failed retrieval keeps the previous values marked stale rather than reporting them as unchanged.
 
 Use precise state language:
 
@@ -41,7 +45,7 @@ Choose tests from the actual task:
 4. Restore a shared URL, use browser back, and reset. Confirm the selected state and derived results match.
 5. Under delayed responses, change selections rapidly and verify the final response belongs to the latest selection.
 6. Use the keyboard and inspect narrow-width labels, focus, and overflow.
-7. Compare an exported selection with the visible data and definition.
+7. Compare an exported or copied selection with the visible data and definition.
 
 A button click proves an action occurred, not that the intended data or explanation changed. Verify the expected output. Live values changing after a toggle, a changed screenshot hash, or a similar widget working elsewhere cannot establish that semantic result.
 
