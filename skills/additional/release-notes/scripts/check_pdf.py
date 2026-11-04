@@ -5,15 +5,19 @@ Usage:
     uv run --with pymupdf python scripts/check_pdf.py note.pdf --html note.html \\
         [--expected-pages N] [--png-dir pages/] [--dpi 100]
 
-Reads the PDF with PyMuPDF and the source HTML for its headings and figure
-titles. Prints one JSON report; each check has a threshold, the measured
-value, and ``ok``. With ``--png-dir`` it also writes one PNG per page, a
-contact sheet of all pages, and a grayscale contact sheet for the
+Reads the PDF with PyMuPDF and the source HTML for its headings, figure
+titles, and text. Prints one JSON report; each check has a threshold, the
+measured value, and ``ok``. With ``--png-dir`` it also writes one PNG per page,
+a contact sheet of all pages, and a grayscale contact sheet for the
 as-is and to-be distinction. The checks gate defects and drift; they do not
 replace reading the page images.
 
-Exit status 0 when every check passes, 1 when any fails, 2 on a setup or
-input problem.
+A check that could not run has ``ok: null`` and the reason as its value, such
+as D24 on a PDF without a text layer or D25 on a PDF that no Chromium printed;
+the report lists it under ``skipped`` and stderr names it.
+
+Exit status 0 when every check passes, 1 when any fails, 2 when none fails but
+a check could not run, and 2 on a setup or input problem.
 """
 
 from __future__ import annotations
@@ -41,6 +45,22 @@ MAX_CHROMA_SHARE: float = 0.05
 CHROMA_LEVEL: int = 31  # 0.12 of 255: below this spread between channels a color counts as neutral
 MIN_INK_SHARE: float = 0.005
 MAX_FIGURES_PER_PAGE: int = 2
+# D25: Chromium rounds layout to whole CSS px, so a full-width table ends up to 0.2 pt past its page clip.
+CLIP_TOLERANCE_PT: float = 0.75
+
+# D24: characters that must not sit at the edge of a wrapped line.
+CLOSERS: str = ")]}\uff09\uff3d\uff5d\u3009\u300b\u300d\u300f\u3011\u3015\u3017\u3019\u301b\u201d\u2019\u00bb"
+OPENERS: str = "([{\uff08\uff3b\uff5b\u3008\u300a\u300c\u300e\u3010\u3014\u3016\u3018\u301a\u201c\u2018\u00ab"
+EDGE_PUNCTUATION: str = ".,!?:;\u2026\u00b7\"'" + CLOSERS + OPENERS
+HANGUL_SYLLABLE = re.compile(r"[\uac00-\ud7a3]")
+SYMBOL_UNITS: tuple[str, ...] = ("%", "\u2030", "\u2103", "\u00b0", "\u339c", "\u339d", "\u339e", "\u338f")
+LATIN_UNITS: frozenset[str] = frozenset(
+    "pt px mm cm km kg mg ms ns KB MB GB TB KiB MiB GiB TiB Hz kHz MHz GHz dpi fps".split())
+# Korean counters and unit nouns; one counts only when the source wrote it against the number, as in 12개.
+KOREAN_UNITS: tuple[str, ...] = tuple(sorted(
+    ("개 개월 건 명 년 월 일 시 시간 분 초 주 쪽 장 회 번 배 원 달러 "
+     "위 차 종 줄 자 단계 가지 곳 권 대 점 퍼센트 포인트 행 열 항목 세").split(), key=len, reverse=True))
+CURRENCY_PREFIXES: str = "$\u20a9\u20ac\u00a3\u00a5"
 
 
 @dataclass(frozen=True)
@@ -49,7 +69,20 @@ class Check:
     name: str
     threshold: str
     value: Any
-    ok: bool
+    ok: bool | None  # None: the check could not run, and value says why
+
+
+@dataclass(frozen=True)
+class _Line:
+    """One printed line: PyMuPDF lines on one baseline that touch, merged."""
+
+    page: int
+    x0: float
+    top: float
+    x1: float
+    bottom: float
+    size: float
+    text: str
 
 
 class _SourceOutline(HTMLParser):
@@ -60,12 +93,16 @@ class _SourceOutline(HTMLParser):
         self.headings: list[str] = []
         self.figure_titles: list[str] = []
         self.opening: list[str] = []
+        self.text: list[str] = []  # all character data outside <head>, for D24
         self._section_depth: int = 0  # > 0 inside <section class="summary">
         self._capture: str | None = None
         self._buffer: list[str] = []
+        self._in_head: bool = False
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         classes: str = dict(attrs).get("class") or ""
+        if tag == "head":
+            self._in_head = True
         if tag == "section":
             self._section_depth += 1 if self._section_depth or "summary" in classes.split() else 0
         if tag in ("h1", "h2", "h3"):
@@ -74,6 +111,8 @@ class _SourceOutline(HTMLParser):
             self._capture, self._buffer = "figure", []
 
     def handle_endtag(self, tag: str) -> None:
+        if tag == "head":
+            self._in_head = False
         if tag == "section" and self._section_depth:
             self._section_depth -= 1
         if self._capture == "heading" and tag in ("h1", "h2", "h3"):
@@ -84,6 +123,8 @@ class _SourceOutline(HTMLParser):
             self._capture = None
 
     def handle_data(self, data: str) -> None:
+        if not self._in_head:
+            self.text.append(data)
         if self._capture:
             self._buffer.append(data)
         if self._section_depth:
@@ -107,11 +148,17 @@ def main(argv: list[str]) -> int:
     source.feed(html_path.read_text(encoding="utf-8"))
     document = pymupdf.open(pdf_path)
     checks: list[Check] = _run_checks(document, source, args.expected_pages)
-    report: dict[str, Any] = {"pdf": str(pdf_path), "pages": document.page_count, "checks": [asdict(c) for c in checks]}
+    skipped: list[Check] = [c for c in checks if c.ok is None]
+    report: dict[str, Any] = {"pdf": str(pdf_path), "pages": document.page_count, "checks": [asdict(c) for c in checks],
+                              "skipped": [{"id": c.id, "reason": c.value} for c in skipped]}
     if args.png_dir:
         report["images"] = _write_images(document, Path(args.png_dir), args.dpi)
     print(json.dumps(report, ensure_ascii=False, indent=1))
-    return 0 if all(c.ok for c in checks) else 1
+    for check in skipped:
+        print(f"check_pdf: {check.id} did not run: {check.value}", file=sys.stderr)
+    if any(c.ok is False for c in checks):
+        return 1
+    return 2 if skipped else 0
 
 
 def _run_checks(document: Any, source: _SourceOutline, expected_pages: int | None) -> list[Check]:
@@ -174,7 +221,127 @@ def _run_checks(document: Any, source: _SourceOutline, expected_pages: int | Non
               outline == len(source.headings) and "/StructTreeRoot" in catalog and bool(language)),
         Check("D21", "heading left at the bottom of a page", "0", stranded, not stranded),
         _opening_on_first_page(document, source),
+        _korean_line_breaks(document, source),
+        _drawn_past_page_clip(document),
     ]
+
+
+def _korean_line_breaks(document: Any, source: _SourceOutline) -> Check:
+    """D24: line breaks that strand a syllable, a bracket, or a unit, located by page.
+
+    A finding needs the source HTML to run the two lines together, so table cells,
+    chart labels, and other separate texts that happen to sit one above the other
+    are not read as a wrapped line.
+    """
+    name, threshold = "Korean line breaks: lone syllable, bracket or quote at a line edge, number split from its unit", "0"
+    lines: list[_Line] = [line for number, page in enumerate(document, start=1) for line in _printed_lines(page, number)]
+    if not lines:
+        return Check("D24", name, threshold, "the PDF has no text layer, so its line breaks cannot be read", None)
+    joined: str = re.sub(r"\s+", "", "".join(source.text))
+    spaced: str = _squash("".join(source.text))
+    found: dict[str, list[str]] = {"lone syllable": [], "closing mark starts a line": [],
+                                   "opening mark ends a line": [], "number split from its unit": []}
+    for line, above in _wrapped_pairs(lines, joined):
+        where: str = f"p{line.page}: \u2026{above.text[-14:]} \u23ce {line.text[:14]}"
+        core: str = line.text.strip().strip(EDGE_PUNCTUATION).strip()
+        if len(core) == 1 and HANGUL_SYLLABLE.fullmatch(core):
+            found["lone syllable"].append(where)
+        head, tail = line.text.lstrip(), above.text.rstrip()
+        if head[:1] in CLOSERS or (head[:1] == '"' and tail.count('"') % 2 == 1):
+            found["closing mark starts a line"].append(where)
+        if tail[-1:] in OPENERS or (tail[-1:] == '"' and tail.count('"') % 2 == 1):
+            found["opening mark ends a line"].append(where)
+        if _splits_number_from_unit(tail, head, spaced):
+            found["number split from its unit"].append(where)
+    report: dict[str, Any] = {kind: places[:10] for kind, places in found.items() if places}
+    return Check("D24", name, threshold, report, not report)
+
+
+def _printed_lines(page: Any, number: int) -> list[_Line]:
+    pieces: list[_Line] = []
+    for block in page.get_text("dict")["blocks"]:
+        for line in block.get("lines", []):
+            spans: list[dict[str, Any]] = line["spans"]
+            text: str = "".join(span["text"] for span in spans)
+            if text.strip():
+                x0, top, x1, bottom = line["bbox"]
+                pieces.append(_Line(number, x0, top, x1, bottom, max(span["size"] for span in spans), text))
+    pieces.sort(key=lambda p: (round(p.bottom), p.x0))
+    merged: list[_Line] = []
+    for piece in pieces:
+        last: _Line | None = merged[-1] if merged else None
+        # PyMuPDF splits a printed line at a font change; a gap wider than 0.6 em is a table column or a chart label.
+        if last and abs(last.bottom - piece.bottom) < 1 and -1 < piece.x0 - last.x1 < 0.6 * piece.size:
+            space: str = " " if piece.x0 - last.x1 > 0.15 * piece.size and not last.text.endswith(" ") else ""
+            merged[-1] = _Line(number, last.x0, min(last.top, piece.top), piece.x1, max(last.bottom, piece.bottom),
+                               max(last.size, piece.size), last.text + space + piece.text)
+        else:
+            merged.append(piece)
+    return merged
+
+
+def _wrapped_pairs(lines: list[_Line], joined_source: str) -> list[tuple[_Line, _Line]]:
+    """Each printed line with the line above it, when both belong to one wrapped run of source text."""
+    pairs: list[tuple[_Line, _Line]] = []
+    for line in lines:
+        above: list[_Line] = [
+            other for other in lines
+            if other.page == line.page and other is not line and other.bottom <= line.top + 1
+            and line.top - other.bottom < 0.8 * line.size and other.x0 - 2 <= line.x0 < other.x1
+        ]
+        if not above:
+            continue
+        previous: _Line = max(above, key=lambda other: other.bottom)
+        seam: str = re.sub(r"\s+", "", previous.text)[-12:] + re.sub(r"\s+", "", line.text)[:12]
+        if seam and seam in joined_source:
+            pairs.append((line, previous))
+    return pairs
+
+
+def _splits_number_from_unit(tail: str, head: str, spaced_source: str) -> bool:
+    first: str = head.split()[0] if head.split() else ""
+    if tail[-1:] in CURRENCY_PREFIXES and head[:1].isdigit():
+        return True
+    if not tail[-1:].isdigit():
+        return False
+    if head.startswith(SYMBOL_UNITS) or first.rstrip(EDGE_PUNCTUATION) in LATIN_UNITS:
+        return True
+    # A counter counts only when the source wrote it against the number: "12개" is split, "v2 개선" is not.
+    last: str = tail.split()[-1]
+    return first.startswith(KOREAN_UNITS) and f"{last}{first}" in spaced_source
+
+
+def _drawn_past_page_clip(document: Any) -> Check:
+    """D25: fills, strokes, or text that run past the clip Chromium puts around each page's content box.
+
+    Chromium paints nothing outside that clip, so the right edge of a full-width table
+    can vanish while the PDF still holds its geometry. Geometry lying wholly outside the
+    clip is dropped from the PDF and cannot be seen here; check_design.mjs D25 measures
+    the tables before printing for that case.
+    """
+    name, threshold = "drawing or text past the page's content clip", f"0, beyond {CLIP_TOLERANCE_PT} pt"
+    found: list[str] = []
+    clipped_pages: int = 0
+    for number, page in enumerate(document, start=1):
+        drawings: list[dict[str, Any]] = page.get_drawings(extended=True)
+        clip: Any = next((d["scissor"] for d in drawings if d.get("type") == "clip" and d.get("level") == 0), None)
+        if clip is None:
+            continue
+        clipped_pages += 1
+        boxes: list[tuple[float, float, float, float]] = [
+            tuple(d["rect"]) for d in drawings if d.get("type") not in ("clip", "group") and d.get("level", 0) >= 1
+        ]
+        boxes += [tuple(line["bbox"]) for block in page.get_text("dict")["blocks"] for line in block.get("lines", [])]
+        rows: dict[int, float] = {}
+        for _x0, y0, x1, y1 in boxes:
+            # The running header and page number sit above and below the clip, in the page margin boxes.
+            if x1 > clip.x1 + CLIP_TOLERANCE_PT and clip.y0 <= (y0 + y1) / 2 <= clip.y1:
+                rows[round(y0)] = max(rows.get(round(y0), 0.0), x1)
+        found.extend(f"p{number} y {y} pt: to {right:.1f} pt, clip ends at {clip.x1:.1f} pt" for y, right in sorted(rows.items()))
+    if not clipped_pages:
+        return Check("D25", name, threshold, "no page carries a content clip; only a Chromium print clips, "
+                     "so measure the tables with check_design.mjs D25 instead", None)
+    return Check("D25", name, threshold, found[:10], not found)
 
 
 def _opening_on_first_page(document: Any, source: _SourceOutline) -> Check:
