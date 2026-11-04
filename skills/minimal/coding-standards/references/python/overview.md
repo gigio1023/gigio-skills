@@ -20,7 +20,7 @@ Read the project's Python support range, `pyproject.toml`, lockfile, and configu
 
 ## Project and environment
 
-Use uv's project workflow for setup and dependency changes: `pyproject.toml`, `uv.lock`, `uv add`, `uv sync`, `uv run`. `pip install` and `uv pip install` are not routine setup, a shortcut, or a retry after failed resolution; an exceptional environment needs a concrete reason and a reproducible dependency record. A new project starts on CPython's current bugfix line (3.14 as of 2026-10-07; 3.15.0 was still at release candidate 3), or one line older when a dependency lags; 3.12 is the syntax floor for `type` aliases and type parameters, not a baseline. Keep runtime dependencies and development groups distinct. Read [project environment](project-environment.md) when setting up Python, changing dependencies, or arranging groups.
+Use uv's project workflow for setup and dependency changes: `pyproject.toml`, `uv.lock`, `uv add`, `uv sync`, `uv run`. `pip install` and `uv pip install` are not routine setup, a shortcut, or a retry after failed resolution; an exceptional environment needs a concrete reason and a reproducible dependency record. A new project starts on CPython's current bugfix line (3.14 as of 2026-10-07; 3.15.0 was still at release candidate 3), or one line older when a dependency lags; 3.12 is the syntax floor for `type` aliases and type parameters, not a baseline. Keep runtime dependencies and development groups distinct. Read [project environment](project-environment.md) when setting up Python, changing dependencies, arranging groups, writing a single-file script, or adding security checks.
 
 ## Structure and modules
 
@@ -46,7 +46,7 @@ A package has one exception root, translated at one seam, chained with `raise ..
 
 | File | Read or run when | Content |
 | --- | --- | --- |
-| [project environment](project-environment.md) | Setting up Python, changing dependencies, arranging groups | uv workflow, version baseline, groups, locked runs, exceptions |
+| [project environment](project-environment.md) | Setting up Python, changing dependencies, arranging groups, writing a single-file script, running fixes or formatting, adding security checks | uv workflow, version baseline, groups, locked runs, PEP 723 scripts, edited-file fix and format scope, optional security checks, exceptions |
 | [Python architecture](architecture.md) | Creating a project or package, adding a port, wiring adapters, building an agent loop | Layouts, Protocol ports, composition root, Pydantic domain models, agent-loop sample, import-linter contracts |
 | [Python functions and modules](functions-and-modules.md) | Writing a multi-phase function, moving code, choosing lint gates | Worked skeleton, private modules and re-exports, size evidence, Ruff block |
 | [types and enums](types-and-enums.md) | Defining types, integrating a typed SDK, changing enum values | Annotation forms, representation table, stable enum values |

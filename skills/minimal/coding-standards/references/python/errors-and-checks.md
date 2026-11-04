@@ -15,7 +15,7 @@ Read this with [correctness and verification](../correctness-and-verification.md
 
 ## Checks
 
-Discover commands from project instructions, CI, and `pyproject.toml`. In uv-managed projects, run them through `uv run` with the declared groups, for example `uv run --locked --group test pytest` or `uv run --locked --group lint ruff check .`; group setup is in [project environment](project-environment.md). Keep one configured formatter and the repository's selected type checker (mypy, pyright, or ty); do not migrate checkers or impose `--strict` as a side effect. Do not apply Ruff's unsafe fixes automatically.
+Discover commands from project instructions, CI, and `pyproject.toml`. In uv-managed projects, run them through `uv run` with the declared groups, for example `uv run --locked --group test pytest` or `uv run --locked --group lint ruff check .`; group setup is in [project environment](project-environment.md). Keep one configured formatter and the repository's selected type checker (mypy, pyright, or ty); do not migrate checkers or impose `--strict` as a side effect. Do not apply Ruff's unsafe fixes automatically. In a project whose tree is not already clean, run fixes and the formatter only on the files you edited; the procedure is in [project environment](project-environment.md#fix-and-format-only-what-you-edited).
 
 New and changed declarations carry explicit types, including locals and SDK objects, unless the touched module in a repository the user does not own consistently follows another convention; inferred-type acceptance by a checker does not meet this rule. The annotation rules are in [types and enums](types-and-enums.md).
 
