@@ -57,7 +57,9 @@ Read the result without the drafting conversation. Can the reader recover the co
 
 Use bundled helpers when their signals answer a real question. Run them from this skill directory or resolve their paths from it. They use Python 3's standard library:
 
-- `python3 scripts/check_draft.py <file>` locates possible padding or dense presentation. Findings require judgment; zero findings provide no evidence that claims are useful, accurate, or clear.
+- `python3 scripts/check_draft.py <file>` locates possible padding, dense presentation, or references to the drafting session. Findings require judgment; zero findings provide no evidence that claims are useful, accurate, or clear.
+- `python3 scripts/check_slop.py <file>` reports where common LLM style patterns cluster, such as Korean connective commas and English negation-contrast frames. Its counts locate passages to reread and never grade a document.
+- `python3 scripts/measure_length.py <before> [<after>]` counts words per heading and their change, for a revision summary that tags changes CUT, MERGE, MOVE, CONDENSE, or PRESERVE.
 - `python3 scripts/protected_diff.py <previous> <revised> --allow "<heading>"` reports literal movement outside a local correction. It is useful for a narrow scope or a verbatim preservation requirement, not as a retention target for a broad rewrite.
 - [Source tracing](references/source-tracing.md) helps a source-bound rewrite with a risk of invented connective facts, or a requested traceable draft. It is optional for routine edits.
 
