@@ -12,9 +12,11 @@ a contact sheet of all pages, and a grayscale contact sheet for the
 as-is and to-be distinction. The checks gate defects and drift; they do not
 replace reading the page images.
 
-A check that could not run has ``ok: null`` and the reason as its value, such
-as D24 on a PDF without a text layer or D25 on a PDF that no Chromium printed;
-the report lists it under ``skipped`` and stderr names it.
+A check that does not apply passes with a value that says so, such as D25 on
+a PDF that no Chromium printed. A check that could not run has ``ok: null`` and
+the reason as its value, such as D24 on a PDF without a text layer or D25 on a
+Chromium page whose content clip cannot be read; the report lists it under
+``skipped`` and stderr names it.
 
 Exit status 0 when every check passes, 1 when any fails, 2 when none fails but
 a check could not run, and 2 on a setup or input problem.
@@ -317,17 +319,18 @@ def _drawn_past_page_clip(document: Any) -> Check:
     Chromium paints nothing outside that clip, so the right edge of a full-width table
     can vanish while the PDF still holds its geometry. Geometry lying wholly outside the
     clip is dropped from the PDF and cannot be seen here; check_design.mjs D25 measures
-    the tables before printing for that case.
+    the tables before printing for that case. Other renderers, such as WeasyPrint, draw
+    no page clip and cut nothing off, so the check does not apply to their PDFs.
     """
     name, threshold = "drawing or text past the page's content clip", f"0, beyond {CLIP_TOLERANCE_PT} pt"
     found: list[str] = []
-    clipped_pages: int = 0
+    unread: list[int] = []
     for number, page in enumerate(document, start=1):
         drawings: list[dict[str, Any]] = page.get_drawings(extended=True)
         clip: Any = next((d["scissor"] for d in drawings if d.get("type") == "clip" and d.get("level") == 0), None)
         if clip is None:
+            unread.append(number)
             continue
-        clipped_pages += 1
         boxes: list[tuple[float, float, float, float]] = [
             tuple(d["rect"]) for d in drawings if d.get("type") not in ("clip", "group") and d.get("level", 0) >= 1
         ]
@@ -338,10 +341,17 @@ def _drawn_past_page_clip(document: Any) -> Check:
             if x1 > clip.x1 + CLIP_TOLERANCE_PT and clip.y0 <= (y0 + y1) / 2 <= clip.y1:
                 rows[round(y0)] = max(rows.get(round(y0), 0.0), x1)
         found.extend(f"p{number} y {y} pt: to {right:.1f} pt, clip ends at {clip.x1:.1f} pt" for y, right in sorted(rows.items()))
-    if not clipped_pages:
-        return Check("D25", name, threshold, "no page carries a content clip; only a Chromium print clips, "
-                     "so measure the tables with check_design.mjs D25 instead", None)
-    return Check("D25", name, threshold, found[:10], not found)
+    if found:
+        return Check("D25", name, threshold, found[:10], False)
+    if not unread:
+        return Check("D25", name, threshold, found, True)
+    metadata: dict[str, str] = document.metadata or {}
+    printer: str = f"{metadata.get('creator') or ''} {metadata.get('producer') or ''}".strip()
+    if "Chromium" in printer or "Skia" in printer:
+        return Check("D25", name, threshold, f"Chromium printed the PDF, but pages {unread} carry no content clip to "
+                     "measure against", None)
+    return Check("D25", name, threshold, f"not applicable: printed by {printer or 'an unnamed renderer'}, which draws "
+                 "no page clip; check_design.mjs D25 measures the tables", True)
 
 
 def _opening_on_first_page(document: Any, source: _SourceOutline) -> Check:

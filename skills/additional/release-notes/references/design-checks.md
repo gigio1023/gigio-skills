@@ -19,7 +19,7 @@ All values live in `assets/note.css`; the charts read the `:root` tokens through
 
 `check_design.mjs` measures the HTML in print emulation at the column width, and `check_pdf.py` measures the PDF. `check_numbers.py` owns the number checks N1 to N7, N7 being that each count label in a chart reads its path's label, described in its header; its PDF pass also catches a text layer that lost characters, which no design check sees.
 
-Both design scripts exit 0 when every check passes, 1 when any fails, and 2 when none fails but a check could not run, such as D24 on a PDF without a text layer, D25 on a note without a table, or D25 in `check_pdf.py` on a PDF that no Chromium printed. A check that did not run has `ok: null`, its reason as the value, and an entry under `skipped`, and stderr names it; report it as not run, never as passed. Exit 2 also covers a setup problem, which prints no report.
+Both design scripts exit 0 when every check passes, 1 when any fails, and 2 when none fails but a check could not run. A check that does not apply passes, and its value starts with "not applicable": D25 on a note without a table, or D25 in `check_pdf.py` on a PDF from a renderer that draws no page clip, such as WeasyPrint. A check that could not run is one whose input or tool is missing: D24 on a PDF without a text layer, D25 in `check_design.mjs` without a sized `@page` rule, or D25 in `check_pdf.py` on a Chromium PDF whose page clip cannot be read. It has `ok: null`, its reason as the value, and an entry under `skipped`, and stderr names it; report it as not run, never as passed. Exit 2 also covers a setup problem, such as a missing PyMuPDF or Playwright, which prints no report.
 
 | ID | Check | Threshold | Script | Basis |
 | --- | --- | --- | --- | --- |

@@ -8,9 +8,10 @@
 // and 1280 px for reading the HTML deliverable. The thresholds hold the
 // skill's own rules (references/design-checks.md); passing them does not show
 // that a chart answers the reader's question, so the page images still need
-// a read. A check that could not run, such as D25 on a note without a table,
-// has `ok: null` and its reason as the value; the report lists it under
-// `skipped` and stderr names it. Exit status 0 when every check passes, 1 when
+// a read. A check that does not apply passes with a value that says so, such
+// as D25 on a note without a table. A check that could not run, such as D25
+// without a sized @page rule, has `ok: null` and its reason as the value; the
+// report lists it under `skipped` and stderr names it. Exit status 0 when every check passes, 1 when
 // any fails, 2 when none fails but a check could not run, and 2 on a setup
 // problem.
 
@@ -64,7 +65,9 @@ try {
     { id: 'D25', name: 'tables wider than the printable width of the @page box', threshold: '0, beyond 1 px',
       ...(measured.wideTables.skipped
         ? { value: measured.wideTables.skipped, ok: null }
-        : { value: measured.wideTables.found, ok: !measured.wideTables.found.length }) },
+        : measured.wideTables.notApplicable
+          ? { value: measured.wideTables.notApplicable, ok: true }
+          : { value: measured.wideTables.found, ok: !measured.wideTables.found.length }) },
     { id: 'A1', name: 'one h1, lang set, charts labelled, table headers scoped', threshold: 'all',
       value: measured.access, ok: Object.values(measured.access).every(Boolean) },
   ];
@@ -295,7 +298,7 @@ function measure(openingBullets) {
   // measured here, before printing, because geometry wholly outside the clip never reaches the PDF.
   function wideTables() {
     const tables = [...document.querySelectorAll('table')];
-    if (!tables.length) return { skipped: 'no table in the note' };
+    if (!tables.length) return { notApplicable: 'not applicable: no table in the note' };
     const printable = printableWidth();
     if (!printable) return { skipped: 'no @page rule with a known size, so the printable width is unknown' };
     const origin = document.documentElement.getBoundingClientRect().left;
