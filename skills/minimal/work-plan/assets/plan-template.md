@@ -19,9 +19,10 @@ What this round should let us decide, understand, produce, or rule out. Explain 
 - Action: <the next bounded analysis, experiment, review, or implementation>
 - Inputs: <sources, data, model, environment, and versions that matter>
 - Assessment: <observation, comparison, judgment, or command that establishes the result>
+- Done when: <checkable threshold that ends this round and the evidence that shows it; never an activity such as "keep investigating">
 - Limits: <time, cost, targets, data access, and other existing grants>
 - Ownership: <writes, output locations, shared resources, or live jobs, only when parallel work or shared resources make it matter>
-- Reconsider when: <result, contradiction, or limit that changes the plan>
+- Stop and ask when: <result, contradiction, failed check, repeated failure, or limit that pauses the work for the user's decision>
 
 Add stable task IDs and actual dependencies when several actions are independently useful. Parallel actions must not make conflicting writes or duplicate live jobs. Do not fill future stages with speculative tasks.
 
