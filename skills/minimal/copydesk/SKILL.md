@@ -53,7 +53,7 @@ For Korean prose or a Korean clarity repair, read the compact [Korean writing](r
 
 ## Verification and delivery
 
-Read the result without the drafting conversation. Can the reader recover the conclusion's reason, the mechanism, and its important conditions? Read the section headings together: they should form a professional topic outline, without conversational sentences or a narration of what the writer will explain. Compare the revision with its source for additions, omissions, stronger claims, changed requirements, or flattened voice. For local corrections, inspect the diff for unrelated movement. For broad revisions, inspect meaning and explicitly protected content across the changed structure.
+Read the result without the drafting conversation. Can the reader recover the conclusion's reason, the mechanism, and its important conditions? Before handing over a document someone will act on without you, run the [cold reader](references/cold-reader.md) pass. Read the section headings together: they should form a professional topic outline, without conversational sentences or a narration of what the writer will explain. Compare the revision with its source for additions, omissions, stronger claims, changed requirements, or flattened voice. For local corrections, inspect the diff for unrelated movement. For broad revisions, inspect meaning and explicitly protected content across the changed structure.
 
 Use bundled helpers when their signals answer a real question. Run them from this skill directory or resolve their paths from it. They use Python 3's standard library:
 
