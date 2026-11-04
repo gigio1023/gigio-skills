@@ -5,7 +5,8 @@ description: >
   measures: failure modes, cases and labels, code checks and validated judges,
   comparison conditions with execution budgets, and the smallest difference
   the decision needs. NOT for a verdict on a built eval (evaluation-audit),
-  operating a multi-run campaign (evaluation-operations), training data or a
+  analyzing result rows (evaluation-analysis), operating a multi-run campaign
+  (evaluation-operations), training data or a
   training comparison (ml-experiment), latency or capacity under load
   (load-testing), benchmark surveys (literature-research), choosing eval
   tooling, or harness code that leaves the measurement unchanged.
@@ -41,7 +42,7 @@ Read [cases and labels](references/cases-and-labels.md) when building or revisin
 
 Check each failure mode with code when a rule can decide it from the output or the end state: parsing, schema, string or value match, execution, or a state query. Use a model judge only for the interpretive remainder. The default is one binary judge per failure mode, with explicit pass and fail definitions, and severity expressed through several binary judges. A validated ordinal scale is defensible when severity itself is the quantity, as in harm severity. A holistic "is this good" judge yields verdicts nobody can act on. For an agent that acts on an environment, score what it left behind rather than its narration, and grade the outcome rather than one prescribed path.
 
-Validating a judge is part of building it, because new reference labels and agreement measurements are new evidence. Read [judge validation](references/judge-validation.md) when writing a judge, measuring it against reference labels, or re-validating after a change. Read [measurement and scoring](references/measurement-and-scoring.md) for denominators, outcome classes, aggregation, and uncertainty.
+Validating a judge is part of building it, because new reference labels and agreement measurements are new evidence. Read [judge validation](references/judge-validation.md) when writing a judge, measuring it against reference labels, or re-validating after a change. Read [measurement and scoring](references/measurement-and-scoring.md) for denominators, outcome classes, aggregation, and uncertainty. Analyzing the result rows of a run, with grain checks, clustered and paired intervals, and per-category multiplicity, belongs to evaluation-analysis.
 
 ## Comparison conditions
 

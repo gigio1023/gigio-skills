@@ -6,7 +6,8 @@ description: >
   or reaches a customer. Checks each readiness claim against artifacts at
   current revisions: oracle and null passes, the served model, data and labels,
   grader errors, sampled trajectories, denominators. NOT for designing an eval
-  (evaluation-design), operating a multi-run campaign (evaluation-operations),
+  (evaluation-design), analyzing result rows (evaluation-analysis), operating
+  a multi-run campaign (evaluation-operations),
   load or capacity test results (load-testing), or finding code bugs
   (bug-diagnosis).
 ---
@@ -54,7 +55,7 @@ Cover the areas the audited artifact touches; a scoring change needs no case-set
 - **Metrics hygiene**: tokens and cost come from recorded usage, latency from the right boundaries, and judge cost is kept apart. Latency or throughput from an unloaded eval run is not presented as performance or capacity under load, which needs a load test (load-testing).
 - **Grader**: rewards outcomes over paths and, for agents, the end state; is neither too rigid nor too lenient; resists cheating; uses ground truth the system cannot reach; has its failures spot-checked; is deterministic or has measured variance.
 - **Judge evidence**: validation results against independent reference labels exist for this judge identity (model snapshot, prompt, rubric, sampling), format sensitivity was tested, and re-validation triggers are stated. Producing new labels or agreement measurements is evaluation-design work.
-- **Detectability**: the noise floor is below the smallest decision-relevant difference, the mechanism under study is actually wired, and the headline recomputes from raw rows.
+- **Detectability**: the noise floor is below the smallest decision-relevant difference, the mechanism under study is actually wired, and the headline recomputes from raw rows. When a result's interval is missing or ignores clustering or repeated samples, the condition to clear is an evaluation-analysis run on the raw rows.
 - **Sampled trajectories**: a sample was read for external failure, formatting failure, shortcut or reward hacking, and refusal, since each can invalidate a success or a failure.
 - **Execution budget**: turns, tokens, and wall time are a comparison condition, equal or declared across compared systems, and budget exhaustion is counted as its own outcome.
 

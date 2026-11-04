@@ -2,7 +2,7 @@
 
 [![skills.sh](https://skills.sh/b/gigio1023/gigio-skills)](https://skills.sh/gigio1023/gigio-skills)
 
-51 reusable [Agent Skills](https://agentskills.io/) for research and evaluation, software delivery, writing, and work with coding agents such as Claude Code, Codex, and Cursor. The skills live in two install sets: the **minimal set** is the default install, and the **additional set** is installed on request. [`npx skills`](https://github.com/vercel-labs/skills) copies the skills you choose into the agents you choose.
+52 reusable [Agent Skills](https://agentskills.io/) for research and evaluation, software delivery, writing, and work with coding agents such as Claude Code, Codex, and Cursor. The skills live in two install sets: the **minimal set** is the default install, and the **additional set** is installed on request. [`npx skills`](https://github.com/vercel-labs/skills) copies the skills you choose into the agents you choose.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/figures/readme/repo-overview.dark.png">
@@ -20,7 +20,7 @@ A skill is one folder. `SKILL.md` holds the description an agent reads to decide
   <img src="docs/figures/readme/install-sets.light.png" width="720" alt="A skill package goes to skills/minimal only when it owns recurring work in the maintainer's own work, is picked by an ordinary request rather than only by name, and runs without an extra tool, account, or harness. Failing any test sends it to skills/additional. Examples: credo-paper-plan and credo-release are the paper track; credo-taste, credo-journal, and small-model-handoff are invoked by name; codex-delegate, 1password-cli, and toss-portfolio-state are bound to a harness or account.">
 </picture>
 
-- **Minimal set** `skills/minimal/`: 32 skills that cover the maintainer's recurring work. A minimal skill never requires an additional or external skill; it may mention one "when installed".
+- **Minimal set** `skills/minimal/`: 33 skills that cover the maintainer's recurring work. A minimal skill never requires an additional or external skill; it may mention one "when installed".
 - **Additional set** `skills/additional/`: 19 skills for the paper track, evaluation on spot GPUs, vulnerability reporting, release notes, by-name workflows, harness-specific delegation, and personal tools.
 - **A set decides availability only.** Once installed, each skill's description and invocation settings decide when it runs. The minimal set reflects the maintainer's work, so choose sets and skills by your own.
 
@@ -45,7 +45,7 @@ npx --yes skills add 'https://github.com/gigio1023/gigio-skills/tree/main/skills
   --skill '*' --agent claude-code codex cursor --global --yes
 ```
 
-Use `skills/additional` in the same URL for the additional set, or `'gigio1023/gigio-skills#main'` for all 51 skills. Quote the `'*'` so the shell does not expand it.
+Use `skills/additional` in the same URL for the additional set, or `'gigio1023/gigio-skills#main'` for all 52 skills. Quote the `'*'` so the shell does not expand it.
 
 Install selected skills by name:
 
@@ -76,7 +76,8 @@ An agent picks a skill from its description, so this table is for a person choos
 | A chosen concept | `design-doc` | `work-plan`, `coding-standards` |
 | Code | `coding-standards` | `review-panel`, `draft-pr`, `commit-and-push` |
 | Training or comparing models | `ml-experiment` | `evaluation-design`, `evaluation-operations` |
-| Measuring quality | `evaluation-design` | `evaluation-operations`, `evaluation-audit`, `insight-dashboard` |
+| Measuring quality | `evaluation-design` | `evaluation-operations`, `evaluation-analysis`, `evaluation-audit`, `insight-dashboard` |
+| Analyzing eval results | `evaluation-analysis` | `evaluation-audit`, `insight-dashboard` |
 | Evaluations on spot GPUs | `spot-gpu-evaluation` | `evaluation-operations` |
 | Load or a failing system | `load-testing`, `bug-diagnosis` | `design-doc` when the fix changes a design |
 | Documents, Notion pages, issues, PRs | `copydesk`, `write-notion`, `write-issue`, `draft-pr` | `review-panel` |
@@ -89,7 +90,7 @@ An agent picks a skill from its description, so this table is for a person choos
 Grouped by kind of work, in the same order as the figures above. Open a group to see what each skill does.
 
 <details>
-<summary><b>Research and evaluation</b>: 10 minimal, 5 additional</summary>
+<summary><b>Research and evaluation</b>: 11 minimal, 5 additional</summary>
 
 | Skill | Set | Use it to |
 | --- | --- | --- |
@@ -102,6 +103,7 @@ Grouped by kind of work, in the same order as the figures above. Open a group to
 | [ml-experiment](skills/minimal/ml-experiment/) | minimal | Design, run, or interpret training, adaptation, serving, or reproduction experiments |
 | [evaluation-design](skills/minimal/evaluation-design/) | minimal | Design what an eval measures: failure modes, cases, labels, judges, and comparison conditions |
 | [evaluation-operations](skills/minimal/evaluation-operations/) | minimal | Operate multi-run evaluation or training campaigns with durable attempt and result records |
+| [evaluation-analysis](skills/minimal/evaluation-analysis/) | minimal | Analyze eval result rows: grain and outcome checks, clustered and paired intervals, and per-category multiplicity |
 | [evaluation-audit](skills/minimal/evaluation-audit/) | minimal | Give a launch, hold, or report verdict on a built eval, judge, harness, or result |
 | [credo-taste](skills/additional/credo-taste/) | additional | Choose a research direction or judge whether a result could become a paper; invoked by name |
 | [credo-paper-plan](skills/additional/credo-paper-plan/) | additional | Plan a paper's argument, claim-evidence map, prior work, and figures, or a reply to peer reviews |
@@ -221,7 +223,7 @@ Inspect a checkout without creating a tracked install:
 npx --yes skills add . --list
 ```
 
-Before publishing, check that each `SKILL.md` name matches its folder, every referenced path exists, the catalog points to the right skill, and the listing finds 51 unique names.
+Before publishing, check that each `SKILL.md` name matches its folder, every referenced path exists, the catalog points to the right skill, and the listing finds 52 unique names.
 
 | Topic | Document |
 | --- | --- |

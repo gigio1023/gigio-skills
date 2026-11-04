@@ -167,3 +167,33 @@
 - Decision: Sol 6.1 handles ordinary research, source selection, query refinement, collection, organization, cited summaries, and factual comparisons. Astra handles complex design, implementation, difficult diagnosis, consequential judgments, decision-oriented synthesis, and final review. Mechanical restrictions belong to the selected execution contract, not to every Sol assignment. Explicit model and effort choices take precedence over package defaults.
 - Used by: dispatch and tier. Existing field names remain unchanged.
 - Inspection status: maintainer decision applied to the current package; no quality or cost comparison is claimed.
+
+<a id="r018"></a>
+## R018: Evan Miller, "Adding Error Bars to Evals"
+
+- Anthropic; research paper, arXiv 2411.00640.
+- https://arxiv.org/abs/2411.00640
+- Checked 2026-11-04.
+- Supporting passages: scores are defined per question; section 3.1 resamples each question K times and averages the K answer scores into the question score.
+- Used by: item and sample.
+- Inspection status: full text read.
+
+<a id="r019"></a>
+## R019: UK AISI Inspect source
+
+- UK AI Security Institute; open-source evaluation framework.
+- https://github.com/UKGovernmentBEIS/inspect_ai at `3321736` (2026-11-04): `src/inspect_ai/dataset/_dataset.py` and `src/inspect_ai/_eval/task/epochs.py`.
+- Checked 2026-11-04.
+- Supporting passages: `class Sample` is "Sample for an evaluation task"; `Epochs` holds the number of epochs and the reducers "used to combine scores from samples across epochs".
+- Used by: item and sample.
+- Inspection status: source files read at this revision.
+
+<a id="r020"></a>
+## R020: EleutherAI lm-evaluation-harness source
+
+- EleutherAI; open-source evaluation framework.
+- https://github.com/EleutherAI/lm-evaluation-harness at `d6de8164` (2026-09-14): `lm_eval/api/instance.py` and `docs/task_guide.md`.
+- Checked 2026-11-04.
+- Supporting passages: an `Instance` carries `doc_id` and `repeats`; the task guide defines `repeats` as the "Number of repeated runs through model for each sample".
+- Used by: item and sample.
+- Inspection status: source files read at this revision.

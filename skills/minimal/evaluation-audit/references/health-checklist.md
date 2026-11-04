@@ -51,10 +51,10 @@ Item-level checks per audit area, paraphrased from Anthropic's eval health check
 
 ## Detectability (Anthropic)
 
-- For a pass rate, the paired-difference half-width is roughly 1/sqrt(n R) at n cases and R repetitions (25 cases, 2 repetitions: about 14 points). Compare it with headroom and the smallest decision-relevant difference. Cheapest levers first: repetitions, cases, a paired or continuous metric.
+- For a pass rate, the paired-difference half-width is roughly 1/sqrt(n R) at n cases and R repetitions (25 cases, 2 repetitions: about 14 points). This is a lower bound: it treats every outcome as independent and ignores item clusters and the correlation of repetitions of one case, so a measured interval is wider (1.4 times on a synthetic table of 300 prompts from 60 behaviors). When result rows exist, check the interval computed from them at the item and cluster level (evaluation-analysis) instead of the rule. Compare it with headroom and the smallest decision-relevant difference. Cheapest levers first: repetitions, cases, a paired or continuous metric.
 - Splits are drawn at random, never by baseline score.
 - Disabling the mechanism under study drops the score, and trajectories show it engaging.
-- The headline recomputes from per-case rows.
+- The headline recomputes from per-case rows; `evaluation-analysis/scripts/eval_compare.py` recomputes rates and paired differences after a key and grain check.
 
 ## Sampled trajectories (Inspect)
 

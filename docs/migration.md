@@ -159,3 +159,11 @@ A skill refresh updates instructions and bundled assets. To activate the Codex r
 | None | `release-notes` in additional | Team release notes for a new version of a taxonomy, standard, dataset, API, library, or product: a version diff whose data file is the only source of the note's numbers, as-is and to-be comparisons with restrained charts, and PDF, HTML, and GitHub release Markdown rendered from one source with number and design checks |
 
 `copydesk` keeps general documents, the writing profile, and its production routes; the new skill owns the release-note form, the version diff, and the checks that tie every printed number to the data file. `draft-pr` and `write-notion` keep publication. It sits in the additional set because it renders through Playwright's Chromium or WeasyPrint, a tool the installer may lack. Install it by name when needed.
+
+## Evaluation analysis on 2026-11-04
+
+| Former name or set | Current name or set | Change |
+| --- | --- | --- |
+| None | `evaluation-analysis` in minimal | Analysis of per-sample eval result rows: key and grain checks, outcome classes and denominators, item-level scores from K samples, clustered and paired intervals for rates and model differences, per-category Holm and Benjamini-Hochberg over a declared family, and the data and prediction noise split, with a standard-library script |
+
+`evaluation-design` keeps what an eval measures and the sizing of a run, `evaluation-audit` keeps the verdict and its "headline recomputes" check, `evaluation-operations` keeps campaign state, `ml-experiment` keeps the design of training and serving comparisons, and `insight-dashboard` keeps how a view presents the numbers. Before this change no skill owned the statistics of a finished result table, and the `1/sqrt(nR)` planning rule in `evaluation-design` and `evaluation-audit` was the only stated interval; both references now call it a lower bound that ignores item clusters and the correlation of repetitions, and point to the new skill. It sits in the minimal set because analyzing eval results recurs in the maintainer's work without another owner, an ordinary request selects it, and its script needs only Python's standard library. Install it on the next refresh of the minimal set.

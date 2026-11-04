@@ -73,3 +73,11 @@
 **Use and distinctions:** A local policy name, not an industry term. Retain it when explaining the earlier policy; do not use it to override a current routing decision.
 
 **Reference:** [R011](references.md#r011), [R015](references.md#r015).
+
+## item and sample
+
+**Meaning and status:** In the analysis of eval results, an item is one case the eval scores (a prompt, question, or task instance) and a sample is one graded answer to that item; an item answered K times has K samples. Field usage differs: Miller's error-bars paper says question and resampled answers, Inspect calls an item a `Sample` and its repetitions `epochs`, and lm-evaluation-harness calls an item a document (`doc_id`) and its repetitions `repeats`. This pack's `evaluation-design` and `evaluation-audit` say case and repetition.
+
+**Use and distinctions:** `evaluation-analysis` says item and sample because the rows it reads are keyed by an item id and a sample index, and item-level scores are the unit of its standard errors. On first use, give the equivalent: "item (a case in evaluation-design)" and "sample (one repetition)". When citing Inspect, write "Inspect sample" for its item so the two senses do not collide. Case and repetition remain correct in the design and audit skills; both pairs name the same things.
+
+**Reference:** [R018](references.md#r018), [R019](references.md#r019), [R020](references.md#r020).

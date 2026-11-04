@@ -1,7 +1,7 @@
 ---
 name: insight-dashboard
 description: >
-  Use when creating or redesigning a data dashboard, leaderboard, interactive analysis report, operational view, or static dashboard for print. Decides what the view compares, its metrics and denominators, how selections and filters change values and rankings, and its explanatory text, so results stay selection-consistent. Phrases include "build a dashboard for these results", "make a leaderboard", "대시보드 만들어줘", and "리더보드 만들어줘". NOT for generic forms or landing pages, ordinary prose documents, interface work that changes no comparison, metric, or explanatory text, such as restyling components or fixing a layout (frontend-design), or static figures (technical-figure, when installed).
+  Use when creating or redesigning a data dashboard, leaderboard, interactive analysis report, operational view, or static dashboard for print. Decides what the view compares, its metrics and denominators, how selections and filters change values and rankings, and its explanatory text, so results stay selection-consistent. Phrases include "build a dashboard for these results", "make a leaderboard", "대시보드 만들어줘", and "리더보드 만들어줘". NOT for generic forms or landing pages, ordinary prose documents, interface work that changes no comparison, metric, or explanatory text, such as restyling components or fixing a layout (frontend-design), the statistical analysis of eval result rows (evaluation-analysis), or static figures (technical-figure, when installed).
 ---
 
 # Insight Dashboard
@@ -34,7 +34,7 @@ In a **synthetic service comparison**, a successful-request median alone may fav
 
 ## Load the detail that changes a decision
 
-- [Data and comparison](references/data-and-comparison.md): denominators, aggregation, uncertainty, chart selection, finding structure, and worked arithmetic.
+- [Data and comparison](references/data-and-comparison.md): denominators, aggregation, uncertainty, chart selection, finding structure, and worked arithmetic. For eval results, `evaluation-analysis` computes the clustered, paired intervals and per-category corrections the view displays.
 - [Pattern examples](references/pattern-examples.md): task-matched public dashboards, actionable adaptations, and finished synthetic view specifications, including a leaderboard.
 - [Interaction and static delivery](references/interaction-and-static.md): selection changes, asynchronous updates, refresh deltas, copying a selection as text, URL sharing, error states, and print.
 
