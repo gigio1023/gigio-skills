@@ -75,6 +75,8 @@ During revision, distinguish an irrelevant sentence from a material condition. D
 
 A request to remove AI slop, humanize prose, or “AI 티 빼줘” asks for a focused revision of existing text; slop is a reader-visible failure, not an authorship verdict. Give each suspect sentence one function: empty framing, cover (a hedge, defense, or disclaimer that answers no reader question), restatement of a point already made, or a needed condition. Remove only the first three, and keep the condition beside the claim it limits. When a removed sentence was bridging retained facts, reconnect them with the relation the source supports instead of leaving a list of fragments. Fix the dominant cluster first with the smallest edit that works, then reread the section for long-range meaning. Pattern counts, edit percentages, and detector scores do not establish quality.
 
+Read a pattern as a place to look. One device, such as a single contrast or one group of three, proves nothing. Several distinct tells in one passage, or the same tell repeated across passages, mark that passage for a rewrite; this co-occurrence chooses where to read closely and never becomes a score. The repair still starts from what the passage fails to do for its reader. Change only the sentences that fail, so that a second pass over the result would change nothing. Text that passes comes back unchanged, which is a complete result; rephrasing it to show work adds risk and no value.
+
 Keep change narration where change is the reader's job: changelogs, release notes, migration guides, decision records, incident timelines, histories, and retrospectives. Elsewhere, describe the current subject. This section and the voice rules in [voice and factual prose](voice-and-facts.md) adapt `slop-aware-writing`, copyright 2026 gigio1023, under the [MIT notice](../LICENSE.slop-aware-writing).
 
 ## Keep volume proportional
@@ -119,10 +121,20 @@ Diff the revision against the previous version. For a local correction, check un
 
 Then read the revision as if told a model wrote it. Before delivering, fix any tell the original lacked, such as a stock transition, a symmetric contrast, upgraded vocabulary, or a formulaic close, and any flattening of the author's stance, register, or recurring choices.
 
+An editor trying to make prose sound human tends to inject its own failures. Check the revision for these before delivering:
+
+- **Invented speaker reactions:** surprise, conviction, or experience the author never expressed, such as "I've seen this before" or "honestly".
+- **Manufactured stakes:** urgency or significance the source does not support.
+- **A contrarian foil:** "Most teams assume X" when nobody in the document or its sources holds X.
+- **Staccato fragments:** ordinary sentences chopped into fragments to create rhythm.
+- **Invented specifics:** a number, name, date, tool, or example the source lacks, added because concrete text reads better.
+
+When a fix needs a fact the source lacks, ask the author for it, or keep the general statement and name the gap. A plausible detail supplied by the editor is an unsupported claim.
+
 For a major documentation update, check that described behavior matches the relevant implementation and that material user-visible changes are covered. For a local wording edit, keep verification local. Repair affected links, anchors, and renderer syntax when changing structure.
 
 Deliver the requested text or artifact first. Add an editorial note only for a factual ambiguity, missing evidence, or unresolved choice that materially affects use. Do not append a routine account of how thoroughly the prose was improved.
 
 ## Sources
 
-The residue kinds and their homes, the stranger test, and the one-home rule adapt the `writing-for-humans` skill in [MaxWolf-01/agents](https://github.com/MaxWolf-01/agents/tree/851789cccd16/mx/skills/writing-for-humans). The revision tags, including PRESERVE, adapt the structure lens of `bmad-review` in [bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD), and the overflow addendum follows that project's product brief. The proportion check adapts the plan self-review in the `writing-plans` skill of [obra/superpowers](https://github.com/obra/superpowers/tree/22f0b463e7a5e579904dd6211a520321035526f7/skills/writing-plans). All were read on 2026-11-04; the text here is an original synthesis.
+The residue kinds and their homes, the stranger test, and the one-home rule adapt the `writing-for-humans` skill in [MaxWolf-01/agents](https://github.com/MaxWolf-01/agents/tree/851789cccd16/mx/skills/writing-for-humans). The revision tags, including PRESERVE, adapt the structure lens of `bmad-review` in [bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD), and the overflow addendum follows that project's product brief. The proportion check adapts the plan self-review in the `writing-plans` skill of [obra/superpowers](https://github.com/obra/superpowers/tree/22f0b463e7a5e579904dd6211a520321035526f7/skills/writing-plans). Co-occurrence as a place to look and the edit that a second pass leaves unchanged adapt EveryInc's `ce-noslop` skill in [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin/tree/a3bcedfc7136/skills/ce-noslop). The injected failures adapt the guardrails in [conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing/tree/f6fbc0015ce8), the ask-the-author verdict in [adewale/anti-slop-writing](https://github.com/adewale/anti-slop-writing/tree/5cf773433c6c), and the rule against added facts in [blader/humanizer](https://github.com/blader/humanizer/tree/0ef9fe5bc357). All were read on 2026-11-04; the text here is an original synthesis.
