@@ -8,8 +8,12 @@
 // and 1280 px for reading the HTML deliverable. The thresholds hold the
 // skill's own rules (references/design-checks.md); passing them does not show
 // that a chart answers the reader's question, so the page images still need
-// a read. Exit status 0 when every check passes, 1 when any fails, 2 on a
-// setup problem.
+// a read. A check that does not apply passes with a value that says so, such
+// as D25 on a note without a table. A check that could not run, such as D25
+// without a sized @page rule, has `ok: null` and its reason as the value; the
+// report lists it under `skipped` and stderr names it. Exit status 0 when every check passes, 1 when
+// any fails, 2 when none fails but a check could not run, and 2 on a setup
+// problem.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -58,13 +62,21 @@ try {
     { id: 'D22', name: 'page-one budget: overview figure, opening and action bullets',
       threshold: `overview present; opening <= ${OPENING_BULLETS} top-level bullets of 1 line; action leads 1 line; nested bullets <= 2 lines; no paragraphs`,
       value: measured.budget, ok: measured.budget.problems.length === 0 },
+    { id: 'D25', name: 'tables wider than the printable width of the @page box', threshold: '0, beyond 1 px',
+      ...(measured.wideTables.skipped
+        ? { value: measured.wideTables.skipped, ok: null }
+        : measured.wideTables.notApplicable
+          ? { value: measured.wideTables.notApplicable, ok: true }
+          : { value: measured.wideTables.found, ok: !measured.wideTables.found.length }) },
     { id: 'A1', name: 'one h1, lang set, charts labelled, table headers scoped', threshold: 'all',
       value: measured.access, ok: Object.values(measured.access).every(Boolean) },
   ];
-  const report = { html: htmlPath, checks };
+  const skipped = checks.filter((c) => c.ok === null);
+  const report = { html: htmlPath, checks, skipped: skipped.map((c) => ({ id: c.id, reason: c.value })) };
   if (shotsDir) report.screenshots = await screenshots(browser, htmlPath, shotsDir);
   console.log(JSON.stringify(report, null, 1));
-  process.exitCode = checks.every((c) => c.ok) ? 0 : 1;
+  for (const c of skipped) console.error(`check_design: ${c.id} did not run: ${c.value}`);
+  process.exitCode = checks.some((c) => c.ok === false) ? 1 : skipped.length ? 2 : 0;
 } catch (err) {
   if (!(err instanceof SetupError)) throw err;
   console.error(`check_design: ${err.message}`);
@@ -278,5 +290,58 @@ function measure(openingBullets) {
   return {
     hues: [...hues].sort((a, b) => a - b), figureHues, sizes: [...sizes].sort((a, b) => a - b), lowText, lowMarks,
     budget, pairSeparation, chrome, radii: [...radii].sort((a, b) => a - b), offScale: [...offScale], dashed, unstriped, emoji, clipped, access,
+    wideTables: wideTables(),
   };
+
+  // D25. Chromium prints each page inside a clip at the @page content box: a table wider than that box
+  // either loses its right edge, with no error, or makes Chromium scale every page down. Its geometry is
+  // measured here, before printing, because geometry wholly outside the clip never reaches the PDF.
+  function wideTables() {
+    const tables = [...document.querySelectorAll('table')];
+    if (!tables.length) return { notApplicable: 'not applicable: no table in the note' };
+    const printable = printableWidth();
+    if (!printable) return { skipped: 'no @page rule with a known size, so the printable width is unknown' };
+    const origin = document.documentElement.getBoundingClientRect().left;
+    const range = document.createRange();
+    const found = [];
+    tables.forEach((table, index) => {
+      range.selectNodeContents(table);
+      const rights = [table, ...table.querySelectorAll('*')].map((el) => el.getBoundingClientRect().right);
+      const right = Math.max(...rights, range.getBoundingClientRect().right, table.getBoundingClientRect().left + table.scrollWidth) - origin;
+      if (right > printable + 1) {
+        const head = [...table.querySelectorAll('th')].map((th) => th.textContent.trim()).join(', ').slice(0, 40);
+        found.push(`table ${index + 1} (${head || 'no header'}): right edge ${round(right)} px, printable width ${round(printable)} px`);
+      }
+    });
+    return { found };
+  }
+
+  // Width of the plain @page rule's page box minus its side margins, in CSS px.
+  function printableWidth() {
+    const named = { A5: [148, 210], A4: [210, 297], A3: [297, 420], B5: [176, 250], B4: [250, 353],
+      letter: [215.9, 279.4], legal: [215.9, 355.6], ledger: [279.4, 431.8] };
+    const px = (length) => {
+      const probe = document.createElement('div');
+      probe.style.cssText = `position:absolute;visibility:hidden;width:${length}`;
+      document.body.append(probe);
+      const width = probe.getBoundingClientRect().width;
+      probe.remove();
+      return width;
+    };
+    for (const sheet of document.styleSheets) {
+      for (const rule of sheet.cssRules) {
+        if (!(rule instanceof CSSPageRule) || rule.selectorText) continue;
+        const size = rule.style.getPropertyValue('size').trim().split(/\s+/).filter(Boolean);
+        if (!size.length) continue;
+        let width;
+        const key = Object.keys(named).find((k) => k.toLowerCase() === size[0].toLowerCase());
+        if (key) width = px(`${named[key][size.includes('landscape') ? 1 : 0]}mm`);
+        else if (/^[\d.]+[a-z]+$/.test(size[0])) width = px(size[0]);
+        if (!width) continue;
+        const margin = (side) => rule.style.getPropertyValue(`margin-${side}`).trim() || '0px';
+        return width - px(margin('left')) - px(margin('right'));
+      }
+    }
+    return null;
+  }
 }

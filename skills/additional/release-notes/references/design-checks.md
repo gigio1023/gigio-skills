@@ -19,6 +19,8 @@ All values live in `assets/note.css`; the charts read the `:root` tokens through
 
 `check_design.mjs` measures the HTML in print emulation at the column width, and `check_pdf.py` measures the PDF. `check_numbers.py` owns the number checks N1 to N7, N7 being that each count label in a chart reads its path's label, described in its header; its PDF pass also catches a text layer that lost characters, which no design check sees.
 
+Both design scripts exit 0 when every check passes, 1 when any fails, and 2 when none fails but a check could not run. A check that does not apply passes, and its value starts with "not applicable": D25 on a note without a table, or D25 in `check_pdf.py` on a PDF from a renderer that draws no page clip, such as WeasyPrint. A check that could not run is one whose input or tool is missing: D24 on a PDF without a text layer, D25 in `check_design.mjs` without a sized `@page` rule, or D25 in `check_pdf.py` on a Chromium PDF whose page clip cannot be read. It has `ok: null`, its reason as the value, and an entry under `skipped`, and stderr names it; report it as not run, never as passed. Exit 2 also covers a setup problem, such as a missing PyMuPDF or Playwright, which prints no report.
+
 | ID | Check | Threshold | Script | Basis |
 | --- | --- | --- | --- | --- |
 | D1 | Accent hue families, chroma above 0.12 bucketed by 30 degrees | At most 3 per document, at most 2 per figure | both | One meaning per hue; the Analysis Function's limit of about four categories |
@@ -44,9 +46,13 @@ All values live in `assets/note.css`; the charts read the `:root` tokens through
 | D21 | Heading left at the bottom of a page | 0 | PDF | Page-break sanity |
 | D22 | Page-one budget | Overview figure present; at most 6 top-level opening bullets of one line; action leads one line; nested bullets at most two lines; no paragraphs in the opening or actions | HTML | A page of paragraphs went unread |
 | D23 | Opening on page one | The last opening words print on page 1 | PDF | The overview and opening are read together |
+| D24 | Korean line breaks | 0 wrapped lines that hold one Hangul syllable alone, start with a closing bracket or quote, or follow a line that ends with an opening one; 0 numbers split from their unit, such as `12` and `개` or `40` and `%` | PDF, with the HTML | Korean typesetting convention |
+| D25 | Content past the printable box | 0 tables wider than the `@page` content width by more than 1 px; 0 fills, strokes, or text past Chromium's page clip by more than 0.75 pt | both | Chromium clips or shrinks a page whose table is too wide; [rendering](rendering.md#table-right-edge) |
 | A1 | One `h1`, `lang` set, every chart `role="img"` with `aria-label`, table headers scoped | All | HTML | Accessible structure |
 
 Thresholds are this skill's rules, not external standards except where WCAG is named. A failure is a defect to fix or a deliberate exception to state in the report with its reason.
+
+D24 reads printed lines from the PDF's text layer and counts a pair of lines only when the HTML runs their text together, so table cells and chart labels that sit one above another are not read as a wrapped line. A break across a page is not checked. A counter such as `개` or `건` counts as a unit only when the HTML wrote it against the number, so `12개` split across lines is reported and `v2 개선` broken at its space is not; `%` and Latin units such as `MB` are reported whenever they start the line after a number. Fix a finding by rewording, or with a no-break space between a number and its unit, never by narrowing the column.
 
 ## Reading the pages
 
@@ -61,4 +67,4 @@ Card pairs, figures, and short text differences keep together across page breaks
 
 ## Sources
 
-[UK Government Analysis Function, charts](https://analysisfunction.civilservice.gov.uk/policy-store/data-visualisation-charts/) and [colours](https://analysisfunction.civilservice.gov.uk/policy-store/data-visualisation-colours/); [GOV.UK type scale](https://design-system.service.gov.uk/styles/type-scale/) and [table](https://design-system.service.gov.uk/components/table/) components; [WCAG 2.2 non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html). All read 2026-11-01. The countable-check approach adapts slop pre-flight counts from published design-skill reviews, whose authors note that such counts measure a skill's own rules rather than quality.
+[UK Government Analysis Function, charts](https://analysisfunction.civilservice.gov.uk/policy-store/data-visualisation-charts/) and [colours](https://analysisfunction.civilservice.gov.uk/policy-store/data-visualisation-colours/); [GOV.UK type scale](https://design-system.service.gov.uk/styles/type-scale/) and [table](https://design-system.service.gov.uk/components/table/) components; [WCAG 2.2 non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html). All read 2026-11-01. The countable-check approach adapts slop pre-flight counts from published design-skill reviews, whose authors note that such counts measure a skill's own rules rather than quality. D24 follows the CJK orphan lint and D25 the table-border check of the `pdf-creator` skill in [daymade/claude-code-skills](https://github.com/daymade/claude-code-skills) (MIT), both read 2026-11-04; that lint targets Chinese, and the Korean rules here are this skill's own.
