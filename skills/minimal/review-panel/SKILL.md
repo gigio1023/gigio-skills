@@ -42,6 +42,8 @@ For code and designs, review two axes in separate contexts: fidelity, whether it
 
 Axes and reviewers multiply. Four contexts, each family on each axis, give the strongest coverage; two contexts with one axis per family cost half and lose the cross-family check on each axis. Choose by the cost of a defect that slips through, and name the coverage chosen in the report. Other artifact types usually need one context per reviewer, unless they also have an intent source and a separate standard worth keeping apart.
 
+Judge the cost of a slipped defect by asking whether a wrong version of this change would fail loudly where it is made or silently somewhere else. A loud, local defect, such as a crash, a type error, or a failing check at the changed line, shows itself on the next run, so the cheaper coverage is usually enough. A silent defect passes every check at the change site and surfaces later: a guard that still passes but no longer guards, an auth, money, or data boundary, a public interface or serialized format other code depends on, a reported number, or retry, timeout, ordering, and concurrency behavior that degrades without an error. Silent or unsure gets the full coverage, and the packet names the distant places where the failure would surface, such as the callers, the consumers of the format, or the metric pipeline, so reviewers read them as well as the diff. The same question sizes the review of a design or an evaluation, where most defects are silent until results arrive.
+
 ## Write the Packet
 
 Write one packet per axis and send the same packet to each reviewer on that axis, so differences in findings come from the reviewers, not the packets. Start from [the packet template](assets/review-packet.template.md) when writing one. The packet states:
@@ -51,7 +53,7 @@ Write one packet per axis and send the same packet to each reviewer on that axis
 - The axis and its criteria.
 - Current rules that override older records, such as a newer user decision that supersedes a section of the design document, so reviewers do not flag compliance with the newer rule as a defect.
 - Limits: read-only access, network, and time.
-- The required response: findings ranked by impact, each with `path:line` evidence, why it matters, and a concrete fix; the parts checked and found sound; and a verdict for the stated purpose.
+- The required response: findings ranked by impact, each with `path:line` evidence, why it matters, and a concrete fix; the parts checked and found sound; a short list of what the reviewer declined to judge, one line each with the reason, such as outside its criteria, needing access or a run it lacked, or outside what it can assess; and a verdict for the stated purpose.
 
 Keep the lead's conclusions out of the packet. A suspicion the lead wants checked goes in only as a hypothesis to test, marked as one. Do not pass one reviewer's findings to another in the first round.
 
@@ -64,6 +66,8 @@ Verify each material finding in the artifact itself: open the cited location, re
 - **Rejected:** the problem does not exist at this revision, the cited location says otherwise, or the finding conflicts with a newer user decision or current rule, which wins. Record the reason and the evidence.
 
 When settling a finding needs a measurement or access the review was not granted, neither apply nor reject it: list it as an open investigation item with the check that would settle it. A finding arguing that a current rule is itself wrong goes to the user as a question instead of being applied or dropped.
+
+Read each reviewer's declined list as a coverage map: an item one reviewer declined and no other reviewer judged is a part of the artifact nobody reviewed. Cover it with a check of your own, another reviewer, or an open investigation item, and never read silence on it as approval.
 
 Merge duplicates into one finding that lists every reviewer who raised it; its judgment comes from the check alone. Never group, rank, or weight findings by agreement; rank them by impact on the artifact's purpose. Keep rejected findings in the table with their reasons, so a later round does not reopen them without new evidence. Non-material items such as wording preferences may be applied when plainly right and in scope, or dropped with a one-line reason.
 
@@ -83,11 +87,11 @@ Comments from a human reviewer on a PR, document, or design follow the same rule
 
 ## Report
 
-Lead with what the review means for the artifact's next step. Then give the judgment table, the changes applied with their paths, the checks re-run with their results, the rejected findings with reasons, the open investigation items and questions for the user, and the panel as run: reviewers, models and effort, axes, access granted, and any loss of independence or coverage.
+Lead with what the review means for the artifact's next step. Then give the judgment table, the changes applied with their paths, the checks re-run with their results, the rejected findings with reasons, the open investigation items and questions for the user, and the panel as run: reviewers, models and effort, axes, the coverage chosen and why, access granted, declined items no reviewer judged and how they were covered, and any loss of independence or coverage.
 
 ## Sources
 
-Running the fidelity axis and the standards axis as separate subagents is adapted from the `code-review` skill in [mattpocock/skills at 49dd158](https://github.com/mattpocock/skills/tree/49dd158/skills/engineering/code-review) (MIT License, Copyright (c) 2026 Matt Pocock), rewritten here and extended from code to designs and other artifacts. That skill's baseline of code smells appears here only as an optional heuristic through `coding-standards`. Verifying review feedback against the codebase before implementing it, clarifying unclear items before implementing related ones, and pushing back with technical evidence instead of performative agreement are adapted from the `receiving-code-review` skill in [obra/superpowers](https://github.com/obra/superpowers) version 6.3.0 (MIT License, Copyright (c) 2025 Jesse Vincent), rewritten here and applied to panel findings as well as comments from people.
+Running the fidelity axis and the standards axis as separate subagents is adapted from the `code-review` skill in [mattpocock/skills at 49dd158](https://github.com/mattpocock/skills/tree/49dd158/skills/engineering/code-review) (MIT License, Copyright (c) 2026 Matt Pocock), rewritten here and extended from code to designs and other artifacts. That skill's baseline of code smells appears here only as an optional heuristic through `coding-standards`. Verifying review feedback against the codebase before implementing it, clarifying unclear items before implementing related ones, and pushing back with technical evidence instead of performative agreement are adapted from the `receiving-code-review` skill in [obra/superpowers](https://github.com/obra/superpowers) version 6.3.0 (MIT License, Copyright (c) 2025 Jesse Vincent), rewritten here and applied to panel findings as well as comments from people. Asking each reviewer for what it declined to judge is adapted from the code reviewer prompt of the `requesting-code-review` skill in [obra/superpowers at 22f0b46](https://github.com/obra/superpowers/tree/22f0b46/skills/requesting-code-review) (MIT License, Copyright (c) 2025 Jesse Vincent). Sizing a review by whether a defect would fail loudly at the change site or silently elsewhere is adapted from the review depth gate of the `ce-code-review` skill in [EveryInc/compound-engineering-plugin at a3bcedf](https://github.com/EveryInc/compound-engineering-plugin/tree/a3bcedf/skills/ce-code-review) (MIT License, Copyright (c) 2025 Every). Treating a weakened bar in the diff as a finding is adapted from the `constraint-driven-development` skill in [addyosmani/agent-skills at 301b02b](https://github.com/addyosmani/agent-skills/tree/301b02b/skills/constraint-driven-development) (MIT License, Copyright (c) 2025 Addy Osmani). All three are rewritten here.
 
 ## References
 
