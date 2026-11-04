@@ -4,8 +4,9 @@ description: >
   Design, run, or interpret an ML experiment: a training, fine-tuning, or
   weight-adaptation comparison, an inference or serving configuration
   comparison at pinned revisions, a reproduction, or the training data it
-  needs. NOT for what an eval measures or its cases (evaluation-design), a
-  verdict on a built eval (evaluation-audit), operating a multi-run
+  needs. NOT for what an eval measures or its cases (evaluation-design),
+  analyzing per-item eval results (evaluation-analysis), a verdict on a
+  built eval (evaluation-audit), operating a multi-run
   campaign's state (evaluation-operations), latency, throughput, or capacity
   under load (load-testing), or literature (literature-research).
 ---
@@ -72,6 +73,7 @@ For a weight-adaptation or capability-preserving comparison, read [model adaptat
 ## Pointers
 
 - evaluation-design decides what an evaluation measures: its failure modes, case set, code checks, judges and their validation, and comparison conditions.
+- evaluation-analysis analyzes per-item eval result rows: grain and outcome checks, clustered and paired intervals for rates and model differences, and per-category multiplicity.
 - evaluation-audit gives a launch, hold, or report verdict on a built evaluation, benchmark, judge, harness, scoring change, or result.
 - evaluation-operations keeps the evidence-backed state of an approved multi-run campaign, evaluation runs or training and ablation runs alike: attempts, ownership, priorities, resume and rerun decisions, and results.
 - load-testing measures latency, throughput, errors, and capacity of a serving endpoint under load.

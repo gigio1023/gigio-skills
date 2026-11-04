@@ -10,13 +10,14 @@ description: >
   "캠페인 상태 확인해줘", or "ablation 이어서 돌려줘". NOT for designing what an
   evaluation measures or its cases (evaluation-design), designing a training
   comparison or readying and recovering a single run (ml-experiment), a
-  verdict on a built eval or its result (evaluation-audit), load or capacity
+  verdict on a built eval or its result (evaluation-audit), statistical
+  analysis of result rows (evaluation-analysis), load or capacity
   tests (load-testing), generic code review, or a one-off evaluation run.
 ---
 
 # Evaluation Operations
 
-Maintain factual operational control of a multi-run campaign, whether its runs are evaluations or training and ablation runs: preserve what happened, keep already approved work moving when requested, and report only what current evidence establishes. Designing the comparison a sweep runs (its factors, baselines, and seeds) and deciding whether one run is ready or recoverable from its saved state belong to ml-experiment; designing what an evaluation measures belongs to evaluation-design. This skill supplies the working method. The project supplies its runner, scheduler, manifests, registries, and deterministic checks; do not replace them with a new campaign framework, controller, daemon, schema, or parallel spreadsheet.
+Maintain factual operational control of a multi-run campaign, whether its runs are evaluations or training and ablation runs: preserve what happened, keep already approved work moving when requested, and report only what current evidence establishes. Designing the comparison a sweep runs (its factors, baselines, and seeds) and deciding whether one run is ready or recoverable from its saved state belong to ml-experiment; designing what an evaluation measures belongs to evaluation-design; the statistical analysis of finished result rows, with grain checks and clustered, paired intervals, belongs to evaluation-analysis. This skill supplies the working method. The project supplies its runner, scheduler, manifests, registries, and deterministic checks; do not replace them with a new campaign framework, controller, daemon, schema, or parallel spreadsheet.
 
 ## Select the authority mode
 
