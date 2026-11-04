@@ -34,9 +34,9 @@ In a **synthetic service comparison**, a successful-request median alone may fav
 
 ## Load the detail that changes a decision
 
-- [Data and comparison](references/data-and-comparison.md): denominators, aggregation, uncertainty, chart selection, and worked arithmetic.
+- [Data and comparison](references/data-and-comparison.md): denominators, aggregation, uncertainty, chart selection, finding structure, and worked arithmetic.
 - [Pattern examples](references/pattern-examples.md): task-matched public dashboards, actionable adaptations, and finished synthetic view specifications, including a leaderboard.
-- [Interaction and static delivery](references/interaction-and-static.md): selection changes, asynchronous updates, URL sharing, error states, and print.
+- [Interaction and static delivery](references/interaction-and-static.md): selection changes, asynchronous updates, refresh deltas, copying a selection as text, URL sharing, error states, and print.
 
 For document-level information selection, prose, and internal sharing, use `copydesk`. For a shadcn implementation, use the [official shadcn skill](https://ui.shadcn.com/docs/skills) when available; otherwise consult the official component documentation. These companions contribute to this artifact; they do not restart intake. Without them, retain supported claims, accessible interaction, sufficient comparison conditions, and recipient-appropriate sources.
 

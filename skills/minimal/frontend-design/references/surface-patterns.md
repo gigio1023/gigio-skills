@@ -59,6 +59,8 @@ Avoid chart walls without interpretation, decorative charts, and KPI cards that 
 
 Purpose: readable, durable, shareable analysis.
 
+A report is read from top to bottom rather than operated. Give it a reading register distinct from an operated dashboard: a calm single column of body text at about 60 to 75 characters per line, such as `max-width: 68ch`, with comfortable line height and quiet chrome. Tables and charts may extend past the column when their content needs the width; the prose returns to it.
+
 Design for:
 
 - Document hierarchy: title, scope and date, summary, evidence, and decision.
@@ -66,7 +68,9 @@ Design for:
 - Print or export behavior when likely, including stable widths and sensible page breaks.
 - Visual restraint that lets the evidence carry the page.
 
-Avoid landing-page theatrics, oversized type that weakens reading, and motion without an analytical purpose.
+Avoid landing-page theatrics, oversized type that weakens reading, dashboard controls and card grids the reader has nothing to operate, and motion without an analytical purpose.
+
+When the report ships as a standalone file or a hosted artifact, read [html-delivery.md](html-delivery.md) for theme tokens, self-containment, and host limits.
 
 ## Landing Or Brand Page
 
