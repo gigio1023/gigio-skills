@@ -19,7 +19,7 @@ Infer the reader, purpose, sources, language, medium, and requested intervention
 | Broad revision | Reorganize, combine, cut, and rewrite throughout the requested scope while preserving meaning, material detail, voice, and explicitly protected passages. |
 | Review | Return the material findings and useful corrections. Edit or publish only when that is also requested. |
 
-The current user-edited copy is the baseline. When an earlier version helps explain the user's choices, distinguish their edits from agent or collaborator changes. Respect intentional deletions instead of restoring the same function elsewhere. A note left for the writer guides the revision; it does not become reader-facing prose. Exact quotations, identifiers, code, and text explicitly marked to stay verbatim retain their form. Broad revision does not make all user-authored prose immutable. See [authoring and revision](references/authoring-and-revision.md) for difficult scope or voice decisions.
+The current user-edited copy is the baseline. When an earlier version helps explain the user's choices, distinguish their edits from agent or collaborator changes. Respect intentional deletions instead of restoring the same function elsewhere. A note left for the writer guides the revision; it does not become reader-facing prose. Exact quotations, identifiers, code, and text explicitly marked to stay verbatim retain their form. Broad revision does not make all user-authored prose immutable. See [authoring and revision](references/authoring-and-revision.md) for difficult scope or voice decisions, conversation residue, and length budgets.
 
 ## Meaning before polish
 
