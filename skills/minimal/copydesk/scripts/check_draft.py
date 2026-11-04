@@ -6,7 +6,11 @@ accuracy, useful content, semantic fidelity, or clear reasoning. Every hit is a 
 A condition that changes how a number should be read (a caveat, a scope
 limit, a unit note) is legitimate even when it matches status_plan -- the
 pattern only says "look here," not "cut this." Categories: self_description,
-status_plan, order_narration, negation_definition, long_cell, opening_prose.
+status_plan, order_narration, negation_definition, session_leak, long_cell,
+opening_prose. session_leak marks text that points at the drafting conversation
+or a session-only path (a temp directory, a scratchpad, a harness home) that the
+reader cannot open; references inside the document, such as "the table above,"
+are not session_leak.
 """
 
 from __future__ import annotations
@@ -21,7 +25,7 @@ MAX_TEXT_LEN = 120  # trim point for reported sentences/cells
 OPENING_LINE_WINDOW = 12  # how many non-empty lines after the title count as the opening
 CATEGORY_ORDER = [
     "self_description", "status_plan", "order_narration",
-    "negation_definition", "long_cell", "opening_prose",
+    "negation_definition", "long_cell", "opening_prose", "session_leak",
 ]
 # "대신하지 못한다" states a real limit, not a negation-of-identity claim -- never flag it.
 NEGATION_SAFE_PHRASE = "대신하지 못한다"
@@ -56,12 +60,28 @@ NEGATION_DEFINITION = [
     r"does not mean", r"is not a",
     r"should not be (?:read|interpreted) as", r"cannot be treated as",
 ]
+# Each pattern names the conversation, its participants' requests, or a path that exists only on the
+# drafting machine. A reference that a reader can resolve inside the document ("위 표", "the table
+# above", "앞 절") is deliberately absent.
+SESSION_LEAK = [
+    r"\bas (?:we|you|I) (?:discussed|agreed|asked|requested|mentioned)\b",
+    r"\bas (?:you )?requested\b", r"\bper your (?:request|instructions?)\b",
+    r"\b(?:in|during|from) (?:this|our) (?:session|conversation|chat)\b",
+    r"\bearlier in (?:this|our|the) (?:session|conversation|chat)\b",
+    r"말씀(?:하신|드린|주신)", r"요청(?:하신|주신)\s*(?:대로|바)",
+    # "이 대화형 모델" is a product description, not a reference to the drafting conversation.
+    r"(?<![가-힣])(?:이|이번|우리)\s+대화(?!형)", r"(?<![가-힣])이번\s*세션",
+    r"앞서\s*(?:논의|이야기|얘기)(?:한|했던|하신)",
+    r"(?<![\w.])/(?:private/)?tmp/", r"\bscratchpad\b",
+    r"(?:~|/Users/[^/\s]+|/home/[^/\s]+)/\.(?:claude|codex)/",
+]
 # IGNORECASE is harmless on the Korean patterns and needed for the English ones, so one compile covers both.
 CATEGORY_PATTERNS = {
     "self_description": [re.compile(p, re.IGNORECASE) for p in SELF_DESCRIPTION],
     "status_plan": [re.compile(p, re.IGNORECASE) for p in STATUS_PLAN],
     "order_narration": [re.compile(p, re.IGNORECASE) for p in ORDER_NARRATION],
     "negation_definition": [re.compile(p, re.IGNORECASE) for p in NEGATION_DEFINITION],
+    "session_leak": [re.compile(p, re.IGNORECASE) for p in SESSION_LEAK],
 }
 
 # A sentence boundary is any of ./!/? followed by whitespace or end-of-text; "다."/"요." are
