@@ -1,6 +1,6 @@
 # Multilingual Writing
 
-Use the relevant section when language, locale, or voice affects a drafting or revision decision. Shared meaning checks are in [clear sentences](voice-and-facts.md#clear-sentences); each language keeps its natural syntax.
+Use the relevant section when language, locale, or voice affects a drafting or revision decision. Each language keeps its natural syntax.
 
 ## Shared judgment
 

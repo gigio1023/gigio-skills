@@ -28,7 +28,7 @@ A local correction protects unrelated wording. A broad revision permits restruct
 
 Do not expand a short message into a report. A memo, guide, or post needs the amount of structure that makes its task understandable. Do not impose a thesis on an API reference or a fixed outline on a personal account.
 
-For structural revision, select the information and presentation units before editing sentences. Separate unlike rows, divide overloaded views by reader question, and replace paragraph tables with actual comparisons or short sections. Preserve the user's explicit editorial preferences as defaults; a wide genre range does not make those preferences optional. Read [information design](information-design.md) for these decisions.
+For structural revision, select the information and presentation units before editing sentences. Separate unlike rows, divide overloaded views by reader question, and replace paragraph tables with actual comparisons or short sections. Preserve the user's explicit editorial preferences as defaults; a wide genre range does not make those preferences optional.
 
 ## Continue from user edits
 
@@ -59,7 +59,7 @@ The reader of a finished document never saw the conversation that produced it. T
 | Reviewer reassurance | "This correctly handles empty input, as requested." | Deleted |
 | Internal plan or spec identifier | "Implements R3 from the plan." | Replaced by what it refers to |
 
-A rejected option stays when the reader would otherwise weigh it, as in a proposal's alternatives; the test is whether the reader had the option on the table. Change narration stays in the genres where change is the reader's job, listed under AI-slop requests below. Reassurance speaks to the person who asked for the change and tells later readers nothing; when the behavior matters, state the behavior itself, such as "Empty input returns an empty list." An identifier such as "R3", "Phase 2b", or "option C" means something only with another document open. Write what it refers to, such as "the retry limit for webhook delivery", and keep the identifier after that description only when the reader also needs it for lookup, as [voice and facts](voice-and-facts.md#technical-explanation-and-definitions) describes for local aliases.
+A rejected option stays when the reader would otherwise weigh it, as in a proposal's alternatives; the test is whether the reader had the option on the table. Change narration stays in the genres where change is the reader's job, listed under AI-slop requests below. Reassurance speaks to the person who asked for the change and tells later readers nothing; when the behavior matters, state the behavior itself, such as "Empty input returns an empty list." An identifier such as "R3", "Phase 2b", or "option C" means something only with another document open. Write what it refers to, such as "the retry limit for webhook delivery", and keep the identifier after that description only when the reader also needs it for lookup.
 
 Give each fact one home. Code, configuration, a schema, command help, or a maintained document is usually the authoritative home, and a restatement elsewhere is a copy that goes stale when the home changes. Restate a fact only when lookup is costly for the reader, such as a default needed at the moment of acting, and name the home beside the copy so the reader can check it. Prose that repeats what the adjacent code or command already shows is deleted. When one document states the same fact twice, keep it where the reader meets it in context.
 
@@ -77,39 +77,25 @@ A request to remove AI slop, humanize prose, or “AI 티 빼줘” asks for a f
 
 Read a pattern as a place to look. One device, such as a single contrast or one group of three, proves nothing. Several distinct tells in one passage, or the same tell repeated across passages, mark that passage for a rewrite; this co-occurrence chooses where to read closely and never becomes a score. The repair still starts from what the passage fails to do for its reader. Change only the sentences that fail, so that a second pass over the result would change nothing. Text that passes comes back unchanged, which is a complete result; rephrasing it to show work adds risk and no value.
 
-Keep change narration where change is the reader's job: changelogs, release notes, migration guides, decision records, incident timelines, histories, and retrospectives. Elsewhere, describe the current subject. This section and the voice rules in [voice and factual prose](voice-and-facts.md) adapt `slop-aware-writing`, copyright 2026 gigio1023, under the [MIT notice](../LICENSE.slop-aware-writing).
+Keep change narration where change is the reader's job: changelogs, release notes, migration guides, decision records, incident timelines, histories, and retrospectives. Elsewhere, describe the current subject. This section adapts `slop-aware-writing`, copyright 2026 gigio1023, under the [MIT notice](../LICENSE.slop-aware-writing).
+
+### Test generic sentences
+
+Use these tests when a sentence reads fluently but may carry no fact. They apply in any language; the examples are English. A failed test marks a sentence for repair, and several distinct failures in one passage mark the passage.
+
+- **Portability.** Could the sentence move into another project's document unchanged? Then it says nothing about this one. "Reliability is a core priority for the team" fits any team; "Each write is acknowledged after two replicas persist it" fits one system. Replace the portable sentence with the fact it stood in for, or delete it.
+- **Literal operation.** Name the operation instead of borrowing a metaphor or a figurative verb for it. Code and configuration do not know, want, or care: "the config knows about the queue" becomes "the config lists the queue". A lever, surface, or flywheel becomes the change, interface, or feedback loop it stands for. Verbs for literal operations, such as reads, rejects, and validates, stay, and so do established terms such as backpressure.
+- **Contrast with a real holder.** The negative half of a contrast needs someone who holds that view: the reader, a cited source, or an earlier section. Two patterns add weight without adding a claim: a contrast split across two sentences, such as "This does not mean X. It means Y.", and a rebuttal of a position nobody in the document holds. State Y directly. Keep the contrast when it corrects a belief the reader is likely to bring.
+- **Emphasis source.** Flatten the sentence: remove its cadence, contrast, and intensifiers while keeping the claim. If the flat version still names an actor, a mechanism, or a limit, the claim stands; prefer the flat version unless the original emphasis serves the reader. If nothing remains, the emphasis came from the pattern, and the sentence goes.
+- **Syntax relation.** When syntax implies a relation, as with two short sentences side by side, a dash, or a colon, restate that relation with because, although, or so that. If the evidence supplies the connective, write it. If no connective can be supplied without inventing it, the syntax stood in for a relation the source does not establish: report the facts separately or ask the author.
+
+The portability and literal-operation tests adapt EveryInc's `ce-noslop` skill in [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin/tree/a3bcedfc7136/skills/ce-noslop), whose catalog also supplies the config example. The contrast test adapts the "Not X but Y" and "Arguing with no one" patterns in [blader/humanizer](https://github.com/blader/humanizer/tree/0ef9fe5bc357). The emphasis-source and syntax-relation tests adapt [adewale/anti-slop-writing](https://github.com/adewale/anti-slop-writing/tree/5cf773433c6c). All were read on 2026-11-04.
 
 ## Keep volume proportional
 
 Length is an editing clue. These checks decide where detail lives; they never justify deleting a condition, mechanism, example, or number the reader needs.
 
-**Length budget.** Before drafting, set a budget from the document form and destination. A governing template, a destination limit, or the user's request overrides these defaults.
-
-| Form | Default budget | Overflow home |
-| --- | --- | --- |
-| Message, chat answer, PR or issue body | One screen, about 300 words | Linked document or commit message |
-| Delivery brief, decision memo, decision record | One page, about 500 words | Linked design document or appendix |
-| Design proposal, technical or experiment report | About four pages, 2,000 words of main text | Appendix or addendum |
-| Guide, runbook, reference | Each task or entry kept to what the reader acts on or looks up | Separate page per task or topic |
-
-Content past the budget moves to its overflow home with a pointer where the reader would look for it; [information design](information-design.md#long-documents-and-progressive-disclosure) covers optional sections in the same document. When the main path still exceeds the budget after optional depth has moved, either the document holds two documents and should be split, or every section answers a reader question and the length stands.
-
-**Revision summary.** For a broad revision or a request to shorten, give the user a summary beside the delivered text, never inside it. Tag each changed section or block once, with its word count before and after and a short reason:
-
-- **CUT:** removed, because nothing the reader needs depended on it.
-- **MERGE:** combined with a passage that said the same thing.
-- **MOVE:** relocated to an appendix, a linked record, or another section.
-- **CONDENSE:** shortened in place with its meaning kept.
-- **PRESERVE:** kept although it looks cuttable, because it carries comprehension, such as the only worked example or the condition that limits a claim.
-
-| Section | Tag | Words before | Words after | Reason |
-| --- | --- | --- | --- | --- |
-| Background | CONDENSE | 410 | 180 | Scheduler history reduced to the constraint it left |
-| Setup | MERGE | 220 | 0 | Repeated the installation steps |
-| Worked example | PRESERVE | 260 | 260 | Only place the retry order is shown |
-| Benchmark table | MOVE | 340 | 40 | Full table in the appendix; the decisive row stays |
-
-Count words with a tool and give the document totals; mark a figure as an estimate when the text could not be counted. The summary lets the user audit what moved and what survived. A local correction needs none. Where a summary is given, it replaces any prose account of how the revision improved the text.
+**Revision summary.** For a broad revision or a request to shorten, a short note beside the delivered text, never inside it, helps the user audit what was cut, merged, moved, condensed, or kept although it looked cuttable, such as the only worked example or the condition that limits a claim. `scripts/measure_length.py` counts words per heading when numbers help. A local correction needs none.
 
 **Proportion.** Check a derived document against its source: a plan against its spec, a summary or brief against its report, release notes against the change list. A summary or brief that approaches its source's length has not selected. A plan several times longer than its spec usually transcribes what the implementation will hold, such as code bodies, and should name signatures, checks, and decisions instead. Flag either case for a closer look, point to the source for restated detail as the one-home rule above describes, and keep only what the derived document's reader needs that the source does not say. A plan for a terse spec can legitimately be longer; the flag asks for a look and sets no ratio.
 
@@ -137,4 +123,4 @@ Deliver the requested text or artifact first. Add an editorial note only for a f
 
 ## Sources
 
-The residue kinds and their homes, the stranger test, and the one-home rule adapt the `writing-for-humans` skill in [MaxWolf-01/agents](https://github.com/MaxWolf-01/agents/tree/851789cccd16/mx/skills/writing-for-humans). The revision tags, including PRESERVE, adapt the structure lens of `bmad-review` in [bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD), and the overflow addendum follows that project's product brief. The proportion check adapts the plan self-review in the `writing-plans` skill of [obra/superpowers](https://github.com/obra/superpowers/tree/22f0b463e7a5e579904dd6211a520321035526f7/skills/writing-plans). Co-occurrence as a place to look and the edit that a second pass leaves unchanged adapt EveryInc's `ce-noslop` skill in [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin/tree/a3bcedfc7136/skills/ce-noslop). The injected failures adapt the guardrails in [conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing/tree/f6fbc0015ce8), the ask-the-author verdict in [adewale/anti-slop-writing](https://github.com/adewale/anti-slop-writing/tree/5cf773433c6c), and the rule against added facts in [blader/humanizer](https://github.com/blader/humanizer/tree/0ef9fe5bc357). All were read on 2026-11-04; the text here is an original synthesis.
+The residue kinds and their homes, the stranger test, and the one-home rule adapt the `writing-for-humans` skill in [MaxWolf-01/agents](https://github.com/MaxWolf-01/agents/tree/851789cccd16/mx/skills/writing-for-humans). The revision summary categories adapt the structure lens of `bmad-review` in [bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD). The proportion check adapts the plan self-review in the `writing-plans` skill of [obra/superpowers](https://github.com/obra/superpowers/tree/22f0b463e7a5e579904dd6211a520321035526f7/skills/writing-plans). Co-occurrence as a place to look and the edit that a second pass leaves unchanged adapt EveryInc's `ce-noslop` skill in [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin/tree/a3bcedfc7136/skills/ce-noslop). The injected failures adapt the guardrails in [conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing/tree/f6fbc0015ce8), the ask-the-author verdict in [adewale/anti-slop-writing](https://github.com/adewale/anti-slop-writing/tree/5cf773433c6c), and the rule against added facts in [blader/humanizer](https://github.com/blader/humanizer/tree/0ef9fe5bc357). All were read on 2026-11-04; the text here is an original synthesis.

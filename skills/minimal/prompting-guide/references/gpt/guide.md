@@ -8,7 +8,7 @@ This package applies OpenAI's [Rethinking skills and prompts for GPT-6 Astra](ht
 
 OpenAI publishes one set of prompts for the GPT-6 family. They address behavior observed with Astra, and OpenAI asks that they be evaluated with the chosen model and workload; there is no separate Sol prompting guide. Use the same patterns for both models, and before adding a clause for Sol, check that the Sol workload shows the behavior the clause addresses: clarification pauses, sensitivity to skill files, heavily formatted output, under-delegation, or broader testing than the change needs.
 
-GPT-6.1 Sol is `gpt-6.1-sol`, distinct from legacy `gpt-6-sol`. Astra and Sol 6.1 require Responses for tools, and neither accepts `none`; Sol 6.1 also rejects `minimal`. Its API default effort is `medium`. [Runtime notes](runtime-notes.md) separate current model contracts from legacy settings and Codex catalog values. Model assignment belongs to the current GPT policy in `model-routing`.
+GPT-6.1 Sol is `gpt-6.1-sol`, distinct from legacy `gpt-6-sol`. Astra and Sol 6.1 require Responses for tools, and neither accepts `none`; Sol 6.1 also rejects `minimal`. Its API default effort is `medium`. [Runtime notes](runtime-notes.md) separate current model contracts from legacy settings and Codex catalog values.
 
 ## Choose The Relevant Material
 
@@ -18,7 +18,6 @@ GPT-6.1 Sol is `gpt-6.1-sol`, distinct from legacy `gpt-6-sol`. Astra and Sol 6.
 | Fix a concrete prompt behavior or tool description | The matching section of [prompt patterns](prompt-patterns.md): execution, clarification, conflicts, style, tools, delegation, or verification |
 | Write a new task prompt | Adapt the small [prompt template](../../assets/gpt/prompt.template.md); add detail only for the task's actual decisions |
 | Change an API integration or migrate from legacy Sol or GPT-5.6 | [Runtime notes](runtime-notes.md); verify applicable compatibility claims before changing settings |
-| Check a model claim or source freshness | [Source notes](source-notes.md): provenance, review dates, and interpretation limits |
 
 ## Make The Change
 

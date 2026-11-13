@@ -65,7 +65,7 @@ For workspace-write, `network=no` passes `sandbox_workspace_write.network_access
 
 The launcher sets `model_reasoning_effort`, `service_tier`, and the applicable network setting. It accepts no arbitrary `-c` passthrough and no approval or sandbox bypass flag. Existing account, project, and managed policy can impose further restrictions. A rejection is evidence to diagnose, not permission to turn those restrictions off.
 
-`--ignore-user-config yes` skips `$CODEX_HOME/config.toml`; authentication still uses `CODEX_HOME`. It does not imply a clean environment or removal of project instructions. `--skip-git-repo-check yes` permits an intended non-Git working directory. Neither option installs or logs in to anything. These flag meanings were checked against CLI 0.159.3 and the [CLI reference](https://learn.chatgpt.com/docs/developer-commands?surface=cli) on 2026-10-06.
+`--ignore-user-config yes` skips `$CODEX_HOME/config.toml`; authentication still uses `CODEX_HOME`. It does not imply a clean environment or removal of project instructions. `--skip-git-repo-check yes` permits an intended non-Git working directory. Neither option installs or logs in to anything.
 
 ## Status and events
 
@@ -91,7 +91,7 @@ The renderer streams JSONL, caps action lines, omits command output and diffs, a
 
 A live process group and an old log timestamp do not distinguish reasoning, waiting, and a stalled process. Diagnose stderr, outstanding work, and the task's actual time limit before cancelling. Do not auto-retry from silence or fabricate success from activity.
 
-The packet's expected duration and progress artifact make a stall visible. Check the artifact at about a third of the expected duration and again when it ends. A running Codex turn cannot take a message, so when nothing in the mission's write scope or progress file has changed for a large part of the estimate and no task command is running, cancel through the procedure below. Then resume with a packet that starts from the partial artifacts and states what is already done; do not relaunch the original packet. A run that is still producing progress past its estimate is slow, not stalled; let it finish or narrow the next resumed turn.
+A running Codex turn cannot take a message. When nothing in the mission's write scope or progress file has changed for a large part of the expected duration and no task command is running, cancel through the procedure below, then resume with a packet that starts from the partial artifacts and states what is already done instead of relaunching the original packet. A run still producing progress past its estimate is slow, not stalled.
 
 ## Observation across hosts
 
@@ -113,11 +113,11 @@ The watcher ending means the host should inspect status; it is not task success.
 
 ## Resume and concurrency
 
-A resume uses a new packet, the exact source run, and a fresh path. The launcher inherits recorded sandbox, model, effort, Fast assertion, network, config, and Git-check settings unless explicitly overridden. Missing optional legacy assertions default to `no`; required sandbox, model, or effort metadata must be present or provided deliberately.
+A resume uses a new packet, the exact source run, and a fresh path. The launcher inherits recorded sandbox, model, effort, Fast assertion, network, config, and Git-check settings unless explicitly overridden. Missing optional legacy assertions, including Fast, default to `no`; required sandbox, model, or effort metadata must be present or provided deliberately.
 
 The source must have a usable typed thread event and either a terminal record or a recorded process group that is no longer present. A source with unknown liveness is rejected before creating a new run. The launcher checks that source attempt, not every historic resume. The host must inspect the latest known attempt and keep one active turn per thread. It must also retain the same authorized CLI account and session store; the script does not copy credentials or move a thread between accounts.
 
-Model policy is applied when deciding the follow-up. Inspect a legacy attempt's inherited settings and select the route under the current policy; pass explicit model options and record the route reason when changing it. Widening filesystem or external authority requires the user's existing or new grant and a matching packet. Read-only roots can share a workspace; concurrent writers need isolated workspaces or worktrees. CLI thread identity alone does not coordinate writes.
+Inspect inherited settings before a follow-up; pass explicit model options and record the route reason when changing them. Widening filesystem or external authority requires the user's existing or new grant and a matching packet. Read-only roots can share a workspace; concurrent writers need isolated workspaces or worktrees. CLI thread identity alone does not coordinate writes.
 
 Before any recovery, inspect effects that may have occurred before a lost response. For a missing final response, resume to reconstruct the handoff. For a partial implementation, continue from the existing files and evidence. For a confirmed launch failure before a thread exists, a fresh launch may be appropriate after the failure is resolved. Preserve the failed attempt.
 
@@ -139,7 +139,7 @@ After confirming identity and the absence of a terminal record:
 kill -INT -"$PG"
 ```
 
-The wrapper catches SIGINT while Codex receives it, allowing a terminal record after the child returns. Observe the result rather than assuming a particular exit code. Historical CLI 0.145.0 evidence and current deterministic fixtures cover this path; abrupt termination can leave tool children outside the wrapper's group.
+The wrapper catches SIGINT while Codex receives it, allowing a terminal record after the child returns. Observe the result rather than assuming a particular exit code. The deterministic fixtures cover this path; abrupt termination can leave tool children outside the wrapper's group.
 
 If graceful cancellation fails, inspect surviving processes before escalating to TERM or KILL on the confirmed group. Record the host action and observation in a separate `cancellation.md`; preserve `result.txt` and partial artifacts. Check for surviving task processes and external effects before resuming. Process identity checks reduce stale-PID risk but cannot make a shell check and signal atomic.
 

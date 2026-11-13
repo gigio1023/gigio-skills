@@ -1,7 +1,7 @@
 ---
 name: terminology
 description: >
-  Look up and apply a project's recorded terms, local names, and wording decisions, and settle which name the project uses when names compete. Use when working in a project with a terminology.md index, when the user asks what a term means or which name to use, when a new, contested, or misused term comes up, or when the user corrects or bans a wording: "what do we call this", "which name should we use", "이 용어 뭐라고 써", "용어 정리해줘". Settling a name surveys established projects, papers, and products and records the choice with sources. NOT for adding undisputed field terms, or for sentence style and claim strength in documents (copydesk).
+  Settle which name a project uses for a concept and record it in the project's terminology.md glossary, or answer from that glossary. Use when the user asks what we call something or which name to use, corrects or bans a wording, or asks to set up or curate the glossary: "what do we call this", "which name should we use", "이 용어 뭐라고 써", "용어 정리해줘".
 ---
 
 # Terminology
@@ -38,7 +38,7 @@ A concept gets a row only when at least one of these holds:
 - A company or local meaning differs from the field's meaning.
 - The user made an explicit wording decision, such as banning a word.
 
-Undisputed field terms stay out even when the project uses them constantly. Sentence patterns, "do not write X" advice, and project explanations are not rows. Claim strength and sentence style belong to `copydesk`.
+Undisputed field terms stay out even when the project uses them constantly. Sentence patterns, "do not write X" advice, and project explanations are not rows.
 
 ## Survey and decision
 

@@ -1,6 +1,6 @@
 # GitHub Issues
 
-Read this when the tracker is GitHub Issues. The core rules in `SKILL.md` still apply. Flags below were checked against `gh` 2.101.0 on 2026-09-17. Sub-issue, relation, and issue-type flags are recent, so run `gh issue create --help` first and, on an older `gh`, use the web interface or the REST API for those fields instead of guessing.
+Sub-issue, relation, and issue-type flags are recent, so run `gh issue create --help` first and, on an older `gh`, use the web interface or the REST API for those fields instead of guessing.
 
 ## Read First
 
@@ -16,12 +16,10 @@ Read this when the tracker is GitHub Issues. The core rules in `SKILL.md` still 
 
 ## Tables, Diagrams, Collapsed Sections, And Images
 
-When to use each is decided by the core rule in `SKILL.md`. This section covers only how GitHub expresses them.
-
 - **Table:** a Markdown table in the body.
 - **Collapsed section:** `<details>` with a `<summary>` line, a blank line after the summary, and Markdown inside. See GitHub's [collapsed sections](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-collapsed-sections).
 - **Diagram:** a fenced code block with the language `mermaid` is rendered in place. See GitHub's [creating diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams).
-- **Image made by another tool,** such as the `technical-figure` skill: `gh issue create --attach './figure.png#Alt text'` uploads an image or video and appends it to the body. When the body already references the file, as in `![Alt text](./figure.png)`, the reference is replaced by the uploaded URL, which lets the figure sit right after the purpose sentence. `gh issue edit` and `gh issue comment` take the same flag.
+- **Image or video:** `gh issue create --attach './figure.png#Alt text'` uploads an image or video and appends it to the body. When the body already references the file, as in `![Alt text](./figure.png)`, the reference is replaced by the uploaded URL. `gh issue edit` and `gh issue comment` take the same flag.
 
 In a public repository an attached image is public, like the rest of the issue.
 

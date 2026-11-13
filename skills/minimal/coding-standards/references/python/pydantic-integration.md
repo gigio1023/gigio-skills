@@ -1,14 +1,6 @@
 # Python Pydantic Integration
 
-Read this when the task changes Pydantic models, validation, or serialization. Pydantic-specific modeling guidance comes from the official external `pydantic` skill; the Python and module-design rules in this package are authored locally. This pack's Pydantic-first representation policy takes precedence over optional alternatives in upstream examples; use upstream guidance for correct library behavior.
-
-## Load the official skill
-
-Use the installed `pydantic` skill when its source is the official [pydantic/skills repository](https://github.com/pydantic/skills). The reviewed source is [skills/pydantic/SKILL.md at 8d674a16cf5a89c49f40e8502a870f3701b9b5a3](https://github.com/pydantic/skills/blob/8d674a16cf5a89c49f40e8502a870f3701b9b5a3/skills/pydantic/SKILL.md), checked 2026-09-29. Read it for field constraints, validators, coercion, model hierarchies, and serialization choices rather than copying its API guide into this package.
-
-If the skill is unavailable locally, read that upstream file for the current task without installing it. If upstream retrieval is unavailable, use the version-matched official Pydantic documentation and report that the external skill could not be loaded; continue work whose behavior can be verified locally. A missing skill is not a reason to add dependencies or guess an unfamiliar API. Match advice to the project's installed Pydantic version. A newer installed skill may be used after checking its relevant API assumptions; do not silently upgrade the application to match it.
-
-The official `building-pydantic-ai-agents` skill serves applications using `pydantic_ai`; it is not a substitute for general `BaseModel` work. This integration does not require Pydantic AI, Logfire, a cloud account, or the other skills in the upstream repository. Skill installation and Python package installation are separate operations.
+Read this when the task changes Pydantic models, validation, or serialization. This pack's Pydantic-first representation policy takes precedence over optional alternatives in upstream examples. For library behavior (field constraints, validators, coercion, serialization), use the version-matched official Pydantic documentation, or the official `pydantic` skill from [pydantic/skills](https://github.com/pydantic/skills) when it is installed. Match advice to the project's installed Pydantic version; do not guess an unfamiliar API or silently upgrade the application.
 
 ## Local modeling and boundary policy
 
@@ -34,7 +26,7 @@ Do not treat `model_construct()` or `model_copy(update=...)` as validation of ne
 
 Use `TypeAdapter` when a boundary needs validation of a container, union, or an already-required non-model type. It is a validation/serialization adapter, not a field annotation or a reason to choose `TypedDict` or dataclasses for new application records.
 
-When changing these behaviors, check the affected field names and aliases, unknown-field retention, coercion, enum values and runtime types, rejected input, and output exposure through the real entry point on fixed input. A serialized or persisted format that callers or stored data depend on is an essential contract, which gets a contract test written from the contract by an author who has not seen the implementation; see [test author packet](../test-author-packet.md). Check only what the change touches; do not duplicate existing coverage.
+When changing these behaviors, check the affected field names and aliases, unknown-field retention, coercion, enum values and runtime types, rejected input, and output exposure through the real entry point on fixed input. A serialized or persisted format that callers or stored data depend on is an essential contract, which gets a contract test written from the contract. Check only what the change touches; do not duplicate existing coverage.
 
 ## Source scope
 

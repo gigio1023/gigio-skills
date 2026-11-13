@@ -6,7 +6,7 @@ A synthetic review. Paths, revisions, dates, and amounts are invented to show th
 
 The session implemented mid-cycle plan changes with proration in a billing service, following `docs/design/proration.md`. The user wrote: "Review this with Fable and Codex before I merge."
 
-The panel was Claude Fable and GPT-6 Astra, the latter through `codex-delegate` in a read-only sandbox with no network. Each family ran the fidelity axis and the standards axis in separate contexts, four contexts in all, because a billing error reaches customer invoices. The packets named revision `a1b2c3d`, diff range `main..a1b2c3d`, and the design document as the intent source. The fidelity packet left out decision log entry D4 of 2026-09-30, which replaced the design document's daily-rate formula with a per-second formula to match the payment provider.
+The panel was Claude Fable and GPT-6 Astra, the latter through `codex-delegate` in a read-only sandbox with no network. Each family ran the fidelity axis and the standards axis in separate contexts, four contexts in all, because a billing error reaches customer invoices and fails silently. The packets named revision `a1b2c3d`, diff range `main..a1b2c3d`, and the design document as the intent source. The fidelity packet left out decision log entry D4 of 2026-09-30, which replaced the design document's daily-rate formula with a per-second formula to match the payment provider.
 
 ## Judgment table
 

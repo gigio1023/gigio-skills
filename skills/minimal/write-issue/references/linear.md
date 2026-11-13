@@ -1,18 +1,6 @@
 # Linear
 
-Read this when the tracker is Linear. It covers which container fits the work, where narrative goes, sub-issue behavior that surprises people, templates and triage, and how to express fields through the Linear MCP server or API. The core rules in `SKILL.md`, including the assignee rule and the reader-access rule, still apply and are not repeated here.
-
-Product behavior below was checked against Linear's documentation on 2026-09-17. Recheck the linked page before relying on a detail that matters.
-
-## Contents
-
-- Choose the container
-- Where narrative goes
-- Sub-issue behavior
-- Relations
-- Templates and triage
-- Tables, diagrams, collapsible sections, and files
-- Express fields through the MCP server or API
+Product behavior and tool names change; confirm a detail that matters against Linear's documentation or the live tool schema.
 
 ## Choose The Container
 
@@ -25,9 +13,7 @@ Product behavior below was checked against Linear's documentation on 2026-09-17.
 
 When a parent keeps growing, Linear's remedy is to turn it into a project, not to nest deeper.
 
-When reorganizing existing work, first reuse the project or parent whose outcome it serves. Combine implementation chores that share one useful result; keep separately owned fixes, decisions, and deliverables visible. A milestone needs a real project checkpoint, so do not turn thematic groups into numbered stages just to arrange the list. These are the skill's editorial defaults, not additional Linear product rules.
-
-For exploratory work Linear offers two forms: a placeholder issue to break down later, or an issue framed as a deliverable such as "Write project spec". The deliverable form is one of the two the core rule allows for uncertain work; the placeholder form is not, because it names no outcome.
+A milestone needs a real project checkpoint; do not turn thematic groups into numbered stages just to arrange the list.
 
 ## Where Narrative Goes
 
@@ -43,7 +29,7 @@ The issue description stays a short task statement. Longer material has its own 
 - The assignee can be inherited: when the author is assigned to the parent, or when all existing sub-issues share the parent's assignee. Inheritance can therefore assign someone nobody chose. Set or clear the assignee explicitly on every sub-issue according to the core assignee rule, and confirm it when reading the result back.
 - A sub-issue created in an active status may join the current cycle. Use the team's backlog or not-started status unless the user's instruction or current evidence identifies it as active, and check the cycle afterwards.
 - A sub-issue may live in a different team from its parent.
-- Parent auto-close (the parent completes when all sub-issues are done) and sub-issue auto-close (remaining sub-issues complete when the parent is done) are opt-in team workflow settings. Do not assume either. Before closing a parent, look at its open sub-issues, because with sub-issue auto-close enabled they will be closed too. Do not change these settings as part of issue writing.
+- Parent auto-close, where the parent completes when all sub-issues are done, and sub-issue auto-close, where remaining sub-issues complete when the parent is done, are opt-in team workflow settings. Do not assume either. Before closing a parent, look at its open sub-issues, because with sub-issue auto-close enabled they will be closed too. Do not change these settings as part of issue writing.
 
 ## Relations
 
@@ -56,7 +42,7 @@ Use blocked by, blocks, related, and duplicate instead of prose. A blocker shows
 
 ## Tables, Diagrams, Collapsible Sections, And Files
 
-When to use each is decided by the core rule in `SKILL.md`. This section covers only how Linear expresses them. Editor forms are from Linear's [editor documentation](https://linear.app/docs/editor), read on 2026-09-17.
+Editor forms are from Linear's [editor documentation](https://linear.app/docs/editor).
 
 | Element | In the editor | Through the MCP server or API |
 | --- | --- | --- |
@@ -67,11 +53,11 @@ When to use each is decided by the core rule in `SKILL.md`. This section covers 
 
 When the collapsible section does not survive the round trip, keep the long detail in a linked shared document or attachment and say in the body what it holds and concludes. Do not move it into a comment.
 
-A Mermaid block is drawn by Linear itself, so it needs no upload. A figure made by another tool, such as the `technical-figure` skill, has to be uploaded. The Linear MCP server does this in three steps for an issue that already exists: prepare the upload with the issue, filename, content type, and exact byte size; send the raw bytes with `PUT` to the signed URL within 60 seconds, repeating every signed header verbatim; then create the attachment from the returned asset URL. Handle one file at a time. As of 2026-09 the tools are named `prepare_attachment_upload` and `create_attachment_from_upload`; names can change, so confirm against the live schema. This adds the file to the issue's attachments. Whether the asset URL also displays inline when placed in the description as an image was not verified, so read the issue back, and when the figure does not show inline, name the attachment in the one visible line that says what the figure shows.
+A file or image has to be uploaded. The Linear MCP server does this in three steps for an issue that already exists: prepare the upload with the issue, filename, content type, and exact byte size; send the raw bytes with `PUT` to the signed URL within 60 seconds, repeating every signed header verbatim; then create the attachment from the returned asset URL. Handle one file at a time. The tools are `prepare_attachment_upload` and `create_attachment_from_upload`. This adds the file to the issue's attachments; read the issue back to see whether it also displays inline.
 
 ## Express Fields Through The MCP Server Or API
 
-Parameter names below are from the Linear MCP server's issue save tool as of 2026-09. The tool's namespace differs by harness, and names can change, so confirm against the live tool schema before writing.
+Parameter names below are from the Linear MCP server's issue save tool. The namespace differs by harness.
 
 | Intent | How |
 | --- | --- |

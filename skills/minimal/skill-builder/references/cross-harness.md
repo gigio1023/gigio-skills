@@ -4,15 +4,14 @@ Use this when one skill package must work in more than one harness, such as Clau
 
 Build one portable core without flattening the harnesses' different model and runtime behavior into vague advice. The common SKILL.md defines the task contract. Harness-only invocation, metadata, hooks, permissions, and path features stay in adapters or installation documentation. If an adapter is removed, the skill should lose convenience or enforcement, not its meaning, normal execution path, or safety boundary.
 
-## Workflow
+## Approach
 
-1. Classify the request. A review-only request returns findings and does not edit files; a create, improve, or modernize request authorizes in-scope edits.
-2. Identify the exact intended model in each harness from the request and the applicable routing policy, and distinguish GPT-6.1 Sol from legacy GPT-6 Sol. Do not substitute a model because a guide names it. Record unavailable model and harness combinations instead of treating one successful run as proof for both.
-3. Write the portable core first with the working contract in SKILL.md and the deltas below. Add only domain knowledge, fragile procedure, authority boundaries, evidence requirements, output preservation, and real stop or fallback rules.
-4. Read [harness adapters](cross-harness-adapters.md) before using a path, invocation syntax, tool name, frontmatter key, hook, subagent feature, or environment variable. Move a capability into an adapter when the other harness cannot interpret it with the same meaning; the core must still complete correctly without that adapter.
-5. Read [model differences](cross-harness-models.md) when writing or simplifying instructions that more than one model family will read.
-6. Apply the [review gate](cross-harness-review.md) to the package and its directly linked resources. In change mode, patch measured defects; do not rewrite a passing skill to mention model names.
-7. Validate packaging and changed executable resources as SKILL.md describes. Run model comparisons only on request, reuse existing traces when available, and keep static findings separate from behavior exercised in either harness.
+- Classify the request. A review-only request returns findings and does not edit files; a create, improve, or modernize request authorizes in-scope edits.
+- Identify the intended model in each harness from the request or the user's configuration. Record unavailable model and harness combinations instead of treating one successful run as proof for both.
+- Write the portable core first with the working contract in SKILL.md and the deltas below. Add only domain knowledge, fragile procedure, authority boundaries, evidence requirements, output preservation, and real stop or fallback rules.
+- Read [harness adapters](cross-harness-adapters.md) before using a path, invocation syntax, tool name, frontmatter key, hook, subagent feature, or environment variable. Move a capability into an adapter when the other harness cannot interpret it with the same meaning; the core must still complete correctly without that adapter.
+- In change mode, patch measured defects; do not rewrite a passing skill to mention model names.
+- Validate packaging and changed executable resources as SKILL.md describes. Run model comparisons only on request, reuse existing traces when available, and keep static findings separate from behavior exercised in either harness.
 
 ## Portable Deltas To The Working Contract
 
@@ -49,7 +48,7 @@ A side-effecting workflow must remain safe when adapter metadata is absent. Do n
 
 Portable does not mean vague. Preserve precise domain contracts and exact safety or schema rules.
 
-Do not copy every recommendation from each model guide into the core. Keep their task-specific intersection, and isolate divergent runtime controls such as effort, long-run memory, programmatic tool calling, and asynchronous agents in the runtime or harness layer, tuned after evaluation rather than set as domain defaults. Model names, effort, and cost routing belong in a routing skill or a dated maintenance reference.
+Do not copy every recommendation from each model guide into the core. Keep their task-specific intersection, and isolate divergent runtime controls such as effort, long-run memory, programmatic tool calling, and asynchronous agents in the runtime or harness layer, tuned after evaluation rather than set as domain defaults. Model names, effort, and cost routing do not belong in the portable core.
 
 ## Output
 

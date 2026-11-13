@@ -162,7 +162,7 @@ Delegation clause:
 Delegate independent subtasks and continue non-overlapping work while they run. Give each subagent a bounded question, evidence requirement, and stop condition. Intervene when a subagent lacks context or leaves scope. Synthesize results before acting; do not concatenate reports.
 ```
 
-Non-blocking subagents (*5.1*). Have the tool that starts a subagent return immediately, deliver each result to the lead in a later user message, and give the lead a separate wait tool. The model still often chooses to wait; the savings come from the runs where it carries on. Use a fresh-context verifier for consequential long runs or subjective quality gates. Do not require a committee for routine bounded work. Per-subagent model and effort selection belongs to the Fable policy in `model-routing`.
+Non-blocking subagents (*5.1*). Have the tool that starts a subagent return immediately, deliver each result to the lead in a later user message, and give the lead a separate wait tool. The model still often chooses to wait; the savings come from the runs where it carries on. Use a fresh-context verifier for consequential long runs or subjective quality gates. Do not require a committee for routine bounded work.
 
 ## Memory, Compaction, and Context
 

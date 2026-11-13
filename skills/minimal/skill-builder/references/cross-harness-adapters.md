@@ -1,6 +1,6 @@
 # Harness Adapters
 
-Use this before adding syntax or behavior that may belong only to Claude Code or Codex. The portable package uses the documented shared format. Optional adapters add native behavior without becoming required for the task's meaning or authority boundary. The [source guide](skill-docs.md) and [validator contract](validation.md) own name, description, and metadata format rules; this file covers what differs between harnesses.
+Use this before adding syntax or behavior that may belong only to Claude Code or Codex. The portable package uses the documented shared format. Optional adapters add native behavior without becoming required for the task's meaning or authority boundary. The [validator contract](validation.md) owns name, description, and metadata format rules; this file covers what differs between harnesses.
 
 ## Loading And Discovery
 

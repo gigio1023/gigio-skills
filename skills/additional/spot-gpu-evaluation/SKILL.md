@@ -1,7 +1,7 @@
 ---
 name: spot-gpu-evaluation
 description: >
-  Plan and operate LLM and agent evaluation runs on preemptible or spot GPU instances: spot versus on-demand placement, restart-path measurement, an external restarter with holds, guest shutdown, resume, and end handlers, continuous result publication, preemption-aware scoring, light monitoring, and cost per completed episode. Use for "run the eval on spot GPUs", "the spot node keeps getting preempted", "is spot worth it for this benchmark", "스팟 GPU로 평가 돌려줘", "선점돼도 이어서 돌게 해줘". Starts or stops billable instances only on request. NOT for training or fine-tuning (ml-experiment), campaign state across runs (evaluation-operations), what an eval measures (evaluation-design), or capacity under load (load-testing).
+  Plan and operate LLM and agent evaluation runs on spot or preemptible GPUs: spot versus on-demand placement, restart-path measurement, an external restarter with holds, resume and end handlers, continuous result publication, and preemption-aware scoring. Use for "run the eval on spot GPUs", "the spot node keeps getting preempted", "스팟 GPU로 평가 돌려줘", "선점돼도 이어서 돌게 해줘".
 ---
 
 # Spot GPU Evaluation
@@ -12,7 +12,7 @@ The method applies to any provider with interruptible capacity: Nebius preemptib
 
 ## Scope and authority
 
-- Evaluation workloads only: serving a model and running benchmark episodes against it. Training and fine-tuning, with their checkpoints, optimizer state, and data progress, belong to `ml-experiment`. Campaign bookkeeping across many runs belongs to `evaluation-operations`; this skill supplies the node-level operation those runs depend on.
+- The workload is evaluation: serving a model and running benchmark episodes against it, at the level of one node and its runs.
 - Creating, starting, and stopping instances, disks, buckets, and addresses spends money, and deleting a disk is irreversible. Act within the user's grant: budget, hourly price cap, regions, instance types, and stop rules. A status question does not authorize a start. When a price cap exists, read the current spot price before each start.
 - Keep GPUs stopped whenever they are not serving or running evaluations, including while waiting for a decision, a code change, or a review. Place the holds described below before stopping.
 - Record instance IDs, addresses, bucket names, account names, and prices in the project's private run record. Shared reports carry the method and the measurements without them.
@@ -40,13 +40,13 @@ Read [placement](references/placement.md) for the formulas, retry-budget policie
 
 ## Qualify the node before the real run
 
-Run these on the first node and record the results before dispatching a scored run:
+Before a scored run, these checks on the first node catch most surprises; skip what the run does not need:
 
 1. **Platform features.** Check what the benchmark needs: `/dev/kvm` and `vmx` or `svm` CPU flags for VM-based targets, a Docker daemon the harness controls, systemd, and root. Probe on the node; provider documentation often omits these.
 2. **Disk throughput.** Measure cold reads of the checkpoint with `scripts/disk_read_throughput.sh`, single and parallel streams. Documented figures for network disks can be off by more than 2x.
 3. **Startup breakdown.** Time a cold start and a warm start stage by stage, as in [restart path](references/restart-path.md).
 4. **Forced stop with a live run.** Stop the instance mid-episode without a hold. Check that the shutdown hook ran within the notice window, partial episodes were salvaged and marked, the restarter started the instance, the run resumed, and records written late reached object storage after reboot. Then stop again during boot resume.
-5. **Records round trip.** Pull the run from object storage into an empty directory and confirm every episode can be reconstructed from what was published. A readiness verdict on the evaluation itself belongs to `evaluation-audit`.
+5. **Records round trip.** Pull the run from object storage into an empty directory and confirm every episode can be reconstructed from what was published.
 
 Write stop rules into the run record before starting, for example: hold and report after 45 minutes of failed starts, after two preemptions before the server becomes healthy, or after three preemptions before 20 episodes finish.
 
@@ -97,22 +97,9 @@ Bind model servers to loopback with an API key and reach them through SSH tunnel
 
 Compute bills while the instance runs; disks, reserved addresses, and the restarter bill while it is stopped. Dynamic spot prices can change during a run, so record the price at each start and report spend as a range. Compare options by cost per completed, uninterrupted episode, including startup, failed restarts, and lost partial episodes. Before self-hosting a model that a hosted API also serves, compare blended per-token prices with the workload's real share of cached input. Read [cost](references/cost.md).
 
-## Checklist
+## Ending a run
 
-Before the first scored run:
-
-- [ ] Placement decision with D, τ, S, and the retry-budget policy written down
-- [ ] Platform features probed on the node
-- [ ] Disk throughput measured; checkpoint on a durable disk and hash-verified
-- [ ] Cold and warm startup breakdown recorded
-- [ ] Restarter on a reachable non-preemptible host with a least-privilege account; holds tested
-- [ ] Shutdown hook, boot resume, publication follower, idle guard, and end handler installed and dry-run tested
-- [ ] Forced stop with a live run passed; run pulled from object storage and reconstructed
-- [ ] Stop rules, price cap, and deadline written in the run record
-- [ ] Monitor running with transition alerts and no workstation dependency
-- [ ] Event log started
-
-At the end: the end handler published with nothing pending, both holds are placed, the instance is STOPPED, spend is recorded, and unfinished episodes are listed.
+At the end, the end handler has published with nothing pending, both holds are placed, the instance is STOPPED, spend is recorded, and unfinished episodes are listed.
 
 ## Resources
 

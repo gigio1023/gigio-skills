@@ -1,6 +1,6 @@
 # Skills CLI Usage
 
-Read this before each installation. It defines how target agents are selected and the live CLI checks needed to keep installation behavior aligned with the npm release used for that operation.
+Target selection and the live CLI checks that keep installation behavior aligned with the npm release used for an operation.
 
 ## Resolve The Stable CLI
 
@@ -15,7 +15,7 @@ test "$(npx --yes "skills@$skills_cli_version" --version)" = "$skills_cli_versio
 npx --yes "skills@$skills_cli_version" --help
 ```
 
-The CLI runs under Node, and each release declares its minimum in `engines.node`; read it with `npm view "skills@$skills_cli_version" engines`. Releases 1.5.23 through 1.7.1 declare `>=22.20.0` (read from their published `package.json` on 2026-10-12). Stop and report an older Node rather than upgrading it.
+The CLI runs under Node, and each release declares its minimum in `engines.node`; read it with `npm view "skills@$skills_cli_version" engines`. Stop and report an older Node rather than upgrading it.
 
 Require live help to expose `add`, `--global`, repeatable `--agent`, repeatable `--skill`, `--yes`, `--copy`, and JSON listing. Stop rather than adapting an unknown interface from memory. Do not opt into a snapshot or prerelease unless the user explicitly requests that separate trust boundary.
 

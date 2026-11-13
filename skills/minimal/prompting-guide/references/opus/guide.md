@@ -35,7 +35,6 @@ Keep domain knowledge, exact syntax, permission boundaries, and required output 
 | Write a new prompt | The [prompt template](../../assets/opus/prompt.template.md), then only the patterns the workload needs |
 | Migrate from Opus 5 or an earlier model | [Runtime and migration](runtime-and-migration.md), then the removal list above |
 | Edit CLAUDE.md, a skill, or a subagent definition that runs on Opus | [Host notes](host-notes.md) |
-| Check a claim or refresh sources | [Source notes](source-notes.md) |
 
 ## Make The Change
 
@@ -43,16 +42,12 @@ Establish the target model, its effort, the host, and whether a person is presen
 
 Add a clause only for an observed symptom or a behavior the workload will certainly hit, such as an unattended multi-part run. Each pattern names its costs and placement; honor both. A clause that must be present from the session's first request, such as the stop policy or a send-to-user tool, cannot be patched in mid-conversation without invalidating earlier thinking blocks.
 
-Treat effort as a setting to measure, not a prompt problem. The 5.5 default is `medium` where Opus 5's is `high`; level names do not transfer between models, and 5.5 thinks more per turn than Opus 5 at the same level, most of all at `xhigh` and `max`. Choosing a subagent's model and effort belongs to the routing skill or policy in force, such as the Fable policy in `model-routing` when Fable leads, not to this guide.
+Treat effort as a setting to measure, not a prompt problem. The 5.5 default is `medium` where Opus 5's is `high`; level names do not transfer between models, and 5.5 thinks more per turn than Opus 5 at the same level, most of all at `xhigh` and `max`.
 
 ## Deliver
 
 - **New prompt:** the prompt, the settings and tools it assumes, and the symptom each model-specific clause addresses.
 - **Review:** the most consequential issue first, with a minimal revision.
-- **Migration:** removed legacy instructions, added 5.5 clauses, and request or loop changes as three separate lists. For code changes to API calls, use the `claude-api` skill where it is available (`/claude-api migrate` in Claude Code) rather than editing by hand from this guide.
+- **Migration:** removed legacy instructions, added 5.5 clauses, and request or loop changes as three separate lists.
 
 State what was checked statically and which behavior is untested. Model trials and eval suites run only on request. When requested, run the same cases at the intended effort, include a long unattended case if the prompt governs one, grade the final artifact rather than the transcript, and record tool calls and tokens for clauses known to add them.
-
-## Neighboring Skills
-
-The Fable guide (`references/fable/guide.md`) owns Fable and Mythos targets. The two model lines changed in different directions, so do not port a clause between them unmeasured. `frontend-design` owns frontend design decisions; this guide covers only the Opus 5.5 default-style tendency. `skill-builder` owns making one skill portable across harnesses.

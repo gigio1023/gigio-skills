@@ -1,6 +1,6 @@
 # Opus Symptom Patterns
 
-Each section starts from what you observe, names the layer that fixes it, gives a clause where prompt text helps, and states the clause's costs and placement. The clauses are original adaptations of Anthropic's [Opus 5.5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5) and [Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5) prompting pages, not Anthropic's text; each section links the official wording. Use the section that matches the behavior in front of you and reconcile it with the existing instructions. Do not concatenate them into one prompt.
+Each section starts from what you observe, names the layer that fixes it, gives a clause where prompt text helps, and states the clause's costs and placement. The clauses are original adaptations of Anthropic's [Opus 5.5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5) prompting page, not Anthropic's text; each section links the official wording. Use the section that matches the behavior in front of you and reconcile it with the existing instructions. Do not concatenate them into one prompt.
 
 Beta header names for the features below are listed once in [runtime and migration](runtime-and-migration.md#beta-headers).
 
@@ -19,17 +19,6 @@ Opus 5.5 behaviors:
 - [Instructions inside pasted text](#instructions-inside-pasted-text)
 - [Dense visual inputs](#dense-visual-inputs)
 - [Generic frontend output](#generic-frontend-output)
-
-Carried from Opus 5:
-
-- [Long user-facing responses](#long-user-facing-responses)
-- [Narration cadence](#narration-cadence)
-- [Long written documents](#long-written-documents)
-- [Over-verification](#over-verification)
-- [Scope expansion](#scope-expansion)
-- [Subagent over-spawning](#subagent-over-spawning)
-- [Correction narration](#correction-narration)
-- [Under-reporting in code review](#under-reporting-in-code-review)
 
 ## Turns Cost More Than On Opus 5
 
@@ -189,64 +178,4 @@ Asked for frontend work without design direction, 5.5 falls back on a few defaul
 Build a one-page portfolio in plain HTML and CSS with placeholder content. Avoid a cream or off-white background, italic accent words inside headlines, numbered section labels like 01/02/03, monospace label text, and pill-shaped buttons.
 ```
 
-The list counters defaults; it is not a design direction. Real design decisions belong to the project's direction or to `frontend-design`.
-
-## Carried From Opus 5
-
-Anthropic states that Opus 5 prompts perform well on 5.5 and that the [Opus 5 patterns](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5) remain a reasonable starting point. The 5.5 pages do not restate these behaviors, so confirm a symptom on 5.5 before adding its clause.
-
-### Long User-Facing Responses
-
-[Official section](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5#response-length-and-verbosity). Effort changes how much the model thinks, not reliably how much it says. Prompt for length directly:
-
-```text
-Keep replies focused and short. Hold caveats and disclaimers to a line, spend the response on the main answer, and give a high-level explanation unless the user asks for depth.
-```
-
-In a long system prompt, repeat a one-line length preference near the end.
-
-### Narration Cadence
-
-[Official section](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5#user-facing-progress-updates). Opus 5 narrates readily during agentic work. Describe the cadence and shape you want, in either direction; positive examples of the desired style work better than lists of what not to say. On 5.5, combine this with the levers in [long turns look silent](#long-turns-look-silent), because the notes now travel in thinking blocks.
-
-### Long Written Documents
-
-[Official section](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5#written-deliverable-length). Files the model writes, such as reports and Markdown summaries, tend to run long:
-
-```text
-Size written documents to the task: cover the substance without filler sections, repeated summaries, or boilerplate.
-```
-
-### Over-Verification
-
-[Official section](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5#task-scope-and-over-verification). Remove explicit verification steps, verifier subagents, "double-check" reminders, and harness scaffolding that adds separate verification passes. The model already checks and corrects its work; the extra instructions compound with that behavior and add tokens without improving results.
-
-### Scope Expansion
-
-[Official section](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5#task-scope-and-over-verification). The model can add unrequested steps or reinterpret the task. For narrow tasks:
-
-```text
-Keep to the requested scope. Settle routine choices yourself; check in only when two plausible readings of the request would lead to materially different work. If you think the request is mistaken or see a better route, note it in one sentence, then carry out the request as given without silently narrowing or expanding it. Complete all of it, and take no action clearly outside it.
-```
-
-### Subagent Over-Spawning
-
-[Official section](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5#controlling-subagent-spawning). Opus 5 delegates readily, which multiplies cost and time on small tasks. Give criteria, set deterministic caps, or both:
-
-```text
-Use a subagent only for a large, independent piece of work that can run in parallel, such as a broad investigation across many files. Handle anything you can finish in a few tool calls yourself, never spawn a subagent to check your own work, and use one subagent rather than several when one suffices.
-```
-
-Claude Code and Agent SDK caps are in [host notes](host-notes.md#settings-an-author-controls).
-
-### Correction Narration
-
-[Official section](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5#self-correction). The model narrates corrections to earlier statements more than earlier models did:
-
-```text
-Correct an earlier statement only when the error would change the user's code, conclusions, or decisions; state the correction briefly and continue. Fix inconsequential slips without comment.
-```
-
-### Under-Reporting In Code Review
-
-[Official section](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5#capability-improvements). The model reviews with high precision and follows severity filters literally, so "only report high-severity issues" or "be conservative" yields fewer findings. Ask for every finding with its severity and confidence, and filter in a separate pass. Early testers of 5.5 reported more bugs caught and fewer false alarms than on Opus 5, which makes a report-everything prompt cheaper to filter.
+The list counters defaults; it is not a design direction.
