@@ -2,6 +2,7 @@
 name: interview
 description: >
   Interview or grill the user until an idea, plan, system change, research direction, or decision is clear enough to act on, ending in a brief the user approves. Use when the user asks to be questioned: "interview me", "grill me on this plan", "ask me questions until this is clear", "인터뷰해줘", "질문하면서 정리해줘".
+disable-model-invocation: true
 ---
 
 # Interview

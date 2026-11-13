@@ -7,6 +7,7 @@ description: >
   re-check. Also checks review comments from people. Use for "cross-check
   this PR with another model", "get a second opinion on this design", or
   "교차 검토".
+disable-model-invocation: true
 ---
 
 # Review Panel

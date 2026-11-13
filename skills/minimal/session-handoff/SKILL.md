@@ -1,14 +1,11 @@
 ---
 name: session-handoff
 description: >
-  Use only when the user asks to write a handoff, continuation prompt, or
-  session transfer file so another agent, model, or harness can continue the
-  current work, or names session-handoff. Writes one short file under
-  `.handoff/` that the successor executes: what was being done, what comes
-  next, and the questions to put to the user. NOT when the user gives the path
-  of an existing handoff file or says to continue from one: that asks you to
-  carry out the file's task, not to write or improve a handoff. Never activate
-  because a session has grown long or context is running low.
+  Write a handoff, continuation prompt, or session transfer file so another
+  agent, model, or harness can continue the current work. Writes one short
+  file under `.handoff/` that the successor executes: what was being done,
+  what comes next, and the questions to put to the user.
+disable-model-invocation: true
 ---
 
 # Session Handoff
