@@ -1,6 +1,6 @@
 # Global instruction files
 
-The author's user-scope instruction files for Claude Code and Codex, kept here so they have history and travel between machines. They hold only neutral operating rules: a subagent fan-out budget (Claude Code), a rule on scope, questions to the user, and delegation (Codex), the default agent targets for skill installs, a pointer to `coding-standards` for code and tests, and the writing profile of `copydesk`. Anyone adopting the pack can copy them as a starting point and replace the parts that are personal taste.
+The author's user-scope instruction files for Claude Code and Codex, kept here so they have history and travel between machines. They hold only neutral operating rules: a subagent fan-out budget (Claude Code), a rule on scope and questions to the user (Codex), the default agent targets for skill installs, a default of verifying code with real runs, and the writing profile of `copydesk`. Anyone adopting the pack can copy them as a starting point and replace the parts that are personal taste.
 
 | File | Loaded by | Profile delivery |
 |---|---|---|

@@ -1,6 +1,6 @@
 # Opus 5.5 Runtime And Migration
 
-Verified against Anthropic documentation on 2026-09-23. This reference covers the runtime facts a prompt author needs in order to put each fix in the right layer. For code changes to API calls, use the `claude-api` skill where it is available: in Claude Code, `/claude-api migrate this project to claude-opus-5-5` swaps model IDs, applies breaking parameter changes and effort calibration, asks for the migration scope before editing, and produces a manual checklist. Recheck the linked pages before changing an integration.
+The runtime facts a prompt author needs to put each fix in the right layer. Recheck the linked pages before changing an integration.
 
 ## Model Facts
 

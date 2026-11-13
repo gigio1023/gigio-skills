@@ -16,7 +16,7 @@ Resolve installed paths and symlink targets before editing:
 - A development symlink may make repository edits live immediately; respect that scope and do not silently repoint it.
 - Per-skill links and shared-directory links are both valid. Preserve topology; do not replace an entire agent skill directory to expose one change.
 
-Use install-skill-pack for requested remote-pack installations. Source editing does not itself authorize replacing global packages.
+Installing a pack is a separate request; source editing does not itself authorize replacing global packages.
 
 ## Local-Only Migration
 

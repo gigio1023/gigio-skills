@@ -2,7 +2,7 @@
 
 Adapted from the `using-git-worktrees` skill (`skills/using-git-worktrees/SKILL.md`) in [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent, MIT License, version `v6.1.1`, retrieved 2026-07-11. The license text is reproduced below.
 
-The adaptation retains the upstream isolation detection, submodule guard, ignore check, setup baseline, and failure reporting. It replaces the upstream native-first placement rule with an explicit-choice-first rule and a project-local Git default. This keeps manually created worktrees under `.worktrees/` instead of silently spreading them across sibling or global directories. It removes framework branding and repeated red-flag sections, makes commit and tracked-file authority explicit, avoids assuming package managers from generic manifests, and distinguishes externally managed worktrees from ones created by this workflow.
+The adaptation retains the upstream isolation detection, submodule guard, ignore check, and failure reporting, and drops the mandatory setup baseline. It replaces the upstream native-first placement rule with an explicit-choice-first rule and a project-local Git default. This keeps manually created worktrees under `.worktrees/` instead of silently spreading them across sibling or global directories. It removes framework branding and repeated red-flag sections, makes commit and tracked-file authority explicit, avoids assuming package managers from generic manifests, and distinguishes externally managed worktrees from ones created by this workflow.
 
 ## Upstream License
 

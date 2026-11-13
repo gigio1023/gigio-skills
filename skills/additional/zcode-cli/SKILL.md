@@ -1,7 +1,7 @@
 ---
 name: zcode-cli
 description: >
-  Configure API-key access and run authorized tasks through Zcode's official CLI with an available model, supported reasoning options, and resumable sessions; use for "use Zcode CLI", "set up GLM with an API key in Zcode", "delegate this to Zcode", "Zcode GLM API key 설정", or "Zcode로 위임해줘". NOT for automatic model calls from a Zcode mention, reading stored conversations from another agent (read-agent-sessions), or delegation through Codex or Cursor.
+  Configure API-key access and run tasks through Zcode's official CLI with an available model, reasoning level, and resumable sessions. Use for "use Zcode CLI", "set up GLM with an API key in Zcode", "delegate this to Zcode", "Zcode GLM API key 설정", or "Zcode로 위임해줘".
 ---
 
 # Zcode CLI
@@ -11,7 +11,7 @@ Set up the requested Zcode connection or run a task with an explicit model selec
 ## Working path
 
 1. Establish the task, workspace, permitted effects, requested model and reasoning level, and expected result from the user's request. Inspection or discussion of this skill does not authorize a model call. Reuse existing authority for the requested work.
-2. Locate the official CLI and inspect its version, `--help`, and `doctor --json`. Read [the CLI contract](references/cli-contract.md) for the verified commands, macOS bundled-runtime fallback, and version-specific limitations. Do not replace an installed official runtime with a community CLI merely because `zcode` is absent from PATH.
+2. Locate the official CLI and inspect its version, `--help`, and `doctor --json`. On macOS without `zcode` on PATH, the CLI ships inside the Desktop app as `node /Applications/ZCode.app/Contents/Resources/glm/zcode.cjs` and needs the provider-file workaround in [runtime discovery](references/cli-contract.md#runtime-discovery); do not swap in a community CLI. [The CLI contract](references/cli-contract.md) holds the verified commands and version-specific limits.
 3. Inspect the runtime's available model catalog and authentication status through its supported interface. For API-key setup, read [the supplied-key recipe](references/cli-contract.md#supplied-api-keys), establish whether the key belongs to Coding Plan or the standard API, and use the matching template and access type. Ask for the intended service if the request does not establish it; the key's shape does not decide it. Preserve existing accounts and provider configuration, using a separate private profile when requested. A Desktop login, a stored default, and a successful `doctor` check do not establish usable model access.
 4. Select the requested provider, model, and supported reasoning option for the intended session. Read back an existing session's selection before running the task. For a new headless session seeded from a private profile, follow [first-call verification](references/cli-contract.md#first-call-verification) and read back the returned session afterward. For another model, inspect its supported options instead of reusing GLM settings. If the user omits a choice, honor an established preference or reuse a valid existing selection; if neither exists, use the default below and ask for the model only when the catalog does not offer it. Do not silently substitute an unavailable requested model or reasoning level.
 5. Choose the permission mode explicitly and apply supported tool exclusions where needed. Read-only work uses plan mode with the restrictions described in the reference. Editing uses the mode and approval interaction permitted by the task. Headless prompts default to `yolo` in the inspected version, so never omit `--mode` or broaden permissions to make an unattended run proceed.
@@ -26,16 +26,8 @@ Prefer the TUI for interactive selection and normal approvals. Use `app-server` 
 
 Resume related work by its exact returned session ID after checking the workspace and selection again. Start a new session for independent work. Avoid `--continue` when concurrent work could make the latest session ambiguous, and never run two continuations of one session at once.
 
-## Authority and records
+## Boundaries
 
-Keep concurrent writers in separate authorized workspaces or assign disjoint files. A worktree isolates Git changes; it does not contain shell commands, MCP tools, network access, or shared Zcode state. Preserve the host's sandbox and approvals. A tool exclusion removes a whole named tool in this CLI; it is not a command-pattern allowlist.
+Keep concurrent writers in separate workspaces or disjoint files; a tool exclusion removes a whole named tool, not a command pattern. Use the masked login flow or a supplied key in a private provider profile, keep credential values out of arguments and prompts, and never extract Desktop credentials or swap providers to get past a failure. When authentication or model access fails, report the observed error instead of guessing its cause.
 
-Use the normal masked login flow or a supplied key in an authorized private provider profile. Do not extract Desktop credentials, copy private authentication headers, change entitlement flags, log secrets, or replace a provider to get past a failure. If authentication, model access, or a required permission cannot be established, stop the affected launch and report the observed error without guessing its cause. Retry only after an identified recoverable condition changes.
-
-Prompts, attachments, and tool results may be sent to the selected provider and retained in Zcode's session storage. Keep credential values out of arguments and prompts. Keep task prompts and diagnostic logs outside this replaceable skill package, restrict access, and inspect them before sharing. Configuration changes, installs, login/logout, publication, and destructive actions need the corresponding task authority; a request to inspect models does not grant them.
-
-## Completion
-
-Return the requested answer or artifact first. Include the CLI version, requested and observed model selection, reasoning level when reported, permission mode, session ID, process or turn outcome, relevant validation, and any remaining blocker. Label a local selection readback as configuration evidence; claim a successful model call only after receiving its actual response. Do not infer subscription billing or entitlement from a model label or successful configuration write.
-
-When maintaining this package, validate metadata, resource links, source-backed commands, and discovery. Documentation changes do not require paid model trials. Report package checks, exercised CLI operations, and live model execution separately.
+Report the session ID and the observed model selection with the result. A local selection readback is configuration evidence; claim a working model call only after an actual response.

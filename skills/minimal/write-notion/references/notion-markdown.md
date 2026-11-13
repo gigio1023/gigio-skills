@@ -1,17 +1,6 @@
 # Notion Markdown Mechanics
 
-Read this before creating or editing a page through the Notion MCP tools. Tool names, parameters, and syntax were checked against the Notion MCP server's tool schemas and its enhanced Markdown specification (the MCP resource `notion://docs/enhanced-markdown-spec`, read with `notion-fetch`) on 2026-10-07. Failures marked "observed" come from use before 2026-10-07 and are not documented by Notion. Tool namespaces differ by harness and parameters can change, so confirm against the live schema before relying on a detail.
-
-## Contents
-
-- Tools
-- Read before editing
-- Create a page
-- Edit content
-- Syntax
-- Upload a figure
-- People mentions
-- Asynchronous writes
+Syntax follows the Notion MCP tool schemas and the enhanced Markdown specification, the MCP resource `notion://docs/enhanced-markdown-spec` read with `notion-fetch`. Failures marked "observed" come from use and are not documented by Notion. Tool namespaces differ by harness and parameters can change, so confirm against the live schema.
 
 ## Tools
 
@@ -20,7 +9,7 @@ Read this before creating or editing a page through the Notion MCP tools. Tool n
 | `notion-fetch` | Read a page before editing; read the Markdown specification resource |
 | `notion-create-pages` | Create a page under a parent page, a database, or as a private draft |
 | `notion-update-page` | Edit content (`update_content`, `insert_content`, `replace_content`) or properties (`update_properties`) |
-| `notion-create-file-upload` | Get a one-time upload URL for one figure |
+| `notion-create-file-upload` | Get a one-time upload URL for one file |
 | `notion-get-users` | Look up user IDs for mentions |
 | `notion-get-async-task` | Wait for an asynchronous create or update before verifying |
 
@@ -35,13 +24,13 @@ In fetched Markdown, an uploaded image appears as `![caption](notion-file-block:
 - For a named destination, pass `parent` with `type: "page_id"`. For a database, fetch it first and use its data source and exact property names.
 - With no destination named, use `creation_mode: "draft"`, which creates a private page; tell the user it is private and offer to move it.
 - Put the title in `properties.title`, not as a heading at the top of `content`.
-- Write the whole page in one `content` string when you can. Uploaded figures can be embedded in that same string.
+- Write the whole page in one `content` string when you can. Uploaded images can be embedded in that same string.
 
 ## Edit Content
 
 ### update_content
 
-Pass `content_updates` as a list of `{old_str, new_str}` pairs. Use the smallest `old_str` that matches exactly once. Set `replace_all_matches: true` only when every occurrence should change. This is the right command for a changed sentence, number, status word, or table cell.
+Pass `content_updates` as a list of `{old_str, new_str}` pairs. Use the smallest `old_str` that matches exactly once. Set `replace_all_matches: true` only when every occurrence should change. This is the right command for a changed sentence, number, or table cell.
 
 Observed failures:
 
@@ -72,13 +61,11 @@ Change the title of a page outside a database with `properties: {"title": "New t
 
 Indent children with tab characters. Outside code, escape these characters with a backslash when they are literal: the backslash itself, `*`, `~`, the backtick, `$`, `[`, `]`, `<`, `>`, `{`, `}`, `|`, and `^`. The common cases are `~` in a range (`11/02\~11/04`, `3\~5 ms`), `<` or `>` in a comparison (`p99 \< 2 ms`), and `$` in a price (`\$40`). Code spans and code blocks are literal and need no escaping.
 
-Header callout, with each field as its own indented line:
+Callout, with each line indented:
 
 ```markdown
 <callout icon="icons/document_gray" color="gray_bg">
-	**Status**: In Review
 	**Owner**: <mention-user url="user://<user-id>"/>
-	**Reviewer**: api-gateway CODEOWNERS
 	**Updated**: <mention-date start="2026-10-07"/>
 </callout>
 ```
@@ -90,10 +77,10 @@ Nested bullets:
 	- Replaces per-instance counters that over-admit during bursts.
 ```
 
-Toggle heading with a table and an image inside it. The table's rows sit one level deeper than the table tag, and every child of the toggle is indented at least once. Table attributes default to false, so set `header-row="true"` on every table; leave `fit-page-width` unset and size the table with column widths, totaling about 700 on a default-width page (a working value, to confirm on the rendered page):
+Toggle heading with a table and an image inside it. The table's rows sit one level deeper than the table tag, and every child of the toggle is indented at least once. Table attributes default to false, so set `header-row="true"` on every table; leave `fit-page-width` unset and size the table with column widths, totaling about 700 on a default-width page; confirm on the rendered page:
 
 ```markdown
-### Comparison evidence: option measurements {toggle="true"}
+### Option measurements {toggle="true"}
 	<table header-row="true">
 		<colgroup>
 			<col width="200">
@@ -128,11 +115,11 @@ Mentions; the user interface shows the resolved name, so the inner text can be o
 
 Use a date mention for a deadline or meeting date, a page mention for a link to another Notion page, and an ordinary Markdown link for an external URL.
 
-## Upload A Figure
+## Upload An Image
 
-The upload needs a shell with network access, such as `curl`, for the multipart POST. Without one, as in a client with no shell tool, give the PNG to the user and report that the figure is not attached; do not leave a file path in the page.
+The upload needs a shell with network access, such as `curl`, for the multipart POST. Without one, give the file to the user and report that it is not attached; do not leave a file path in the page.
 
-1. Render the figure as a light-theme PNG under 20 MiB, the limit of this single-part upload flow.
+1. Keep the file under 20 MiB, the limit of this single-part upload flow.
 2. Call `notion-create-file-upload` with the filename, such as `{"filename": "limiter-request-flow.png"}`. Omit `content_type` so the type is inferred from the extension.
 3. Send exactly one `multipart/form-data` POST to the returned `upload_url`, with the file in the `file` form field and every header from `upload_headers`:
 
@@ -143,10 +130,10 @@ The upload needs a shell with network access, such as `curl`, for the multipart 
    ```
 
    The headers authorize the upload. Do not paste them into the page, a commit, or the report. The URL is short-lived and accepts only this one file; if it expires, create a new upload.
-4. Embed the figure in `notion-create-pages` content or a `notion-update-page` edit with the `markdown_source` or `suggested_markdown` the upload returns, adding the caption. Only when neither is returned, write `![<caption>](file-upload://<upload-id>)` by hand. After saving, a fetch shows the source as `notion-file-block://...`.
+4. Embed the image in `notion-create-pages` content or a `notion-update-page` edit with the `markdown_source` or `suggested_markdown` the upload returns, adding the caption. Only when neither is returned, write `![<caption>](file-upload://<upload-id>)` by hand. After saving, a fetch shows the source as `notion-file-block://...`.
 5. Fetch and confirm the image block and its caption are present.
 
-To replace a figure, upload the new file, fetch the page, and send `replace_content` with the whole body where only that image's `notion-file-block://` source is swapped for the new upload's returned source and its caption is updated.
+To replace an image, upload the new file, fetch the page, and send `replace_content` with the whole body where only that image's `notion-file-block://` source is swapped for the new upload's returned source and its caption is updated.
 
 ## People Mentions
 

@@ -1,14 +1,11 @@
 ---
 name: pr-review-comment
 description: >
-  Use when the user wants code review findings validated against a Pull Request
-  diff and posted as GitHub inline review comments, including "review and
-  comment", "PR review comment", and "post review". Discovers an installed
-  review skill or accepts supplied candidate findings, verifies code evidence
-  and exact diff targets, previews the payload, and posts only after explicit
-  approval. Works with github.com and GitHub Enterprise through the gh CLI. NOT
-  for review-only feedback with no posting; use a code-review skill. NOT for
-  validating or editing comments already posted on a PR.
+  Validate code review findings against a GitHub Pull Request diff and post them
+  as inline review comments on the exact commit and lines, after the user
+  approves the payload. Works with github.com and GitHub Enterprise through the
+  gh CLI. Use for "review and comment", "PR review comment", "post review", or
+  "PR에 리뷰 코멘트 달아줘".
 ---
 
 # PR Review Comment
@@ -16,7 +13,6 @@ description: >
 ## Outcome Contract
 
 - Outcome: material, code-supported findings attached to the correct diff side and commit, with a review body only when it helps the author act.
-- Source order: user scope, target repo instructions, complete PR metadata and diff, existing review threads, code/callers/tests, candidate reviewer output, tone references.
 - Authorization: collecting and drafting are read-only. Posting, replying, requesting changes, approving, or dismissing reviews are separate external mutations and require the user's explicit approval for that action.
 - Done: posted review is read back from the target host and its URL, frozen head SHA, event, and accepted comment count match the approved payload.
 
@@ -62,22 +58,11 @@ gh api --paginate "repos/{owner}/{repo}/pulls/{number}/reviews?per_page=100"
 
 ### 3. Obtain Candidate Findings
 
-Use the review source the user named, including findings that `review-panel`, when installed, has already judged valid. Otherwise inspect the current harness and installed skills, then choose the strongest applicable code-review skill. Parallel review is useful only when independent correctness, security, or repo-specific reviewers materially expand coverage.
-
-User-provided review text is candidate evidence, not an accepted verdict. It goes through the same validation as delegated findings.
+Use the findings the user supplied or the review source they named; otherwise review the diff yourself. Supplied review text is candidate evidence, not an accepted verdict, and goes through the same validation.
 
 ### 4. Validate Findings
 
-For every candidate:
-
-1. Restate the falsifiable code claim.
-2. Inspect the changed code, nearest caller, relevant test, and repo rule.
-3. Identify the precondition and a concrete failure or counterexample.
-4. Classify it as `valid`, `partial`, `invalid`, or `needs-context`.
-5. Deduplicate findings with the same cause and consequence. A point an existing review thread already makes on the same code is `already-raised`; do not repost it.
-6. Draft only `valid` findings and the supported part of `partial` findings.
-
-Style is not a finding unless it violates a repo rule or creates a material correctness, security, operability, or maintainability cost.
+Check each candidate's claim against the changed code, its callers, tests, and repo rules, and keep only what the code supports, trimming a partly supported finding to its supported part. Merge findings with the same cause, and drop any point an existing review thread already makes on the same code. Style is not a finding unless it breaks a repo rule or carries a real correctness, security, or maintenance cost.
 
 ### 5. Resolve Exact Diff Targets
 
@@ -99,7 +84,9 @@ Each inline draft uses this closed schema:
 - Added or current lines use `RIGHT`; deleted lines use `LEFT`.
 - Omit `start_line` and `start_side` for a single-line comment.
 - Every target must exist in the collected diff. Never guess a line number: a finding without a verified diff target goes to the review body when it materially affects the PR; otherwise discard or file separately.
-- Read `references/comment-format.md` and `references/voice-and-tone.md` before drafting. Keep evidence and fix direction, and remove review-process narration. Mirror the repo's own review conventions (label prefixes such as `Nit:`, formality register) as seen in the threads collected in phase 2.
+- Write each comment as a human reviewer would: the problem, its impact when not obvious, and the fix, with a `suggestion` block only for a small line-level replacement. Comment on the code, not the developer. Leave out severity tags, internal IDs, review headers, tool or methodology narration, and signature footers. Follow the repo's own conventions, such as a `Nit:` prefix, as seen in the threads from phase 2.
+- Use the review body only for merge triage, a material finding that cannot be inline, or a PR-scope question; otherwise leave it empty rather than summarizing the inline comments.
+- Code links use the full 40-character SHA: `https://{host}/{owner}/{repo}/blob/{sha}/{path}#L{start}-L{end}`.
 
 ### 6. Preview And Approve
 
@@ -111,7 +98,7 @@ Show one approval packet:
 - event: `COMMENT`, `REQUEST_CHANGES`, or `APPROVE`
 - every inline path, side, line range, and final body
 - final review body, including why any finding is not inline
-- discarded, `already-raised`, and `needs-context` candidates with reasons
+- discarded and already-raised candidates with reasons
 
 Do not post until the user approves this exact packet. GitHub refuses both `REQUEST_CHANGES` and `APPROVE` on the reviewer's own PR; use `COMMENT` there.
 
@@ -141,14 +128,7 @@ A reply is a separate mutation. Preview the target comment URL and reply text, o
 ## Gotchas
 
 - Never post supplied reviewer output `as-is`. Validate its claim and target.
-- Missing REST `patch` content does not mean unchanged code. Fetch the complete diff or mark the finding `needs-context`.
+- Missing REST `patch` content does not mean unchanged code. Fetch the complete diff or keep the finding out of inline targets.
 - A valid finding can still produce HTTP 422 when `side`, line, or head SHA is stale. Use the exact target schema, final head check, and frozen top-level `commit_id`.
 - Submitted reviews and comments are externally visible and not reliably deletable. Approval applies to the exact payload, not a paraphrased summary.
 - Do not combine `-f` fields with `--input`; post one JSON document.
-
-## Reference Files
-
-| File | Read when | Content |
-|---|---|---|
-| `references/comment-format.md` | Before target resolution and drafting | Inline/body roles, anti-patterns, code link format |
-| `references/voice-and-tone.md` | Before the first draft | Human review voice, examples, posting self-check |

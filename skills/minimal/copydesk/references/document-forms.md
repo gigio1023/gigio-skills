@@ -2,7 +2,7 @@
 
 Use when choosing or revising a document's structure. Begin with the reader's task, genre, and governing template. When that form is unfamiliar, read a real technical exemplar; public source pointers are kept in [writing sources](https://github.com/gigio1023/gigio-skills/blob/main/docs/writing-sources.md).
 
-Use the shared noun-phrase heading, compact-cell, and focused-visual defaults across these forms. Vary the explanation and reading order by purpose. A factual record's brevity is not a reason to omit mechanisms from a guide or reasons from a proposal. [Information design](information-design.md) covers the choice between paragraphs, lists, tables, and visuals.
+Vary the explanation and reading order by purpose. A factual record's brevity is not a reason to omit mechanisms from a guide or reasons from a proposal.
 
 ## Contents
 
@@ -50,8 +50,6 @@ End with the supported engineering implication or next discriminating test, not 
 
 ## Design proposal, RFC, or enhancement proposal
 
-For the design of a module or system, the `design-doc` skill, when installed, owns the document's sections and design content, and this skill writes its prose. The guidance below covers other proposals, and design documents when `design-doc` is not installed.
-
 The reader needs to assess a change before treating it as implementation fact. State the current behavior or constraint, the proposed behavior, and why the change is needed. Explain the mechanism in enough detail to reveal its trade-offs: responsibilities, interfaces, state, data flow, compatibility, and failure behavior as applicable.
 
 Give a concrete usage example before reference-level detail when it helps the reader understand the new interface. Then specify the semantics that the example cannot settle: ordering, lifetime, ownership, concurrency, error handling, and migration. Keep guide-level explanation and exact specification aligned. Rust RFC 2394 demonstrates this two-level structure; its historical syntax is not a current API reference.
@@ -64,7 +62,7 @@ Keep unresolved questions that affect the design, with the evidence or decision 
 
 ## Delivery brief
 
-Use a delivery brief for customer- or deadline-bound product work, when the people who build, accept, and decide need one short page that says what will be delivered, by when, and how acceptance will be judged. It is not a product requirements spec or a set of user stories, and it never replaces the design document: the brief states the promise, and the design document, written with `design-doc` when installed, states how the system meets it. The brief links the technical design and the plan instead of restating them.
+Use a delivery brief for customer- or deadline-bound product work, when the people who build, accept, and decide need one short page that says what will be delivered, by when, and how acceptance will be judged. It is not a product requirements spec or a set of user stories, and it never replaces the design document: the brief states the promise, and the design document states how the system meets it. The brief links the technical design and the plan instead of restating them.
 
 Give each part only the length its content needs:
 
@@ -84,7 +82,7 @@ The reader needs a usable mental model of an existing system. Start with the bou
 
 Explain the invariants and transitions: what is stored durably, what is only in memory, when ownership changes, what can be repeated, and how the system behaves when a dependency is unavailable. Distinguish control flow from data movement. Show trust boundaries when security or access determines the interaction. A box labeled “security” cannot stand in for an actual authorization check.
 
-Use a diagram where spatial relationships reduce prose. Label arrows with the action or data, then explain only what the figure cannot show. Keep the diagram's names consistent with the code and reader-facing terminology. Do not invent components to make a diagram look balanced or claim current behavior from an old design document without checking the implementation.
+Keep names consistent with the code and reader-facing terminology. Do not claim current behavior from an old design document without checking the implementation.
 
 ## Architecture decision record
 

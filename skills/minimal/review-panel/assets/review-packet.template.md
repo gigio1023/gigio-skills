@@ -16,7 +16,7 @@ You are reviewing an artifact you did not write, in a context kept separate from
 ## Axis and criteria
 
 - Axis: [fidelity: does it do what [intent source at revision] asks | standards: does it meet the criteria below]
-- Criteria: [quoted or summarized from the owning skill, or stated directly]
+- Criteria: [quoted or summarized criteria]
 
 ## Current rules that override older records
 

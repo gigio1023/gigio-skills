@@ -13,6 +13,6 @@ Last reviewed 2026-10-03.
 
 Users start a successor with the handoff path alone. A path to a Markdown file with headings reads like a document to review, and successors have answered it by editing the handoff instead of doing the work. The bold opening line names the file as the reader's task and forbids editing it, and the description's NOT clause keeps a pasted path from loading this skill.
 
-## Questions Borrowed From find-unknowns
+## Questions for the User
 
-The Questions for the User table applies the find-unknowns question rules without requiring that skill: ask only what would change the work, never ask what inspection can settle, offer concrete options with a recommended default, and record what happens without an answer instead of treating silence as consent.
+The Questions for the User table follows the pack's question rules: ask only what would change the work, never ask what inspection can settle, offer concrete options with a recommended default, and record what happens without an answer instead of treating silence as consent.

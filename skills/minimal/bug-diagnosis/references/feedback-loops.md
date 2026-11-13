@@ -19,7 +19,7 @@ Pick the cheapest loop that drives the real failing path and checks the reported
 
 ## Replay agent and pipeline failures
 
-A rare failure in an agent or model pipeline often becomes deterministic once the stochastic step is fixed. Save the trajectory, tool results, and model responses from a failing run, then replay from the step before the failure with recorded responses in place of live model calls. If the failure persists under replay, the cause is in the surrounding code, such as parsing, state handling, truncation, retries, or tool wiring, and the replay is a fast loop for it. If the failure disappears under replay and depends on what the model sampled, the question has become a rate across samples, which belongs to `ml-experiment`.
+A rare failure in an agent or model pipeline often becomes deterministic once the stochastic step is fixed. Save the trajectory, tool results, and model responses from a failing run, then replay from the step before the failure with recorded responses in place of live model calls. If the failure persists under replay, the cause is in the surrounding code, such as parsing, state handling, truncation, retries, or tool wiring, and the replay is a fast loop for it. If the failure disappears under replay and depends on what the model sampled, the question has become a rate across samples, which needs a sampled comparison rather than a mechanism hunt.
 
 ## Improve the loop
 

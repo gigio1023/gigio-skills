@@ -61,6 +61,6 @@ For repeated publication of a redacted derivative, a source-to-output script can
 
 ## Delivery
 
-Inspect the actual destination after rendering, conversion, or publication: complete content, visible row and column labels, readable cells, list hierarchy, equations, figure size and numbering, captions, and working source links. For a collapsible document, check the initial view and representative expanded content. Distinguish a retrieved-content check from a visual check, and never report a rendered view as inspected when only its source was read. Re-fetch what was published and diff it against the source; a Notion replacement of 192 items once applied only 100 silently.
+After publication, re-fetch what was published and diff it against the source; a Notion replacement of 192 items once applied only 100 silently. Report only what was actually checked.
 
 Preparing a document does not by itself authorize sending or publication. An explicit request to send, publish, or update a shared copy supplies authorization within that audience and destination; reuse it. Ask only about a consequential missing recipient, exposure, or authority, and finish the authorized preparation first so the user can review the concrete result. Return the artifact, its path or URL, and any material delivery limitation. Preserve a source copy when creating a redacted derivative; edit the original when that is the requested work.

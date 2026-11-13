@@ -1,6 +1,6 @@
 # Goal Mode Prompts
 
-Read this with the target family's guide when the user wants a Codex Goal mode or Claude Code `/goal` prompt explained, drafted, reviewed, translated, set, or handed to the other harness. It is not for ordinary objectives, acceptance criteria, task prompts, implementation plans, or autonomous work without explicit Goal mode intent. This reference absorbed the former `goal-prompting` skill on 2026-10-12.
+Read this with the target family's guide when the user wants a Codex Goal mode or Claude Code `/goal` prompt explained, drafted, reviewed, translated, set, or handed to the other harness. It is not for ordinary objectives, acceptance criteria, task prompts, implementation plans, or autonomous work without explicit Goal mode intent.
 
 Turn intent into a goal prompt that the named harness can pursue and judge honestly. Support advice, drafting, review, cross-harness translation, and explicit activation without forcing one workflow on every request.
 
@@ -13,8 +13,6 @@ Turn intent into a goal prompt that the named harness can pursue and judge hones
 5. Write the smallest contract that preserves the outcome, evidence, material boundaries, and real stop conditions. Keep a direct goal payload below the target's documented limit. For domain-specific proof or a file-backed contract, read [goal-patterns.md](goal-patterns.md).
 6. Audit the draft for false completion, unverified assumptions, impossible checks, hidden side effects, and target-specific evaluator blind spots.
 7. Return the requested artifact. Activate it only when the user explicitly asked to set or start the goal and the current session exposes an agent-callable goal-state capability.
-
-For the dated official sources and reviewed community patterns behind these rules, read [source-notes.md](source-notes.md).
 
 ## Goal Fit
 

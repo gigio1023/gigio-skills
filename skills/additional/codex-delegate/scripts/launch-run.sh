@@ -12,7 +12,7 @@ usage: launch-run.sh --workspace DIR --packet FILE --run-dir DIR (--sandbox MODE
 Options:
   --model MODEL              new-thread default: gpt-6-astra
   --effort EFFORT            new-thread default: xhigh
-  --fast-requested yes|no    new-thread default: no
+  --fast-requested yes|no    new-thread default: yes
   --network-access yes|no    new-thread default: no; yes requires workspace-write
   --ignore-user-config yes|no
                               new-thread default: no
@@ -247,7 +247,7 @@ else
   [ "$SANDBOX_SET" = yes ] || fail "--sandbox is required for a new thread"
   [ "$MODEL_SET" = yes ] || MODEL=gpt-6-astra
   [ "$EFFORT_SET" = yes ] || EFFORT=xhigh
-  [ "$FAST_REQUESTED_SET" = yes ] || FAST_REQUESTED=no
+  [ "$FAST_REQUESTED_SET" = yes ] || FAST_REQUESTED=yes
   [ "$NETWORK_ACCESS_SET" = yes ] || NETWORK_ACCESS=no
   [ "$IGNORE_USER_CONFIG_SET" = yes ] || IGNORE_USER_CONFIG=no
   [ "$SKIP_GIT_REPO_CHECK_SET" = yes ] || SKIP_GIT_REPO_CHECK=no

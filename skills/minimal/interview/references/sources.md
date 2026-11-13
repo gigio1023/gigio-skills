@@ -1,0 +1,5 @@
+# Sources
+
+- Method basis: [Q00/ouroboros](https://github.com/Q00/ouroboros) at `98d3d66d4123` (`skills/interview/SKILL.md`): Socratic questions, context-first intake, facts versus human decisions, and user confirmation before the brief. Its state files, commands, mandatory subagents, and numeric convergence thresholds are not adopted.
+- Rounds over a decision tree, a recommended answer per question, and fact lookups kept on the agent's side are adapted from the `grilling` skill in [mattpocock/skills at 49dd158](https://github.com/mattpocock/skills/tree/49dd158/skills/productivity/grilling) (MIT License, Copyright (c) 2026 Matt Pocock), rewritten here.
+- The four kinds of unknowns and showing samples or references for criteria people recognize on sight are adapted from Thariq Shihipar, ["A field guide to Claude Fable 5: Finding your unknowns"](https://claude.com/resources/articles/a-field-guide-to-claude-fable-finding-your-unknowns) (Anthropic). This skill keeps batched rounds instead of one question per turn.

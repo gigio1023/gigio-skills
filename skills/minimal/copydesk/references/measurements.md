@@ -1,6 +1,6 @@
-# Measurements and Figures
+# Measurements
 
-Use when a document presents data, equations, comparison tables, or technical figures. Check the underlying evidence and calculations before optimizing the display. A restrained style can still make a false comparison appear credible.
+Use when a document presents data, equations, or comparison tables. Check the underlying evidence and calculations before optimizing the presentation. A restrained style can still make a false comparison appear credible.
 
 ## Specify the measured quantity
 
@@ -14,29 +14,19 @@ Compute arithmetic with code or a spreadsheet. Show numerator and denominator wh
 
 Use the same measure, unit, population, and relevant budget across compared systems. If a difference is unavoidable, make it visible and qualify the conclusion. Separate measurement at a historical revision from current product behavior. A source's self-reported benchmark remains an attributed result until independently reproduced.
 
-Keep missing, not measured, failed, timed out, and zero distinct. State how censored or failed observations enter the summary. A lower successful-request latency can coexist with more failures; show both when the decision depends on reliability. Report variability and uncertainty when they affect ranking or a proposed threshold. Label intervals with their type and construction rather than drawing unexplained error bars.
+Keep missing, not measured, failed, timed out, and zero distinct. State how censored or failed observations enter the summary. A lower successful-request latency can coexist with more failures; show both when the decision depends on reliability. Report variability and uncertainty when they affect ranking or a proposed threshold. Label intervals with their type and construction.
 
 A repeated run, an ablation, a paired comparison, and a causal intervention answer different questions. Describe the actual procedure. If a confidence interval or significance test was not computed, do not invent one; report the observed variation and the limitation it creates. “Not statistically significant” is not proof of equivalence.
 
 ## Tables
 
-Use [information design](information-design.md#table-design) to decide whether to split, replace, or omit a table before formatting its measurements. A short table can still be dense when its cells mix methods, results, interpretation, and source history.
+A short table can still be dense when its cells mix methods, results, interpretation, and source history.
 
 Make column headings carry repeated context: units, metric names, direction when unclear, and relevant settings. Align numeric values for comparison, keep precision consistent, and order rows for the reader's question. Use restrained emphasis on the meaningful comparison, not a badge in every cell. A status column can be useful; a “verified” decoration usually does not add evidence.
 
 Keep conditions that change a row's interpretation beside that row. Use a short note for a shared exclusion or measurement rule. Cells should hold values, identifiers, or short phrases; put extended explanations beside the table. When comparing qualitative attributes, use consistent short descriptions and explain the deciding trade-off outside the grid. A one-row table of unrelated facts is often clearer as a sentence or list. Do not fill missing cells with invented zeroes.
 
-For alternatives, compare the same decision dimensions and explain the chosen trade-off in prose. Avoid a composite score unless its meaning and weights are justified for this decision. Exact lookup may need a table even when a chart looks more impressive.
-
-## Figures and captions
-
-Choose a figure because it clarifies a mechanism, change, distribution, or comparison. Give it one primary question and a noun-phrase title. Split distinct questions or detail levels before adding more panels, legends, or smaller type. Show a decisive result at a legible size before adding detail. Comparable panels need compatible axes and scales, or an explicit reason for differences. Use direct labels when they reduce legend lookup; preserve units, baseline, and the actual meaning of color. Do not rely on color alone.
-
-A caption should identify what was measured or depicted and supply the local interpretation condition missing from the title and axes. Add the finding there only if it is not already clearly stated nearby. Point to a panel or visible feature when explaining a mechanism; do not tour every mark. A methods detail such as fixed attention patterns can be part of the figure's meaning, while a generic warning about the limits of all research is not. After restructuring, number figures in reading order and repair references to panels and figures.
-
-For an ablation or failure experiment, compare the normal and changed condition on aligned panels and explain the expected versus observed effect. MapReduce's Figure 3 uses matched input/shuffle/output panels for normal execution, disabled backup tasks, and killed workers. The useful transfer is the controlled comparison and interpretation, not its historical hardware or palette.
-
-For architecture figures, show real responsibilities, interfaces, state, and flow. Label different kinds of edges. An overview can omit implementation detail but cannot silently remove a component that explains the failure or trust boundary. Use a companion sequence or detailed view when one diagram becomes unreadable.
+For alternatives, compare the same decision dimensions and explain the chosen trade-off in prose. Avoid a composite score unless its meaning and weights are justified for this decision.
 
 ## Equations, code, and reproduction
 
@@ -48,4 +38,4 @@ Keep input references, transformation code, configurations, and actual results i
 
 ## Output checks
 
-Verify calculations independently of rendering. Check that the table, chart, text, and filtered view use the same population and definition. Inspect the final document at its delivered size, not just the editable source. For PDF, make essential data visible without hover or controls, preserve searchable text and citations, and inspect dense figures and page boundaries. Use an accessible summary or data representation when the chart is not independently interpretable.
+Verify calculations independently of formatting. Check that tables and text use the same population and definition.

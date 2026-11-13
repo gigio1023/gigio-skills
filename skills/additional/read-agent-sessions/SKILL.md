@@ -1,16 +1,11 @@
 ---
 name: read-agent-sessions
 description: >
-  Use when a conversation session from Codex (CLI or desktop app), Claude Code
-  (CLI or desktop app), Zcode, or Hermes must be located and read on the local
-  machine so another agent can understand or take over what happened — "find
-  that codex session about X", "summarize this claude session", "read session
-  abc123 and continue the work", or handing a session id or conversation title
-  to a different agent. Resolves loose identifiers (session id prefix,
-  conversation title, remembered prompt fragment) to the stored transcript and
-  extracts a readable conversation. NOT for resuming a session in its own
-  harness, editing session files, or session-handoff summaries of the current
-  session.
+  Locate and read a Codex, Claude Code, Zcode, or Hermes session stored on this
+  machine and extract a readable conversation or takeover summary from a session
+  id prefix, conversation title, or remembered prompt fragment. Use for "find
+  that codex session about X", "summarize this claude session", or "read session
+  abc123 and continue the work".
 ---
 
 # Read Agent Sessions
@@ -25,7 +20,7 @@ Turn a loose session reference — an id prefix, a title someone remembers, or a
 4. Follow the identified harness's reference before extracting. Each store has its own schema, duplicate-content traps, and subagent linkage; the recipes there were verified against real stores on the author's macOS machine at the versions and dates each reference states, so confirm them against the store in front of you.
 5. Extract the human-readable conversation: real user turns and assistant text, skipping tool plumbing, system-injected context, and reasoning blocks. Follow subagent or child sessions when the main transcript delegates work the requester cares about.
 6. Verify the summary against the extracted records before reporting. Dates, paths, decisions, and quoted claims in the handoff must appear in the transcript; a plausible summary that outruns its evidence is a failure, not a shortcut.
-7. Deliver the handoff with its provenance: harness, session id, project path, time range, the resolution chain (which identifier matched which file, via which index), and any gaps such as encrypted reasoning or missing titles.
+7. Deliver the handoff with the harness and session id so the receiver can re-read the source, plus any gaps such as encrypted reasoning or missing titles. Add the project path, time range, or resolution chain when they help.
 
 Prerequisites: `jq` for the JSONL recipes, and the `sqlite3` CLI with JSON1 (`json_extract`) and FTS5 (`messages_fts`) for the SQLite recipes. When a tool is missing, do not install it without the user's approval; read the same files with a short Python standard-library script instead (`json` line by line for JSONL, the `sqlite3` module with a `file:...?mode=ro` URI for databases), and fall back from FTS5 to `LIKE` filters if that build lacks it.
 
@@ -73,7 +68,7 @@ Sessions can contain secrets the original conversation handled. Summarize their 
 
 ## Output
 
-Return the handoff summary with its provenance block (harness, session id, project path, time range, resolution chain), the extract or its location if the requester needs raw turns, verified facts distinguished from inference, and material gaps: encrypted content, missing titles, ambiguous matches left for the user to decide. A session that cannot be found is reported as not found with the routes tried — an honest miss, not a reconstructed guess.
+Return the handoff summary with the harness and session id, the extract or its location if the requester needs raw turns, verified facts distinguished from inference, and material gaps: encrypted content, missing titles, ambiguous matches left for the user to decide. A session that cannot be found is reported as not found with the routes tried — an honest miss, not a reconstructed guess.
 
 ## Gotchas
 

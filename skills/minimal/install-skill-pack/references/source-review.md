@@ -1,6 +1,6 @@
 # Source Review
 
-Read the complete selected package before installation and judge it as a whole, including whether its powers are necessary and proportionate to the user's request.
+For a third-party source, read the complete selected package before installation and judge it as a whole, including whether its powers are necessary and proportionate to the user's request.
 
 ## Identity And Completeness
 

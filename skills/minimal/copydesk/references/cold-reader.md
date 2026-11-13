@@ -4,7 +4,7 @@ Use before handing over a document that someone will act on without its writer: 
 
 ## What the reader gets
 
-Start one subagent with a fresh context. Give it the document's contents inline, or the rendered copy when layout carries meaning, and the role of the intended reader, such as "an engineer on the billing team who will implement this and did not follow the design discussion". Never give a path: a path invites the reader to open the repository, neighboring files, or earlier drafts, and those hold the context the test removes. Never give the writer's intent, the conversation, the source notes, or the answers the writer expects.
+Start one subagent with a fresh context. Give it the document's contents inline and the role of the intended reader, such as "an engineer on the billing team who will implement this and did not follow the design discussion". Never give a path: a path invites the reader to open the repository, neighboring files, or earlier drafts, and those hold the context the test removes. Never give the writer's intent, the conversation, the source notes, or the answers the writer expects.
 
 Before starting the reader, write one line for yourself: what the document is meant to be, who it is for, and what it should lead the reader to do or decide. The reader never sees this line.
 
@@ -44,8 +44,6 @@ The first pile is the common case: the writer knew the answer and left it out. F
 
 When the harness cannot start a subagent, read as that reader yourself, paragraph by paragraph. After each paragraph, ask: could someone who read only up to here, with no access to the conversation, follow this? Note each term, reference, or step that leans on something not yet on the page, and each question the next paragraph assumes is settled. This read is weaker than a fresh context because the writer already knows the answers. When reporting a document whose stakes called for the pass, say that it was a self-read.
 
-A skill with its own fixed reader questions keeps them. `release-notes`, when installed, compares its reader's answers with its data file instead of sorting open questions.
-
 ## Sources
 
-The three-way sort of the reader's questions adapts the builder check in the `brainstorming` skill of [obra/superpowers](https://github.com/obra/superpowers/tree/22f0b463e7a5e579904dd6211a520321035526f7/skills/brainstorming), read on 2026-11-04. Passing contents instead of a path, keeping the writer's intent from the reader, and treating a mismatch as a document defect adapt the `shower` skill in [LilMGenius/paperthin](https://github.com/LilMGenius/paperthin). The fresh-context reader test follows the Reader Testing step of Anthropic's `doc-coauthoring` skill ([anthropics/skills](https://github.com/anthropics/skills/tree/main/skills/doc-coauthoring), read at commit `ca45fc4` on 2026-10-28), which `release-notes` adapts for its fixed questions.
+The three-way sort of the reader's questions adapts the builder check in the `brainstorming` skill of [obra/superpowers](https://github.com/obra/superpowers/tree/22f0b463e7a5e579904dd6211a520321035526f7/skills/brainstorming), read on 2026-11-04. Passing contents instead of a path, keeping the writer's intent from the reader, and treating a mismatch as a document defect adapt the `shower` skill in [LilMGenius/paperthin](https://github.com/LilMGenius/paperthin). The fresh-context reader test follows the Reader Testing step of Anthropic's `doc-coauthoring` skill ([anthropics/skills](https://github.com/anthropics/skills/tree/main/skills/doc-coauthoring), read at commit `ca45fc4` on 2026-10-28).

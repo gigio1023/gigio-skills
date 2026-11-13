@@ -2,18 +2,9 @@
 
 Build prompts that give Claude Fable a clear reason, outcome, boundary, and evidence bar while leaving room for strong long-horizon judgment. Remove legacy micromanagement before adding model-specific scaffolding. Fable 5 prompts carry over to Fable 5.1 unchanged; the shifts section below covers the behaviors that moved.
 
-## Quick Start
+## Approach
 
-1. Identify the target artifact and workload: new prompt, review, migration, tool contract, long-running agent, or failure diagnosis. Name the exact model, Fable 5 or Fable 5.1, and the runtime it runs in.
-2. Define the observable outcome, why it matters, relevant context, authority boundary, evidence, output, and completion criteria.
-3. For an existing prompt, inspect available traces or checks. Separate an observed failure from a suspected prompt cause; runtime availability alone does not authorize comparison runs.
-4. Remove repeated rules, exhaustive behavior lists, stale thinking-budget instructions, aggressive tool triggers, anti-formatting and hold-your-findings rules written for chattier models, and scaffolding for behavior Fable already performs reliably.
-5. Add brief, direct clauses only for real gaps. Use [prompt patterns](prompt-patterns.md) for long-run, tool, memory, and communication patterns. Use [the prompt template](../../assets/fable/prompt.template.md) for a new complex prompt.
-6. Put effort, thinking display, timeout, fallback, compaction, history handling, and tool setup in the API or harness rather than pretending they are prompt instructions.
-7. Validate the requested artifact. When model evaluation is requested, test the same cases at the intended effort and compare outcome correctness, evidence, scope control, latency, tokens, and cost.
-8. Deliver the prompt, required runtime settings, and concise rationale. Request evidence and decisions, never a transcript of private reasoning.
-
-Read [source notes](source-notes.md) when maintaining model-specific claims or API behavior.
+Name the exact model (Fable 5 or 5.1) and the runtime. Define the observable outcome, why it matters, the authority boundary, and the evidence of completion. For an existing prompt, separate an observed failure in traces from a suspected prompt cause. Remove repeated rules, exhaustive behavior lists, stale thinking-budget instructions, aggressive tool triggers, anti-formatting and hold-your-findings rules written for chattier models, and scaffolding for behavior Fable already performs. Then add brief clauses only for real gaps, from [prompt patterns](prompt-patterns.md) or [the prompt template](../../assets/fable/prompt.template.md). Put effort, thinking display, timeouts, fallback, compaction, history handling, and tool setup in the API or harness, not the prompt. Ask for evidence and decisions, never a transcript of private reasoning.
 
 ## Core Prompt Shape
 
@@ -59,7 +50,7 @@ When the user must receive exact content mid-run, provide a dedicated send-to-us
 
 Fable can manage sustained subagent collaboration. Delegate when work is independent, context isolation helps, a specialist tool matters, or a fresh verifier reduces anchoring. Prefer asynchronous coordination: a spawning tool that returns immediately, results delivered in a later user message, and a separate wait tool, so the lead keeps working.
 
-Do not turn every task into a committee. Keep dependent judgment with the lead and synthesize results before acting. Which model and effort each subagent gets is a question for the Fable policy in `model-routing`.
+Do not turn every task into a committee. Keep dependent judgment with the lead and synthesize results before acting.
 
 ### Use Durable Memory Selectively
 
@@ -100,7 +91,7 @@ Each shift has a clause in [prompt patterns](prompt-patterns.md). Delete conflic
 
 Create evaluation fixtures or run additional model sessions only on request. A static review may deliver revised wording with an untested-behavior caveat; it does not need a new benchmark to finish.
 
-Start at `high`, the default. Step up to `xhigh` or `max` only for capability-sensitive long-horizon work, and down to `medium` or `low` for routine or interactive work once evals show quality holds. Effort names do not mean the same thinking across models, so re-run the sweep when moving from Fable 5 to Fable 5.1. Fable 5.1 at `medium` roughly matches Fable 5 at lower cost. Its prompting page says that at `low` it is often competitive on cost per task with Opus and Sonnet models while scoring higher; that comparison predates Opus 5.5, which costs less on every price line ($4 and $20 per million input and output tokens, cache reads $0.20, against Fable 5.1's $10, $50, and $0.25), so measure it against Opus 5.5 before relying on it. Fable 5.1 also accepts per-message effort changes that keep the prompt cache, so a loop can run hard steps higher and routine steps lower.
+Start at `high`, the default. Step up to `xhigh` or `max` only for capability-sensitive long-horizon work, and down to `medium` or `low` for routine or interactive work once evals show quality holds. Effort names do not mean the same thinking across models, so re-run the sweep when moving from Fable 5 to Fable 5.1. Fable 5.1 at `medium` roughly matches Fable 5 at lower cost. Compare its cost per task against the current Opus model before relying on a cross-family claim. Fable 5.1 also accepts per-message effort changes that keep the prompt cache, so a loop can run hard steps higher and routine steps lower.
 
 Use two to five positive cases and one or two near misses. Include at least one long-run case when the prompt governs tools, state, or subagents. Grade the final environment or artifact, not only the transcript.
 
@@ -113,7 +104,6 @@ For a new prompt, return the final prompt plus the runtime settings and tools it
 | File | Read when | Content |
 | --- | --- | --- |
 | [prompt-patterns.md](prompt-patterns.md) | Writing or revising a non-trivial Fable prompt | Prompt clauses, long-run scaffolding, Fable 5.1 shifts, runtime controls, migration, and failure patterns |
-| [source-notes.md](source-notes.md) | Maintaining model-specific claims | Official Anthropic sources, Fable 5.1 deltas, and durable translations |
 | [prompt.template.md](../../assets/fable/prompt.template.md) | Starting a new complex prompt | Compact fill-in prompt skeleton |
 
 ## Gotchas

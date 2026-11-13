@@ -1,6 +1,6 @@
 # Correctness and Verification
 
-Read this for changes to errors, resources, concurrency, or project documentation, for deciding how a change is verified and reported, and for deciding whether a test is warranted. Use the repository's existing test and documentation conventions where they exist. Python mechanics (exception chaining, `asyncio` cancellation, `uv run` checks, Ruff and pytest) are in [Python errors and checks](python/errors-and-checks.md); the blind test author's packet is in [test author packet](test-author-packet.md).
+Read this for changes to errors, resources, concurrency, or project documentation, for deciding how a change is verified and reported, and for deciding whether a test is warranted. Use the repository's existing test and documentation conventions where they exist. Python mechanics (exception chaining, `asyncio` cancellation, `uv run` checks, Ruff and pytest) are in [Python errors and checks](python/errors-and-checks.md).
 
 ## Contents
 
@@ -49,7 +49,7 @@ For a bug fix, reproduce the failure before the fix when feasible and rerun the 
 
 Keep fixtures deterministic and isolated; do not require a live service when a local run against a recorded or fake adapter proves the relevant behavior. Live, paid, or state-changing runs need the authority applicable to that environment.
 
-Real-run checks establish that code runs and behaves as specified on the inputs tried. They do not establish the quality of learned or judged behavior, which needs an evaluation through the production interface (designed with `evaluation-design`, when installed), and they do not establish performance: latency and throughput from a functional run or an evaluation run are unloaded numbers. Capacity, latency under load, and saturation belong to `load-testing`.
+Real-run checks establish that code runs and behaves as specified on the inputs tried. They do not establish the quality of learned or judged behavior, which needs an evaluation through the production interface, and they do not establish performance: latency and throughput from a functional run or an evaluation run are unloaded numbers, not capacity or latency under load.
 
 ## Status report and completion
 
@@ -67,14 +67,12 @@ The default is no new tests. Verification comes from real entry-point runs on fi
 
 **Essential contracts only.** A test is added only for an essential module contract: one that callers or stored data depend on, whose silent break would be costly (a security decision, money, data loss, a reported number), and that a real run does not exercise cheaply. Typical cases are a parser's accept and reject boundary, a serialized or persisted format, an error mapping callers branch on, a calculation with independently known results, and an agent loop's budget, termination, and permission checks. An accepted design document lists its essential contracts under the verification split with their reasons; follow that list. Prose-only, formatting-only, and mechanical changes get no tests.
 
-**Implement first, then a blind author.** Implement the change. Then a subagent that has not seen the implementation writes the tests from the interface contract alone, in Detroit (classicist) style:
+**Implement first, then test the contract.** Write the tests from the interface contract, in Detroit (classicist) style. Writing them without rereading the implementation, or handing the contract to a separate author, keeps them from restating the code; use it when it helps.
 
 - Real collaborators inside the module; outcomes checked through the public interface.
 - Fakes only at external I/O and model seams, preferably the controlled adapters the code already has.
 - No mocks that mirror interactions: no assertions on call order, call counts, or arguments passed between internal helpers.
 - Expected values from the requirement, the documented contract, an independent calculation, or a reproduced bug, never from running the implementation.
-
-The packet's contents and exclusions are in [test author packet](test-author-packet.md). Where the harness cannot start a subagent, write the packet, then write the tests from it without reopening the implementation, and report that the author was not blind.
 
 **Reconcile each mismatch.** When a new test fails, decide which of three it is before changing anything:
 
@@ -100,4 +98,4 @@ Run the smallest set that covers the changed surface, including repository-requi
 
 The exception-hierarchy and single-seam rules follow the practice measured in httpx and the OpenAI and Anthropic SDKs; see [Python reference repositories](python/reference-repositories.md). Detroit or classicist style is the testing school Martin Fowler contrasts with the mockist school in [Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html) (2007). The rule that completion claims rest on fresh verification evidence, "evidence before claims", is adapted from the `verification-before-completion` skill in [obra/superpowers](https://github.com/obra/superpowers) (MIT License, Jesse Vincent), rewritten here; this pack does not adopt that project's test-first rule.
 
-The test policy is this pack's choice: no new tests by default, essential contracts only, tests written blind from the contract, and verification through real runs and evaluation. These references do not mandate a coverage percentage or a specific test framework.
+The test policy is this pack's choice: no new tests by default, essential contracts only, tests written from the contract, and verification through real runs and evaluation. These references do not mandate a coverage percentage or a specific test framework.

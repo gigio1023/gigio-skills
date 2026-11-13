@@ -1,10 +1,10 @@
 # Synthetic Examples
 
-Use these contrasts to diagnose why a sentence, table, or figure is less useful, then keep the operation the stronger version demonstrates. Every example is independently constructed: its names, numbers, and events are not measurements of a real system or anonymized company records, and they are never copied into a real document. “Before” is the passage being repaired, not necessarily the complete input. Each “Supplied teaching facts” block gives additional facts available to that example's writer. Use those facts to repair unsupported claims or add a needed explanation; never infer them from the wording alone. When only the before passage is available, preserve its uncertainty and seek missing evidence instead. For prose and displays working together in one document, start with [finished examples](finished-examples.md).
+Use these contrasts to diagnose why a sentence or table is less useful, then keep the operation the stronger version demonstrates. Every example is independently constructed: its names, numbers, and events are not measurements of a real system or anonymized company records, and they are never copied into a real document. “Before” is the passage being repaired, not necessarily the complete input. Each “Supplied teaching facts” block gives additional facts available to that example's writer. Use those facts to repair unsupported claims or add a needed explanation; never infer them from the wording alone. When only the before passage is available, preserve its uncertainty and seek missing evidence instead.
 
 ## Contents
 
-- Structural repairs: [paragraph table](#paragraph-table), [table split](#table-split), [heading and cell phrases](#heading-and-cell-phrases), [figure split](#figure-split), [genre transfer](#genre-transfer), [row identity](#row-identity), [internal aliases](#internal-aliases), [list hierarchy](#list-hierarchy).
+- Structural repairs: [paragraph table](#paragraph-table), [table split](#table-split), [heading and cell phrases](#heading-and-cell-phrases), [genre transfer](#genre-transfer), [row identity](#row-identity), [internal aliases](#internal-aliases), [list hierarchy](#list-hierarchy).
 - Prose rewrites: [observation and explanation](#separate-an-observation-from-its-explanation), [broad promise](#turn-a-broad-promise-into-an-observable-test), [alternative](#compare-an-alternative-fairly), [failure sequence](#keep-the-failure-sequence-without-blame), [untested condition](#name-the-untested-condition-readers-would-assume), [definition](#define-the-measurement-not-the-familiar-word), [Korean relations](#restore-the-relation-in-korean).
 
 ## Structural repairs
@@ -78,21 +78,6 @@ Stable path names connect the views. The second table earns its place only when 
 **Explanatory sentence:** “The worker retries the job when the result is not acknowledged before the lease expires.”
 
 Headings and cells stay compact while the sentence supplies the operation and condition. Do not apply a complete-sentence prose rule to labels. In Korean, use “작업 재시도” as the heading and “최대 3회” in the cell, and keep the relation in prose: “워커는 리스가 만료될 때까지 처리 결과가 확인되지 않으면 작업을 다시 시도한다.”
-
-### Figure split
-
-**Supplied teaching facts:** The supplied diagram contains the client, queue, and worker flow, a durable job record, a release timeline, and baseline/candidate queue-latency distributions. The reader needs to understand where requests wait and compare queue latency.
-
-**Before:** one diagram combines a request path, a database schema, a release timeline, and two latency charts. Small type and four legends make everything fit, but the reader must infer which parts explain runtime behavior.
-
-**After figure plan:**
-
-| View | Question | Contents |
-| --- | --- | --- |
-| Request lifecycle | Where does a request wait? | Client, queue, worker; submit, dequeue, and acknowledge edges |
-| Queue latency | Which configuration reduces waiting? | Matched baseline and candidate distributions |
-
-Explain the durable job record beside the lifecycle only if recovery needs it. Keep the full schema in the implementation reference. Omit the release timeline when it explains neither result. The matched distributions belong together because comparing them is the task.
 
 ### Genre transfer
 
