@@ -5,7 +5,6 @@ description: >
   agent, model, or harness can continue the current work. Writes one short
   file under `.handoff/` that the successor executes: what was being done,
   what comes next, and the questions to put to the user.
-disable-model-invocation: true
 ---
 
 # Session Handoff
