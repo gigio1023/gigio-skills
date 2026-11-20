@@ -149,7 +149,7 @@ Grouped by kind of work, in the same order as the figures above. Open a group to
 | Skill | Set | Use it to |
 | --- | --- | --- |
 | [copydesk](skills/minimal/copydesk/) | minimal | Write, revise, and review documents in natural Korean and precise English; the entry point for any reader-facing text |
-| [write-notion](skills/minimal/write-notion/) | minimal | Create and revise team pages in Notion with layout, mentions, tables, and figures |
+| [write-notion](skills/minimal/write-notion/) | minimal | Create and revise Notion pages that read without the work's context, in current Notion Markdown, without losing existing content |
 | [english-prompt-review](skills/additional/english-prompt-review/) | additional | Rewrite an English prompt naturally and explain nuance in your native language |
 | [vuln-report](skills/additional/vuln-report/) | additional | Write and check vulnerability reports, advisories, and evidence packages for each disclosure venue |
 | [release-notes](skills/additional/release-notes/) | additional | Write a team release note comparing two versions with reconciled counts and as-is and to-be charts, as PDF, HTML, or a GitHub release body |

@@ -2,55 +2,61 @@
 name: write-notion
 description: >
   Create, restructure, or revise team pages in Notion through the Notion MCP
-  tools: design docs, RFCs, decision records, briefs, notes, or any page whose
-  layout, tables, toggles, mentions, or images need work. Use for "write the
-  design doc in Notion", "Notion에 정리해줘", "노션 페이지 고쳐줘", "fix the tables on
-  this Notion page". Edits safely without deleting child pages or comments.
+  tools so the saved page reads cleanly to someone outside the work: design
+  docs, decision records, investigation and evaluation write-ups, briefs, and
+  notes, with toggles, tables, mentions, and images that render as intended.
+  Use for "write the design doc in Notion", "Notion에 정리해줘", "노션 페이지
+  고쳐줘", "노션 문서 간결하게 다시 써줘", "fix the tables on this Notion page".
+  NOT for prose that is not going to Notion (copydesk) or tracker tickets
+  (write-issue).
 ---
 
 # Write Notion
 
-Publish or edit a Notion page so the stored page matches what was intended and nothing on it is lost. The user's instruction and the page's or team's existing conventions, including its language and register, decide the content and shape.
+The result is a Notion page that its readers understand from the page alone, stored with the structure that was intended and with nothing already on it lost. The user's instruction and the destination's conventions decide the content, language, and register. The Notion MCP tool descriptions already require a fetch before editing, the smallest edit, native mentions, preserved child pages, draft mode for an unnamed destination, and confirmation before deletion; this skill adds what they leave out.
 
-## Before writing
+## Reader and purpose
 
-- Fetch the target page or destination parent and a few sibling pages, and match their language, heading levels, block types, and table pattern.
-- Check who can read the destination: a teamspace, the whole workspace, or a page published to the web. Keep secrets, credentials, personal data, and customer-confidential text out.
-- Read the Notion enhanced Markdown spec (`notion://docs/enhanced-markdown-spec` through `notion-fetch`) once per session when the client exposes it. [references/notion-markdown.md](references/notion-markdown.md) has the exact syntax, upload flow, and observed failures.
-- Show the complete draft first when the user asked for a draft, the page belongs to someone else and editing it was not authorized, the destination is a guess, the edit would delete child pages or databases, or a mention could notify someone other than the person the user named. Otherwise the request is the grant.
-- With no destination named, create a private draft (`creation_mode: "draft"`) and say it is private.
-- Without a working Notion connection, deliver the page as Notion Markdown and say nothing was published.
+Decide who reads the page and what they will do with it, and give the page one purpose. A decision record holds one decision and its status. The first block states the finding, decision, or current status, so a reader who stops there already has the answer; a summary under the title states that finding rather than announcing what the page covers.
 
-## Editing
+Write for a reader who did not see the work. A page written at the end of a long session absorbs what the session used: local file paths, run and experiment IDs, aliases coined during the work, PR numbers, model nicknames, and phrases such as "as discussed above". Replace each with the standard term or full name, the result itself, or a link the page's readers can open, and define a project-local term where it first appears. When the reader needs a file, upload it to the page instead of describing where it sits on the writer's machine.
 
-- Use `notion-create-pages` for a new page and `notion-update-page` for an existing one, with the smallest edit that does the job. Put the title in `properties.title`, and change titles and database properties with `update_properties` in a separate call.
-- Prefer `update_content` with the smallest unique `old_str`. It cannot target image blocks, and its exact match can fail on long non-ASCII strings and on strings containing mention tags. Retry with a shorter fragment that avoids the mention; if that fails, fetch again and use `replace_content`.
-- `replace_content` sends the whole body. Build it only from a fresh, untruncated fetch with no unknown blocks, and keep every fetched tag that carries a `url` or `src` exactly as fetched, including `notion-file-block://` image sources. Removing a `<page url="...">Title</page>` tag deletes or moves that child page. Set every column ratio on pages with columns, and leave meeting-notes transcripts untouched.
-- Before a whole-body replace on a page with open discussions (fetch with `include_discussions: true`), tell the user comment anchors may not survive and ask. Never pass `allow_deleting_content: true` without the user's confirmation.
-- `insert_content` only prepends or appends.
-- A toggle heading is `## Title {toggle="true"}` with tab-indented children; tables and images inside it are indented too.
-- Escape literal `~` in ranges (`11/02\~11/04`), `<` and `>` in comparisons (`p99 \< 2 ms`), and `$` in prices (`\$40`).
-- Mentions are `<mention-user url="user://<user-id>"/>`, `<mention-date start="YYYY-MM-DD"/>`, and `<mention-page url="..."/>`. Find user IDs with `notion-get-users`; `@Name` does not create a mention. Mentions can notify, so mention only the people the page must identify, and refer to people outside the workspace by role or organization.
+Sibling pages set the language, heading levels, and table style. They do not set the sections: leave out any template section that would hold nothing specific to this page. Check who can read the destination, whether a teamspace, the whole workspace, or the web, and keep secrets, credentials, personal data, and customer-confidential text out.
 
-## Tables
+## Draft, cut, publish
 
-- Always set `<table header-row="true">`; table attributes default to false, so otherwise the first row is ordinary data.
-- Size columns with `<colgroup>` and `<col width="N">`: about 70 for a short status column, 150 to 220 for names, 240 to 300 for short descriptions, totaling about 700 on a default-width page and less inside toggles and callouts. Leave `fit-page-width` unset.
-- Cells hold rich text only: no lists, images, raw HTML, or merged cells.
+For a new page or a substantial rewrite, write the draft as plain Markdown in a scratch file and convert it to Notion markup only when the text is settled. Composing prose inside a tool-call string, between tags, leaves no point at which the text is reread before readers see it. Make one cut pass over the draft: remove sentences whose removal loses nothing, such as a restated request, an announcement of what follows, a recap, or a closing outlook; give each evaluative adjective the number behind it or drop it; give each qualifier its condition or drop it. Keep the reasoning, mechanism, and conditions a reader needs to trust the result. When copydesk is installed, its draft checker `check_draft.py` flags session references and padding, and its cold-reader pass shows what the conversation supplied that the page does not. A small edit to an existing page goes straight to `update_content`.
 
-## Images
+Show the complete draft in chat first when the user asked for a draft, the destination is a guess, the page belongs to someone else and editing it was not authorized, the edit would delete child pages or databases, or a mention could notify someone the user did not name. Otherwise the request is the grant. On someone else's page, `notion-create-suggested-edit` proposes a change the owner can accept; it needs a Business or Enterprise plan. Without a working Notion connection, deliver the page as Notion Markdown and say that nothing was published.
 
-Upload an image with `notion-create-file-upload`, one multipart POST to the returned URL with the returned headers, then embed it with the `markdown_source` or `suggested_markdown` the upload returns. The POST needs a shell with network access; without one, give the file to the user and say it is not attached rather than leaving a path in the page. An uploaded image does not change with the text, so re-upload it when its labels or numbers change.
+## Blocks
+
+Formatting costs the writer one tag and costs every reader attention, so each block earns its place.
+
+- Prose carries causes, mechanisms, and trade-offs. Bullets hold parallel items and numbered lists hold sequences. A bullet does not open with a bold label such as `**What**:`.
+- A toggle holds detail that only some readers need, such as raw logs, per-item tables, reproduction commands, or a long measurement breakdown. Findings, decisions, and open questions stay visible. The toggle's title names what is inside, and toggles are not nested.
+- A table compares items on shared attributes, with one value or short phrase per cell; a cell that needs two sentences belongs in prose. Write pipe tables, and use a `<table>` element only when the table needs column widths or colors.
+- Headings carry information with the key words first, stop at H3, and do not sit over a single short paragraph.
+- Use at most one callout. Bold only a few terms on a page. Leave out emoji in headings, dividers between sections that already have headings, a table of contents on a short page, and an icon or cover the sibling pages do not have.
+- Add an image when a figure carries a result the text cannot. Upload it rather than leaving a path, and re-upload it when its labels or numbers change.
+
+Before writing Notion markup in a session, read the specification at `notion://docs/notion-flavored-markdown-spec` through `notion-fetch`. [Notion Markdown behavior](references/notion-markdown.md) has the current syntax for these blocks, the upload flow, and how the server rewrites what it receives; read it before a structural edit, an image change, or an edit that failed to match.
+
+## Editing an existing page
+
+- Copy every `old_str` from the latest fetch. The server rewrites content on save, so a string copied from an earlier call of your own often matches nothing.
+- To insert in the middle of a page, pass `update_content` the block before the insertion point as `old_str` and that block followed by the new content as `new_str`. `insert_content` adds only at the start or end, and appending each update at the bottom leaves a page that reads in the order it was written.
+- `update_content` applies the operations that match and reports the others as `no_match` warnings without failing the call, and it takes at most 100 operations per call. Read the warnings and split larger batches.
+- `replace_content` regenerates the whole body, which rewords passages that were not meant to change and drops anything missing from the fetched text. Use it only for a requested restructure, built from a fresh fetch that is not truncated and reports no unknown blocks, keeping every fetched tag that carries a `url` or `source` exactly as fetched. Before replacing a page with open discussions (fetch with `include_discussions: true`), tell the user that comment anchors may not survive and ask.
+- Change a title or database property with `update_properties` in its own call.
 
 ## Verification
 
-After every structural edit, wait for any async task with `notion-get-async-task`, fetch the page, and check:
+The server converts some legacy syntax and reports it in `warnings`, but stores other mistakes silently as literal text: a heading written as `## Title {toggle="true"}` keeps that text in the heading, and tab-indented children become one paragraph. After a structural edit, wait for any async task with `notion-get-async-task`, fetch the page, and check that:
 
-- images and child pages are all still present, by count against the pre-edit fetch;
-- toggle headings contain the children meant to be hidden;
-- tables carry `header-row="true"` and sensible widths;
-- no person is named as `@Name` or plain text where a mention was intended;
-- numbers match their sources;
-- links open for the page's readers, with no local paths or private scratch files.
+- every block meant to sit inside a toggle, callout, column, or tab is inside it, and no tag or attribute text appears literally;
+- images, child pages, and databases match the pre-edit fetch by count;
+- the first block states the result, and no local paths, run IDs, private aliases, or session references remain;
+- numbers match their sources, links open for the page's readers, and people meant as mentions are mentions.
 
-Fix failures and fetch again. A simple text edit that changed no structure needs no extra fetch.
+Fix what fails and fetch again. Report tool warnings to the user. A text edit that returned no warnings needs no extra fetch.
