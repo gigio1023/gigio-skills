@@ -120,6 +120,18 @@ Use each source for the property actually inspected. A saved text supports a tex
 
 Prefer a primary method paper, specification, design proposal, decision record, engineering reference, or well-evidenced postmortem over an announcement, annual letter, product brochure, or adoption survey. Match the genre and reader task before the brand. Read the relevant prose and actual figures, then identify what to transfer at sentence, paragraph, evidence, table, caption, and document levels. Reuse the technique in original wording; preserve licenses and attribution when actual content or assets are reused.
 
+## Notion block use
+
+The block rules in `write-notion` were checked against these sources on 2026-11-20. They are maintenance pointers; the skill states the rules without loading this section.
+
+- First block states the result: Nielsen Norman Group, [Inverted Pyramid](https://www.nngroup.com/articles/inverted-pyramid/), where readers can stop at any point and still have the main point.
+- Toggles hold detail only some readers need: GOV.UK Design System, [Accordion](https://design-system.service.gov.uk/components/accordion/), which says not to use an accordion for content all users need; Nielsen Norman Group, [Accordions on Desktop](https://www.nngroup.com/articles/accordions-on-desktop/), on hidden content being missed and on deep hierarchies.
+- Bold labels and emphasis: Martin Fowler, [Excessive Bold](https://martinfowler.com/bliki/ExcessiveBold.html), and Wikipedia's [Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), which lists bold-label bullets and emoji-led headings. Zhang et al., [From Lists to Emojis](https://arxiv.org/abs/2409.11704) (ACL 2025), measures reward-model and human preference for lists, bold, and emoji.
+- Callouts and tables: Google developer documentation style guide, [Notices](https://developers.google.com/style/notices), and Google Technical Writing One, [Lists and tables](https://developers.google.com/tech-writing/one/lists-and-tables).
+- Headings: Nielsen Norman Group, [F-Shaped Pattern](https://www.nngroup.com/articles/f-shaped-pattern-reading-web-content/), on starting headings with the information-carrying words; Toss, [technical-writing](https://github.com/toss/technical-writing), on keeping one topic per page and shallow heading depth.
+- Cut pass after drafting: Chakrabarty et al., [Can AI writing be salvaged?](https://arxiv.org/abs/2409.14509) (CHI 2025), which measures redundancy and cliché in model-written paragraphs and the effect of edit passes; Zhang et al., [Verbosity ≠ Veracity](https://arxiv.org/abs/2411.07858), on models padding answers when uncertain. Neither tests a plain instruction to be concise.
+- Limits on cutting: Google Technical Writing One, [Paragraphs](https://developers.google.com/tech-writing/one/paragraphs), and Michael Nygard, [Documenting Architecture Decisions](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions), which keeps reasoning in full sentences.
+
 ## Example library
 
 Use this library to find a public work close to the current reader task. The entries identify a passage and an original adaptation, not a prescribed template. Choose the relevant example, read its passage, and apply the technique to the actual project evidence. The skill's [synthetic examples](../skills/minimal/copydesk/references/synthetic-examples.md) hold finished synthetic rewrites; the [close readings](#close-readings) above hold the original technical foundations.

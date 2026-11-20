@@ -1,148 +1,111 @@
-# Notion Markdown Mechanics
+# Notion Markdown Behavior
 
-Syntax follows the Notion MCP tool schemas and the enhanced Markdown specification, the MCP resource `notion://docs/enhanced-markdown-spec` read with `notion-fetch`. Failures marked "observed" come from use and are not documented by Notion. Tool namespaces differ by harness and parameters can change, so confirm against the live schema.
+The specification at `notion://docs/notion-flavored-markdown-spec`, read with `notion-fetch`, is authoritative and changes over time. This file records what the Notion MCP server did with this syntax when it was checked on 2026-11-20, including behavior the specification does not state. Tool namespaces differ by harness and parameters change, so confirm them against the live schema.
 
-## Tools
+## Block syntax
 
-| Tool | Use |
+Containers share one shape: the opening tag, the title, a blank line, then the children as plain Markdown, then the closing tag. This covers `<toggle>`, `<callout>`, `<column>` inside `<columns>`, `<tab>` inside `<tabs>`, and `<quote>` or `<li>` when they need children or attributes. Children are never tab-indented; a plain `## Heading` has no children, so content meant to collapse under a heading goes in `<toggle heading="h2">`. Write `<b>`, `<i>`, `<s>`, `<u>`, and `<span color="...">` for inline styling when Markdown cannot express it. Other HTML, such as `<div>`, `<details>`, `<sup>`, or `<mark>`, is stored as literal text or converted.
+
+A synthetic decision page that uses each block once:
+
+```markdown
+The public API gateway will use a token bucket in Redis for rate limiting. In the burst test it admitted 0.4% of requests above quota, against 6.1% for the current per-instance counters, and added 0.8 ms at p99.
+
+## Decision
+
+Accepted on <date start="2026-09-30" />. Owner: <mention url="user://<user-id>"/>.
+
+The gateway checks each request against one bucket per API key. Per-instance counters over-admit during bursts because each instance sees only its own share of a key's traffic.
+
+## Options measured
+
+| Algorithm | Admitted above quota | p99 added |
+| --- | --- | --- |
+| Token bucket in Redis | 0.4% | 0.8 ms |
+| Sliding window in Redis | 0.2% | 2.3 ms |
+| Per-instance counters | 6.1% | 0.0 ms |
+
+The sliding window is stricter, but its 2.3 ms exceeds the 1 ms latency budget for gateway checks.
+
+<toggle heading="h3">Burst test setup and per-key results
+
+Load test on <date start="2026-09-30" />: 20,000 requests per second for 60 seconds across 50 API keys, each with a quota of 100 requests per second.
+
+<table header-row="true">
+<colgroup>
+<col width="220" />
+<col width="160" />
+<col width="160" />
+</colgroup>
+<tr>
+<td>Algorithm</td>
+<td>Worst key, admitted</td>
+<td>Best key, admitted</td>
+</tr>
+<tr>
+<td>Token bucket in Redis</td>
+<td>102.1 per second</td>
+<td>100.0 per second</td>
+</tr>
+</table>
+
+![Requests admitted above quota per second, by algorithm.](file-upload://<upload-id>)
+</toggle>
+
+## Open questions
+
+- Does the 1 ms budget hold when Redis fails over to a replica in another zone?
+```
+
+Other blocks:
+
+- Callout: `<callout icon="💡" color="gray_bg">` followed by the title text, a blank line, children, and `</callout>`.
+- Columns: `<columns><column>...</column><column>...</column></columns>`; `ratio="50"` on a column is optional.
+- Tabs: `<tabs><tab>Title` then a blank line, the body, and `</tab></tabs>`.
+- Mentions: `<mention url="user://<user-id>"/>` for a person, `<mention url="https://www.notion.so/<page-id>"/>` for a page, and `<date start="2026-11-02" end="2026-11-13" />` for a date or range. An ordinary `[text](url)` link is for external URLs.
+- A plain table is a pipe table. A `<table>` element is for column widths or colors; its attributes default to false, so set `header-row="true"` when the first row is a header. Cells hold inline content only, with `<br />` for a line break.
+
+## How the server rewrites content
+
+A fetch returns the stored form, which differs from what was sent. `update_content` matches against the stored form, so copy `old_str` from a fresh fetch.
+
+| Sent | Stored and fetched |
 | --- | --- |
-| `notion-fetch` | Read a page before editing; read the Markdown specification resource |
-| `notion-create-pages` | Create a page under a parent page, a database, or as a private draft |
-| `notion-update-page` | Edit content (`update_content`, `insert_content`, `replace_content`) or properties (`update_properties`) |
-| `notion-create-file-upload` | Get a one-time upload URL for one file |
-| `notion-get-users` | Look up user IDs for mentions |
-| `notion-get-async-task` | Wait for an asynchronous create or update before verifying |
+| `**Owner**` | `<b>Owner</b>` |
+| a literal `~`, `<`, `$`, `{`, or `\|` in running text | the same character escaped with a backslash |
+| `<toggle heading="h3">Title` | the title moved to its own line after the opening tag |
+| `<table header-row="true">` with no widths or colors | a pipe table |
+| `<table header-row="false">` | `<table>` with no attribute |
+| `<td>text</td>` | `<td>`, the text, and `</td>` on separate lines |
+| `![caption](file-upload://<id>)` | `<image source="notion-file-block://...">caption</image>` |
+| `<mention url="user://<id>"/>` | the same mention with the user's email appended to the URL and their name as the label |
+| tab-indented nested bullets | two-space-indented nested bullets |
 
-## Read Before Editing
+Legacy syntax is converted with a `deprecated_tag` warning: `<details>` and `<summary>` become a `<toggle>`, `<mention-user>` and `<mention-date>` become `<mention>` and `<date>`. Two legacy forms are stored silently and wrongly: `## Title {toggle="true"}` keeps the braces as heading text and turns its tab-indented children, including any table, into escaped text in one paragraph; a callout with tab-indented children becomes one paragraph joined by `<br />`.
 
-Fetch the page and keep the fetched Markdown as the baseline for the edit and for the after-edit comparison. Check `truncated`, `unknown_block_count`, and `unknown_block_ids` in the result: when blocks were omitted, the fetched text is not the whole page and must not be sent back through `replace_content`.
+Because a fetched user mention carries the person's email, do not paste fetched page text into a destination with a wider audience without removing it.
 
-In fetched Markdown, an uploaded image appears as `![caption](notion-file-block://...)`, a child page as `<page url="...">Title</page>`, and an embedded database as `<database ...>`. Count them before the edit so the verification can compare. Match the page's existing heading levels, block types, nesting, and table pattern.
+## Upload a file
 
-## Create A Page
+The upload needs a shell with network access, such as `curl`, for one multipart POST. Without one, give the file to the user and say it is not attached; do not leave a file path in the page.
 
-- For a named destination, pass `parent` with `type: "page_id"`. For a database, fetch it first and use its data source and exact property names.
-- With no destination named, use `creation_mode: "draft"`, which creates a private page; tell the user it is private and offer to move it.
-- Put the title in `properties.title`, not as a heading at the top of `content`.
-- Write the whole page in one `content` string when you can. Uploaded images can be embedded in that same string.
-
-## Edit Content
-
-### update_content
-
-Pass `content_updates` as a list of `{old_str, new_str}` pairs. Use the smallest `old_str` that matches exactly once. Set `replace_all_matches: true` only when every occurrence should change. This is the right command for a changed sentence, number, or table cell.
-
-Observed failures:
-
-- It cannot target image blocks. Replacing, moving, or removing an image needs `replace_content`.
-- Exact matching can fail on long non-ASCII strings and on strings that contain mention tags. First try a shorter unique fragment that avoids the mention. If it still fails, fetch again and use `replace_content` with the whole body.
-
-### insert_content
-
-Prepends or appends only, with `position: {"type": "start"}` or `{"type": "end"}`. It does not insert in the middle of a page.
-
-### replace_content
-
-Send the whole body, built from a fresh and complete fetch with only the intended changes applied.
-
-- Keep every fetched tag that carries a `url` or `src` exactly as fetched: `<page>`, `<database>`, `<folder>`, `<synced_block>` and `<synced_block_reference>`, `<custom-block>`, and file blocks such as images, files, PDFs, audio, video, and embeds.
-- A `<page url="...">Title</page>` tag is a child page. Removing it deletes the child page from this page, and adding a `<page>` tag with an existing page's URL moves that page here. `<mention-page>` is an inline link and does not replace a `<page>` block.
-- Keep every existing `notion-file-block://` source unchanged. Only an image you are replacing gets the new upload's source.
-- When the page has `<columns>`, set the `ratio` of every `<column>` explicitly. Leave a `<meeting-notes>` block's `<transcript>` untouched; it cannot be edited.
-- If the tool reports that child pages or databases would be deleted, stop, show the list, and ask. Never pass `allow_deleting_content: true` without the user's confirmation.
-- Do not use it when the fetch was truncated or reported unknown blocks.
-- Whether a whole-body replacement keeps reviewers' inline comments anchored was not verified. Fetch with `include_discussions: true` first; when the page has open discussions, tell the user that comment anchors may not survive and ask before replacing the body.
-
-### update_properties
-
-Change the title of a page outside a database with `properties: {"title": "New title"}`. For a database page, use the exact property names from the fetch. Make this a separate call from content edits.
-
-## Syntax
-
-Indent children with tab characters. Outside code, escape these characters with a backslash when they are literal: the backslash itself, `*`, `~`, the backtick, `$`, `[`, `]`, `<`, `>`, `{`, `}`, `|`, and `^`. The common cases are `~` in a range (`11/02\~11/04`, `3\~5 ms`), `<` or `>` in a comparison (`p99 \< 2 ms`), and `$` in a price (`\$40`). Code spans and code blocks are literal and need no escaping.
-
-Callout, with each line indented:
-
-```markdown
-<callout icon="icons/document_gray" color="gray_bg">
-	**Owner**: <mention-user url="user://<user-id>"/>
-	**Updated**: <mention-date start="2026-10-07"/>
-</callout>
-```
-
-Nested bullets:
-
-```markdown
-- **What**: a shared rate limiter for the public API gateway.
-	- Replaces per-instance counters that over-admit during bursts.
-```
-
-Toggle heading with a table and an image inside it. The table's rows sit one level deeper than the table tag, and every child of the toggle is indented at least once. Table attributes default to false, so set `header-row="true"` on every table; leave `fit-page-width` unset and size the table with column widths, totaling about 700 on a default-width page; confirm on the rendered page:
-
-```markdown
-### Option measurements {toggle="true"}
-	<table header-row="true">
-		<colgroup>
-			<col width="200">
-			<col width="110">
-			<col width="280">
-		</colgroup>
-		<tr>
-			<td>Algorithm</td>
-			<td>p99 added</td>
-			<td>Main cost</td>
-		</tr>
-		<tr>
-			<td>Token bucket</td>
-			<td>0.8 ms</td>
-			<td>One script call per check</td>
-		</tr>
-	</table>
-	- Internal load test on <mention-date start="2026-09-30"/>, 20k requests per second.
-	![Burst admission by algorithm. Bars show requests admitted above quota.](file-upload://<upload-id>)
-```
-
-A toggle without a heading is `<details>` with a `<summary>` line and indented children. Table cells hold rich text only: no lists, images, or raw HTML tags; use `**bold**`, not `<b>`. Notion cannot merge cells through Markdown.
-
-Mentions; the user interface shows the resolved name, so the inner text can be omitted:
-
-```markdown
-<mention-user url="user://<user-id>"/>
-<mention-date start="2026-11-30"/>
-<mention-date start="2026-11-02" end="2026-11-13"/>
-<mention-page url="https://www.notion.so/<page-id>"/>
-```
-
-Use a date mention for a deadline or meeting date, a page mention for a link to another Notion page, and an ordinary Markdown link for an external URL.
-
-## Upload An Image
-
-The upload needs a shell with network access, such as `curl`, for the multipart POST. Without one, give the file to the user and report that it is not attached; do not leave a file path in the page.
-
-1. Keep the file under 20 MiB, the limit of this single-part upload flow.
-2. Call `notion-create-file-upload` with the filename, such as `{"filename": "limiter-request-flow.png"}`. Omit `content_type` so the type is inferred from the extension.
-3. Send exactly one `multipart/form-data` POST to the returned `upload_url`, with the file in the `file` form field and every header from `upload_headers`:
+1. Keep the file under 20 MiB. Call `notion-create-file-upload` with the filename, such as `{"filename": "burst-admission.png"}`, and omit `content_type` so the extension decides it.
+2. Send exactly one `multipart/form-data` POST to the returned `upload_url`, with the file in the `file` field and every header from `upload_headers`. The headers authorize the upload; keep them out of the page, commits, and reports. The URL expires within minutes and accepts only this file.
 
    ```bash
-   curl -sS -X POST "$UPLOAD_URL" \
-     -H "<header-name>: <header-value>" \
-     -F "file=@limiter-request-flow.png"
+   curl -sS -X POST "$UPLOAD_URL" -H "authorization: $UPLOAD_AUTH" -F "file=@burst-admission.png"
    ```
 
-   The headers authorize the upload. Do not paste them into the page, a commit, or the report. The URL is short-lived and accepts only this one file; if it expires, create a new upload.
-4. Embed the image in `notion-create-pages` content or a `notion-update-page` edit with the `markdown_source` or `suggested_markdown` the upload returns, adding the caption. Only when neither is returned, write `![<caption>](file-upload://<upload-id>)` by hand. After saving, a fetch shows the source as `notion-file-block://...`.
-5. Fetch and confirm the image block and its caption are present.
+3. The response carries `markdown_source` (`file-upload://<id>`) and `suggested_markdown` (`<image source="file-upload://<id>" />`). Embed it with a caption as `![caption](file-upload://<id>)` or `<image source="file-upload://<id>">caption</image>`. An image is its own block, never inline with text.
 
-To replace an image, upload the new file, fetch the page, and send `replace_content` with the whole body where only that image's `notion-file-block://` source is swapped for the new upload's returned source and its caption is updated.
+To replace an image, upload the new file, fetch the page, and send `update_content` whose `old_str` is the whole fetched `<image source="notion-file-block://...">caption</image>` block and whose `new_str` is `<image source="file-upload://<new-id>">new caption</image>`. Other images keep their `notion-file-block://` sources untouched.
 
-## People Mentions
+For a small text file, `notion-create-attachment` takes the content directly (up to 200 KiB) and returns a source to place with `<file source="..."/>`. An HTML file placed with `<embed source="..."/>` renders as a sandboxed preview.
 
-- `notion-get-users` with `{"query": "<name or email>"}` returns matching users and their IDs. `{"user_id": "self"}` returns the current user, which is usually the author.
-- Write the mention as `<mention-user url="user://<user-id>"/>`. Never write `@Name` or a plain name.
-- A Person property in a database takes an array of user IDs through `update_properties`.
-- Mentioning someone can notify them. Add a mention only for the person the page must identify, and report who was mentioned.
-- Someone outside the workspace cannot be mentioned; refer to them by role or organization.
+## People
 
-## Asynchronous Writes
+`notion-get-users` with `{"query": "<name or email>"}` returns user IDs, and `{"user_id": "self"}` returns the current user. A mention can notify, so mention only the people the page must identify and report who was mentioned. Someone outside the workspace cannot be mentioned; refer to them by role or organization. A Person property in a database takes an array of user IDs through `update_properties`.
 
-The tool descriptions of `notion-create-pages` and `notion-update-page` ask callers to pass `allow_async: true`; an omitted value runs synchronously when possible. When a call returns an `async_task`, wait with `notion-get-async-task` until it succeeds before the verification fetch. Pass `allow_async: false` when the next step needs the result.
+## Asynchronous writes
+
+`notion-create-pages` and `notion-update-page` accept `allow_async`, which their descriptions default to true. When a call returns an `async_task`, wait with `notion-get-async-task` until it succeeds before fetching. Pass `allow_async: false` when the next step needs the result immediately.
