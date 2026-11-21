@@ -2,7 +2,7 @@
 
 [![skills.sh](https://skills.sh/b/gigio1023/gigio-skills)](https://skills.sh/gigio1023/gigio-skills)
 
-52 reusable [Agent Skills](https://agentskills.io/) for research and evaluation, software delivery, writing, and work with coding agents such as Claude Code, Codex, and Cursor. The skills live in two install sets: the **minimal set** is the default install, and the **additional set** is installed on request. [`npx skills`](https://github.com/vercel-labs/skills) copies the skills you choose into the agents you choose.
+53 reusable [Agent Skills](https://agentskills.io/) for research and evaluation, software delivery, writing, and work with coding agents such as Claude Code, Codex, and Cursor. The skills live in two install sets: the **minimal set** is the default install, and the **additional set** is installed on request. [`npx skills`](https://github.com/vercel-labs/skills) copies the skills you choose into the agents you choose.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/figures/readme/repo-overview.dark.png">
@@ -20,7 +20,7 @@ A skill is one folder. `SKILL.md` holds the description an agent reads to decide
   <img src="docs/figures/readme/install-sets.light.png" width="720" alt="A skill package goes to skills/minimal only when it owns recurring work in the maintainer's own work, is picked by an ordinary request rather than only by name, and runs without an extra tool, account, or harness. Failing any test sends it to skills/additional. Examples: credo-paper-plan and credo-release are the paper track; credo-taste, credo-journal, and small-model-handoff are invoked by name; codex-delegate, 1password-cli, and toss-portfolio-state are bound to a harness or account.">
 </picture>
 
-- **Minimal set** `skills/minimal/`: 33 skills that cover the maintainer's recurring work. A minimal skill never requires an additional or external skill; it may mention one "when installed".
+- **Minimal set** `skills/minimal/`: 34 skills that cover the maintainer's recurring work. A minimal skill never requires an additional or external skill; it may mention one "when installed".
 - **Additional set** `skills/additional/`: 19 skills for the paper track, evaluation on spot GPUs, vulnerability reporting, release notes, by-name workflows, harness-specific delegation, and personal tools.
 - **A set decides availability only.** Once installed, each skill's description and invocation settings decide when it runs. The minimal set reflects the maintainer's work, so choose sets and skills by your own.
 
@@ -45,7 +45,7 @@ npx --yes skills add 'https://github.com/gigio1023/gigio-skills/tree/main/skills
   --skill '*' --agent claude-code codex cursor --global --yes
 ```
 
-Use `skills/additional` in the same URL for the additional set, or `'gigio1023/gigio-skills#main'` for all 52 skills. Quote the `'*'` so the shell does not expand it.
+Use `skills/additional` in the same URL for the additional set, or `'gigio1023/gigio-skills#main'` for all 53 skills. Quote the `'*'` so the shell does not expand it.
 
 Install selected skills by name:
 
@@ -82,7 +82,7 @@ An agent picks a skill from its description, so this table is for a person choos
 | Load or a failing system | `load-testing`, `bug-diagnosis` | `design-doc` when the fix changes a design |
 | Documents, Notion pages, issues, PRs | `copydesk`, `write-notion`, `write-issue`, `draft-pr` | `review-panel` |
 | A release note for a new version | `release-notes` | `draft-pr` for the GitHub release, `write-notion` |
-| Delegation, prompts, skills | `orchestrate-subagents`, `model-routing`, `prompting-guide`, `skill-builder` | `codex-delegate`, `small-model-handoff` |
+| Delegation, prompts, skills | `orchestrate-subagents`, `lead-delegate`, `model-routing`, `prompting-guide`, `skill-builder` | `codex-delegate`, `small-model-handoff` |
 | Continuing or handing off work | `work-plan`, `session-handoff` | `read-agent-sessions` |
 
 ## Skill catalog
@@ -170,11 +170,12 @@ Grouped by kind of work, in the same order as the figures above. Open a group to
 </details>
 
 <details>
-<summary><b>Agents and harnesses</b>: 5 minimal, 5 additional</summary>
+<summary><b>Agents and harnesses</b>: 6 minimal, 5 additional</summary>
 
 | Skill | Set | Use it to |
 | --- | --- | --- |
 | [orchestrate-subagents](skills/minimal/orchestrate-subagents/) | minimal | Coordinate delegated work and synthesize its evidence |
+| [lead-delegate](skills/minimal/lead-delegate/) | minimal | Keep planning and judgment in the lead and hand whole tasks to child sessions: brief, report, and acceptance on evidence |
 | [model-routing](skills/minimal/model-routing/) | minimal | Choose subagent models and effort; GPT research uses Sol 6.1, complex judgment uses Astra |
 | [prompting-guide](skills/minimal/prompting-guide/) | minimal | Write, review, and migrate prompts, skills, and goal prompts for Claude Fable, Claude Opus, or GPT-6 |
 | [skill-builder](skills/minimal/skill-builder/) | minimal | Turn real workflows into skills, including ones that work across Claude Code and Codex |
@@ -223,7 +224,7 @@ Inspect a checkout without creating a tracked install:
 npx --yes skills add . --list
 ```
 
-Before publishing, check that each `SKILL.md` name matches its folder, every referenced path exists, the catalog points to the right skill, and the listing finds 52 unique names.
+Before publishing, check that each `SKILL.md` name matches its folder, every referenced path exists, the catalog points to the right skill, and the listing finds 53 unique names.
 
 | Topic | Document |
 | --- | --- |

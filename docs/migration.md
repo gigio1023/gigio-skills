@@ -167,3 +167,11 @@ A skill refresh updates instructions and bundled assets. To activate the Codex r
 | None | `evaluation-analysis` in minimal | Analysis of per-sample eval result rows: key and grain checks, outcome classes and denominators, item-level scores from K samples, clustered and paired intervals for rates and model differences, per-category Holm and Benjamini-Hochberg over a declared family, and the data and prediction noise split, with a standard-library script |
 
 `evaluation-design` keeps what an eval measures and the sizing of a run, `evaluation-audit` keeps the verdict and its "headline recomputes" check, `evaluation-operations` keeps campaign state, `ml-experiment` keeps the design of training and serving comparisons, and `insight-dashboard` keeps how a view presents the numbers. Before this change no skill owned the statistics of a finished result table, and the `1/sqrt(nR)` planning rule in `evaluation-design` and `evaluation-audit` was the only stated interval; both references now call it a lower bound that ignores item clusters and the correlation of repetitions, and point to the new skill. It sits in the minimal set because analyzing eval results recurs in the maintainer's work without another owner, an ordinary request selects it, and its script needs only Python's standard library. Install it on the next refresh of the minimal set.
+
+## Lead delegation on 2026-11-21
+
+| Former name or set | Current name or set | Change |
+| --- | --- | --- |
+| None | `lead-delegate` in minimal | A lead session keeps planning and judgment and hands whole tasks to child sessions that own them end to end: what each side holds, the brief, the one-time report with evidence lines, acceptance checks, and per-harness session mechanics for Claude Code and Codex. |
+
+`orchestrate-subagents` keeps the choice of unit, packets, the dispatch loop, and merging results inside one session. `model-routing` keeps model and effort policy; the role table in `lead-delegate` is a default that a routing policy or user instruction overrides. `codex-delegate` keeps the launch, watch, and recovery of a detached Codex run.

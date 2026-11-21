@@ -6,6 +6,7 @@ GPT-6.1 Sol handles most ordinary research, source selection, collection, organi
 | --- | --- |
 | `model-routing` | GPT and Fable model and effort policies, worker roles, and nested delegation |
 | `orchestrate-subagents` | Decomposition, ownership, coordination, and synthesis |
+| `lead-delegate` | The split between a lead and child sessions that own whole tasks: brief, report, acceptance, and session mechanics |
 | `small-model-handoff` | Fixed execution contracts for a deliberately selected mechanical or weaker executor |
 | `codex-delegate` | External Codex mission launch, authority, runtime, and evidence |
 
