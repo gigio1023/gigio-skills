@@ -22,7 +22,7 @@ When a brief seems to need wide reading first, that reading is the child's first
 
 ## Brief
 
-The brief says what must be true at the end and leaves the steps to the child. A lead that has not read the code writes steps on assumptions, and an agent following wrong steps tends to fail without saying so; in one measured comparison, guidance followed by the agent's own plan resolved more tasks than strict steps ([sources](references/sources.md)).
+The brief says what must be true at the end and leaves the steps to the child. A lead that has not read the code writes steps on assumptions, and an agent held to wrong steps tends to fail without saying so. In one measured comparison, strict steps and full autonomy resolved about the same number of tasks, and autonomy on the first attempt followed by specific corrections resolved the most ([sources](references/sources.md)).
 
 - **Goal and reason.** The outcome and why it is wanted, so the child can make the calls the brief did not foresee.
 - **Done when.** Conditions the lead can check, each with the command or observation that shows it.
@@ -38,12 +38,12 @@ Pass an existing task file by path instead of paraphrasing it. A subagent below 
 
 ## Report
 
-Each wake-up of the lead spends the most expensive tokens in the run, so the child reports once, when the work is done or it cannot continue. The first lines carry what the lead must act on, because some harnesses forward only the start of the message.
+Each wake-up of the lead spends the most expensive tokens in the run, so the child reports once, when the work is done or it cannot continue. The message starts with the form, and its first lines stay short and carry what the lead must act on, because some harnesses forward only the start of the message.
 
 ```
 STATUS: done | blocked | needs-decision, in one line
-MODEL: model ID and effort this session ran on
 NEEDS: the decision or input required from the lead, or none
+MODEL: model ID this session ran on
 RESULT: what exists now and where (branch, PR, paths)
 EVIDENCE: each done-when condition, the command run, the output lines that show it
 DEVIATIONS: where the work departed from the brief, and why
