@@ -1,6 +1,6 @@
 # Claude Code
 
-Checked 2026-11-21 against the Claude Code 2.1.330 docs and the desktop app's session tools as listed in a live session. The session tools are not in the public docs and change between app versions, so trust the tool list in front of you over this file.
+Checked 2026-11-21 against the Claude Code 2.1.330 docs, the local `claude` 2.1.322 help, and the desktop app's session tools as listed in a live session. The session tools are not in the public docs and change between app versions, so trust the tool list in front of you over this file.
 
 ## Roles and Models
 
@@ -13,7 +13,7 @@ Defaults when the user has set none. A user instruction, a preference file, or a
 | Subagent with judgment | Opus 5.5 | Implementation, diagnosis, review |
 | Subagent executing a fixed plan | `sonnet` | Read-only collection, fixed command runs |
 
-A subagent with no model set runs on its parent's model, so a child session's subagents are Opus unless the spawn names another model. Per the docs the order is spawn parameter, agent definition, `CLAUDE_CODE_SUBAGENT_MODEL`, then the parent.
+A subagent with no model set runs on its parent's model, so a child session's subagents are Opus unless the spawn names another model. Per the docs the first source that sets a model wins: the spawn's `model` parameter, the agent definition's `model` field, `CLAUDE_CODE_SUBAGENT_MODEL`, then the parent's model. On the Agent tool the spawn parameter takes an alias such as `opus` or `sonnet`, not a full model ID, and a mod's `agent.spawn` hook that sets a model replaces it. A nested subagent with no model of its own runs on the subagent that spawned it.
 
 ## Desktop App Sessions
 
@@ -31,7 +31,7 @@ A subagent with no model set runs on its parent's model, so a child session's su
 
 ## CLI Sessions
 
-`claude --bg "<prompt>"`, or `claude agents` with `--model`, `--effort`, and `--permission-mode`, starts a background session. It reports to the user. The lead reaches it with `ListAgents` and `SendMessage`. Adding `notify_when_idle` to a `SendMessage` returns one notice when that session next goes idle; it works from the main conversation only, for sessions on the same machine, and is dropped after 12 hours.
+`claude --bg "<prompt>"` starts a background session and takes the session flags `--model`, `--effort`, and `--permission-mode`. `claude agents` opens agent view, where the same three flags set the defaults for every session dispatched from it. A background session reports to the user. The lead reaches it with `ListAgents` and `SendMessage`. Adding `notify_when_idle` to a `SendMessage` returns one notice when that session next goes idle or exits, at once if it is already idle; it works from the main conversation only, for sessions on the same machine, needs 2.1.236 or later in both sessions, and is dropped if no notice arrives within 12 hours.
 
 When `crossSessionInbound` is unset, delivery depends on the two sessions' permission classes. Sessions that bypass permission prompts form one class and all others the second. A message between sessions of different classes is held for the user's approval. A terminal session shows an approval dialog; a Desktop app or VS Code session cannot show it and drops the message at `dialogExpiry`, five minutes by default. Run the lead and its child sessions in the same class, or set `crossSessionInbound` to `accept`. Whether the desktop app's own session tools follow this rule is untested.
 
