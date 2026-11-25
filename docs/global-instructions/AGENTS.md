@@ -51,4 +51,5 @@ Standing preferences for documents, PR bodies, issues, and messages a colleague 
 - Resolve the reviewing team's language from the current request and repository context, such as the language of recent PRs and issues. Ask only when it remains unclear; English is the fallback.
 - A PR body says why and what. Keep validation logs and routine self-appraisal out of it. Retain meaningful conditions and uncertainty. A behavior change uses an as-is/to-be table against the real base branch; add a diagram only when requested. A required repository template takes precedence.
 - An issue names the outcome before the tasks and stays short. Use complete sentences for causes, conditions, and mechanisms.
+- A comment or reply on a PR, issue, or advisory is short and conversational, a few plain sentences like a short post. The formal register belongs to the body; a reply answers the question or adds the new fact and links the evidence.
 <!-- writing-profile:end -->

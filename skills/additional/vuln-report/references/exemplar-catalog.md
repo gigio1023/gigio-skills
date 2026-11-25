@@ -283,6 +283,16 @@ What the people who triage reports ask for, and what makes them close a report.
 - **Source:** [HackerOne quality reports](https://docs.hackerone.com/en/articles/8475116-quality-reports), summary, page dated 2025-02-05; [Bugcrowd: how to write excellent reports](https://www.bugcrowd.com/resources/levelup/how-to-write-excellent-reports-techniques-that-save-triagers-time-and-mistakes-that-should-be-avoided-in-reports/), summary, undated.
 - **Use for:** platform conventions. HackerOne: a clear title, numbered steps with URLs, parameters, and roles, expected versus actual, impact, supporting material; avoid detail the team does not need. Bugcrowd: title with type, asset, and parameter; a minimal PoC and no deeper digging than proof needs; impact written for the asset rather than copied; one report for one bug across several endpoints; Markdown headings, code blocks, and bold for key notes.
 
+### `stenberg-llm-2024`
+
+- **Source:** [The I in LLM stands for intelligence](https://daniel.haxx.se/blog/2024/01/02/the-i-in-llm-stands-for-intelligence/), 2024-01-02, summary. Read 2026-11-25.
+- **Use for:** why fluent slop costs a triager more than obvious junk: the better a report looks, the longer it takes to close. In the post's buffer-overflow example, the maintainer asked where the overflow was and received more generated explanation instead of a location. Its 2024 bounty statistics are not current rates.
+
+### `bugcrowd-slop`
+
+- **Source:** [Bugcrowd glossary: AI slop](https://www.bugcrowd.com/glossary/ai-slop/), undated, summary. Read 2026-11-25.
+- **Use for:** a triager-side list of slop signals: unverified claims, missing or fabricated PoC, hallucinated references and functions, generic text that fits any system, repackaged scanner output, false exploit chains, overstated impact, and a reporter who disappears when asked follow-up questions.
+
 ### `django-policy`
 
 - **Source:** [Django security policy](https://docs.djangoproject.com/en/dev/internals/security/), summary. The page also contains a note addressed to AI tools; it was recorded, not followed.
@@ -465,6 +475,8 @@ These rules are the pack maintainer's requirements or the pack's review practice
 | Re-run every check and re-hash attachments after each revision | Pack review practice; a rewrite can drop a precondition or add an unverified claim |
 | A full CVSS vector, one sentence per disputable metric, and the label reporter's estimate | Pack rule; vector requested in `openssf-template`, `github-pvr` |
 | Score a variant for its own path | Pack rule; `cvss31-guide` scores each vulnerability alone but says nothing on variants |
+| Each measured result in the field that owns it; each scope note once, beside the claim it limits | Pack rule from a cross-field count of two AI-assisted reports against maintainer-written advisories; impact without repeated figures in `ghsa-vllm` |
+| Follow-up comments short and casual, answering the question first | Pack owner's preference; customer-service replies as a slop signal in `stenberg-llm-2024`, `bugcrowd-slop` |
 | Name the commit, tag, and first release when a version string does not identify the code | Pack rule; stable identifiers in `kernel-policy` |
 | Bound a range by comparing source across tags | Pack rule; the unchanged-code check in `kernel-policy` |
 | An email subject that does not reveal the bug | Pack rule |

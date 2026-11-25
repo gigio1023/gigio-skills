@@ -20,7 +20,9 @@ A report is read by someone deciding, under time pressure, whether to believe it
 - Policies differ on AI-drafted text. curl asks the reporter to write the report after verifying the finding, and Apple discourages long AI-generated descriptions, while Django and the kernel accept short drafts that are disclosed and verified by the person (`curl-ai-policy`, `apple-guidelines`, `django-policy`, `kernel-policy`). Whoever drafts, cut what generated reports tend to add: length, decoration, and speculative consequences (`kernel-policy`, `apple-guidelines`).
 - Plain, even imperfect, English is fine. Grammar is not a credibility signal, and some programs accept reports in other languages (`cert-credibility`, `google-native-language`).
 - Keep the narrative of how you found it to one sentence or a separate short section; a story preamble before the finding reads as padding (`cert-credibility`).
-- Say each limit once, in the sentence it limits. Do not repeat caveats in several sections (`local`).
+- Say each limit once, in the sentence it limits. Do not repeat caveats in several sections (`local`). A run of "not tested" and "not run" sentences that limit no claim in the report answers objections nobody raised; keep the ones a triager would otherwise read as covered.
+- State each measured result once, in the field that owns it. The summary carries the headline result in a sentence, details or reproduction carry the figures, and impact says who can do what under which preconditions without listing the measurements again. A multi-field form invites each field to stand alone; the copies drift when one is corrected, and the triager reads the same numbers three times. Published maintainer-written advisories in the surveyed set keep the impact field to a few sentences with no repeated figures (`ghsa-vllm`, `local`).
+- Point to a section by its heading. "(Next sections)" or "see below" in a form whose fields the maintainer may read in any order sends them searching (`local`).
 
 ## Person and tense
 
