@@ -17,6 +17,7 @@ Vary the explanation and reading order by purpose. A factual record's brevity is
 - [Incident report or postmortem](#incident-report-or-postmortem)
 - [Periodic review or progress report](#periodic-review-or-progress-report)
 - [Project overview, reference, or runbook](#project-overview-reference-or-runbook)
+- [Comment or reply in a thread](#comment-or-reply-in-a-thread)
 
 ## Guide or explanation for a new reader
 
@@ -113,3 +114,7 @@ A project overview explains what the project does, where it fits, the main entry
 A reference organizes exact interfaces and behavior for lookup: parameter or field, type, valid values, default, effect, and relevant error. Describe interactions between fields where they matter. Do not bury a required condition in a motivational introduction.
 
 A runbook organizes actions by the actual symptom or task. State prerequisites before the action they constrain, the command or operation, the observable result, and the next step on failure. Distinguish inspection from mutation. A command example that has not been exercised is not a verified procedure. Avoid documenting credentials or copying a private environment into a public example.
+
+## Comment or reply in a thread
+
+A comment on a pull request, issue, or advisory, or a reply in a review thread, is a turn in a conversation with someone who already read the main text. Write it the way a colleague would type it: a few plain sentences that answer the question asked or add the one new fact, with no headings, no summary of the thread, and no restated background. A short casual register fits here, like a short social post; the formal register belongs to the document body. Link the commit, run, or file that carries the evidence instead of pasting it. When a reply grows past a few sentences because new evidence needs explaining, put that evidence in the document or an attachment and keep the reply as the pointer to it. Courtesy is fine in one phrase. Wikipedia's editor guide to [AI use in comments](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_use_in_comments) (revision 1387778157) describes the opposite as a customer-service register: letter-style greetings and sign-offs, assurances of good faith, "happy to" offers, requests for feedback, and long replies split into titled sections.

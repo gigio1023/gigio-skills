@@ -10,6 +10,10 @@ This is an attributed synthesis. It does not import the third-party checker, aut
 
 The earlier percentage-of-STE policy is retired. Korean follows natural Korean grammar, and English clarity work preserves useful clauses, tense, and uncertainty. The ordinary path starts with reader purpose, semantic fidelity, and [finished examples](../skills/minimal/copydesk/references/finished-examples.md). Pattern evidence is a targeted diagnostic aid rather than a routine reading requirement.
 
+## Anti-slop survey
+
+The [November 2026 anti-slop survey](anti-slop-survey/README.md) records the public skills, linters, tells lists, triage policies, and papers read for copydesk's structure checker and one-home rule, with pinned revisions, licenses, and a checker evaluation on real documents.
+
 ## Close readings
 
 Use this catalog to select and closely read a public technical exemplar. The value is in the writing operation: how the author states a fact, explains a mechanism, introduces a comparison, qualifies a result, or justifies a choice. A company name or a “technical report” label does not make every sentence worth copying.

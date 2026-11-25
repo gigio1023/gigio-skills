@@ -15,6 +15,7 @@ Walk this after `scripts/check_report.py` and before handing the package to the 
 - [ ] Every present-tense capability was executed and observed; source-only claims say so in the same sentence (`ghsa-nginx-ui`, `chromium-vrp-faq`).
 - [ ] Every quoted line matches the source at the pinned tag or commit, with omissions marked (`h1-curl-socks5`, `local`).
 - [ ] Every number in the text matches the attachment it cites (`local`).
+- [ ] Each measured result appears in the field that owns it, with the summary carrying only the headline result; each "not tested" note limits a claim the report makes and appears once; pointers name a heading (`ghsa-vllm`, `local`).
 - [ ] Preconditions are listed, including whether the default configuration is affected, and what is not affected is stated (`p0-report-2026`, `ghsa-vllm`).
 - [ ] Undemonstrated chains are in their own conditional sentences (`p0-report-2026`, `kernel-policy`).
 - [ ] Severity follows the venue: absent when the policy says so; when given, a full vector with its version, reasons for disputable metrics, and the label reporter's estimate, never a bare number (`django-policy`, `openssf-template`, `cvss31-guide`).

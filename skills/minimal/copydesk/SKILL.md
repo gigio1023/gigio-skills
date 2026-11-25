@@ -57,6 +57,7 @@ Bundled helpers use Python 3's standard library; run them from this skill direct
 
 - `python3 scripts/check_slop.py <file>` reports where common LLM style patterns cluster, such as Korean connective commas and English negation-contrast frames. Its counts locate passages to reread and never grade a document.
 - `python3 scripts/check_draft.py <file>` locates possible padding, dense presentation, or references to the drafting session. Zero findings say nothing about usefulness or accuracy.
+- `python3 scripts/check_structure.py <file> [<file> ...]` reads a document as a whole: quantities and sentences repeated across sections, sentences saying what was not tested or run, and pointers such as "see below" that name no heading. Pass a form's field files together to check them as one document. A summary may restate the main result once.
 - `python3 scripts/measure_length.py <before> [<after>]` counts words per heading and their change.
 - `python3 scripts/protected_diff.py <previous> <revised> --allow "<heading>"` reports literal movement outside a local correction.
 - `python3 scripts/trace_check.py <traced.md>` with [source tracing](references/source-tracing.md) helps a source-bound rewrite at risk of invented connective facts.
