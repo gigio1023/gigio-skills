@@ -16,10 +16,19 @@ script.
 
 Korean: commas per 100 characters (whitespace excluded); commas right after a
 connective ending (-고, -며, -지만, -면서, -아서/-어서, -는데, -면) per 100
-sentences; sentences that open with 이는, 또한, 아울러, or 나아가. The ending
-match is a regular expression without a morphological analyzer, so a noun that
-ends in the same syllable can be counted and a verb excluded with a homograph
-noun can be missed.
+sentences; sentences that open with 이는, 또한, 아울러, or 나아가; sentences whose
+final predicate is a negation (않는다, 못했다, 없다, 아니다, and their noun endings);
+and negate-then-affirm frames inside a sentence (가 아니라, 가 아닌, 뿐만 아니라,
+-지 않고). The ending match is a regular expression without a morphological
+analyzer, so a noun that ends in the same syllable can be counted and a verb
+excluded with a homograph noun can be missed.
+
+The two negation counts have no human baseline. They list sentences for the
+deletion test in references/korean-writing.md: a negative sentence stays when it
+defines a negative state, reports a measured absence, forbids an action, or
+corrects a belief the reader holds. Table cells are skipped like other tables.
+A sentence measured as English for its field terms is still checked for these
+two patterns, so their rates can run slightly high against the Korean sentence count.
 
 English: negation-contrast frames ("not just X but Y", "isn't X, it's Y",
 "It's not X. It's Y.", "No X, no Y"), "serves as" and "stands as", "it's worth
@@ -53,7 +62,7 @@ from check_draft import HEADING_RE, LIST_ITEM_RE, group_blocks, is_table_row, sc
 
 MAX_SENTENCE_LEN = 120  # trim point for reported sentences
 CATEGORY_ORDER = [
-    "ko_connective_comma", "ko_initial_connective",
+    "ko_connective_comma", "ko_initial_connective", "ko_negative_sentence", "ko_negation_contrast",
     "en_negation_contrast", "en_serves_as", "en_worth_noting", "en_llm_verb",
 ]
 
@@ -85,6 +94,16 @@ KO_NOT_CONNECTIVE = (
     "그리고", "하지만", "그러면",
 )
 KO_INITIAL_CONNECTIVE_RE = re.compile(r"^(이는|또한|아울러|나아가)(?=[\s,，]|$)")
+# The sentence's final predicate, in plain, polite, and noun endings.
+KO_NEGATIVE_END_RE = re.compile(
+    r"(?:않(?:는다|았다|다|습니다|았습니다|음|았음)|못\s?(?:한다|했다|합니다|했습니다|함|했음)"
+    r"|없(?:다|었다|습니다|었습니다|음|었음)|아니(?:다|었다)|아닙니다|아님)[\s.!?。)\]]*$"
+)
+# Adjectives built on 없다 that assert rather than negate.
+KO_NOT_NEGATIVE = ("틀림없", "다름없", "어김없", "끊임없", "더없", "변함없")
+KO_NEGATION_CONTRAST_RE = re.compile(
+    r"(?:이|가|은|는|도|만)\s?아니(?:라서|라|고)(?=[\s,，])|(?:이|가)\s?아닌(?=\s)|지\s?않(?:고|으며)(?=[\s,，])"
+)
 
 APOSTROPHE = "['’]"
 EN_NEGATION_CONTRAST_RES = [
@@ -137,6 +156,8 @@ class KoreanCounts:
     commas: int = 0
     connective_commas: int = 0
     initial_connectives: dict[str, int] = field(default_factory=dict)
+    negative_sentences: int = 0
+    negation_contrasts: int = 0
 
 
 @dataclass
@@ -226,6 +247,18 @@ def measure_korean(sentence: Sentence, counts: KoreanCounts, hits: list[Hit]) ->
         word = opener.group(1)
         counts.initial_connectives[word] = counts.initial_connectives.get(word, 0) + 1
         hits.append(Hit(sentence.line, sentence.col, "ko_initial_connective", word, trim(sentence.text)))
+    measure_korean_negation(sentence, counts, hits)
+
+
+def measure_korean_negation(sentence: Sentence, counts: KoreanCounts, hits: list[Hit]) -> None:
+    """Record a negative final predicate and negate-then-affirm frames; mutates both arguments."""
+    ending: re.Match[str] | None = KO_NEGATIVE_END_RE.search(sentence.text)
+    if ending and not sentence.text[: ending.start() + 1].endswith(KO_NOT_NEGATIVE):
+        counts.negative_sentences += 1
+        hits.append(Hit(sentence.line, sentence.col, "ko_negative_sentence", ending.group(0).strip(), trim(sentence.text)))
+    for m in KO_NEGATION_CONTRAST_RE.finditer(sentence.text):
+        counts.negation_contrasts += 1
+        hits.append(Hit(sentence.line, sentence.col, "ko_negation_contrast", m.group(0), trim(sentence.text)))
 
 
 def measure_english(sentence: Sentence, following: Sentence | None, counts: EnglishCounts, hits: list[Hit]) -> None:
@@ -262,6 +295,9 @@ def analyze(text: str) -> Report:
         if is_korean(sentence.text):
             measure_korean(sentence, korean, hits)
         elif LATIN_RE.search(sentence.text):
+            if HANGUL_RE.search(sentence.text):
+                # A Korean predicate after English field terms: "User simulator는 없다."
+                measure_korean_negation(sentence, korean, hits)
             following: Sentence | None = sentences[index + 1] if index + 1 < len(sentences) else None
             measure_english(sentence, following, english, hits)
     hits.sort(key=lambda h: (h.line, h.col, CATEGORY_ORDER.index(h.category)))
@@ -279,6 +315,8 @@ def rates_of(report: Report) -> dict[str, float | None]:
         "ko_commas_per_100_chars": rate(ko.commas, ko.characters, 100),
         "ko_connective_commas_per_100_sentences": rate(ko.connective_commas, ko.sentences, 100),
         "ko_initial_connectives_per_100_sentences": rate(sum(ko.initial_connectives.values()), ko.sentences, 100),
+        "ko_negative_sentences_per_100_sentences": rate(ko.negative_sentences, ko.sentences, 100),
+        "ko_negation_contrasts_per_100_sentences": rate(ko.negation_contrasts, ko.sentences, 100),
         "en_negation_contrast_per_100_sentences": rate(en.negation_contrast, en.sentences, 100),
         "en_serves_as_per_100_sentences": rate(en.serves_as, en.sentences, 100),
         "en_worth_noting_per_100_sentences": rate(en.worth_noting, en.sentences, 100),
@@ -302,6 +340,8 @@ def render_text(report: Report) -> str:
         f"  connective commas: {ko.connective_commas} ({shown(r['ko_connective_commas_per_100_sentences'])} per 100 sentences)",
         f"  sentence-initial 이는/또한/아울러/나아가: {sum(ko.initial_connectives.values())}"
         f" ({shown(r['ko_initial_connectives_per_100_sentences'])} per 100 sentences; {openers})",
+        f"  sentences ending in a negation: {ko.negative_sentences} ({shown(r['ko_negative_sentences_per_100_sentences'])} per 100 sentences)",
+        f"  negate-then-affirm frames: {ko.negation_contrasts} ({shown(r['ko_negation_contrasts_per_100_sentences'])} per 100 sentences)",
         f"english: {en.sentences} sentences, {en.words} words",
         f"  negation-contrast frames: {en.negation_contrast} ({shown(r['en_negation_contrast_per_100_sentences'])} per 100 sentences)",
         f"  serves as / stands as: {en.serves_as} ({shown(r['en_serves_as_per_100_sentences'])} per 100 sentences)",
