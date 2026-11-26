@@ -14,6 +14,7 @@ Standing preferences for documents, PR bodies, issues, and messages a colleague 
 
 - Shared working documents such as design docs, decision records, and question lists default to concise nested bullets for parallel facts and decisions; a cause, mechanism, or trade-off keeps the sentences it needs.
 - Keep actors, actions, references, and conditions clear. Preserve natural causal and contrastive sentences; length alone is not a defect. Use consistent terms for the same concept while retaining distinctions between different concepts. Remove repeated framing and padding without dropping grammar or reasoning.
+- State what holds. Delete a sentence that only negates when another sentence or the open-questions section already carries the fact; otherwise restate it with the value or the actor, such as `undecided`, `0 of 40`, or `only the grader reads the key`. Negation stays where it is the fact: the definition of a negative state, a measured absence, a prohibition, an unsupported scope, or the correction of a belief the reader holds.
 
 ## Content
 

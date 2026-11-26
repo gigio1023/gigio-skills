@@ -25,11 +25,12 @@ AI-assisted vulnerability reports that pass every lexical check can still read a
 | copydesk | One home per result in multi-section documents; scope notes once beside the claim; before-and-after scope-note comparison ([authoring and revision](../../skills/minimal/copydesk/references/authoring-and-revision.md#remove-conversation-residue)) | Same; overcorrection risk |
 | copydesk | Model verdicts and slop-removal prompts named as unreliable in the AI-slop section | Shaib et al.; Oh et al. |
 | copydesk | Comment or reply form; writing-profile line on comment register, synced to the repository instruction template | Follow-up register |
+| copydesk | `scripts/check_slop.py` lists Korean sentences that end in a negation and negate-then-affirm frames; the Korean guide and the writing profile gain a deletion test for negative sentences (added 2026-11-26) | Owner preference; Zamaraeva et al.; Strunk's positive-form rule |
 | vuln-report | Style rules: each result in its owning field, scope-note runs, named pointers; presubmit item; step 10 runs `check_structure.py` when copydesk is installed | Structure; maintainer-written advisories |
 | vuln-report | Follow-up replies answer first, casual, no greeting or recap; canary requests go to the person; two catalog sources added | Triage views |
 | submission-review (project-local) | Stranger read covers fields as one document; checklist items for one field per result, scope notes, generic text, tool-addressed text; follow-up comment section; credit in the first comment; evidence-grounded cuts | All of the above |
 
-Not adopted: banned-word or metaphor-verb lists, composite slop scores, detector-evasion and voice-mimicry goals, persistent hooks, and sending private reports to third-party APIs ([skills survey](sources-skills.md)). A corrective-disclaimer counter ("rather than", "does not by itself") was not added because it did not separate the reports from human text in the evaluation set.
+Not adopted: banned-word or metaphor-verb lists, composite slop scores, detector-evasion and voice-mimicry goals, persistent hooks, and sending private reports to third-party APIs ([skills survey](sources-skills.md)). A corrective-disclaimer counter ("rather than", "does not by itself") was not added because it did not separate the reports from human text in the evaluation set. The Korean negation lists added on 2026-11-26 make no such claim: they have no human baseline and only locate sentences for the owner's deletion test.
 
 ## Open questions
 
